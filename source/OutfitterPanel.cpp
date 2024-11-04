@@ -354,7 +354,7 @@ ShopPanel::TransactionResult OutfitterPanel::CanPurchase() const
 	int64_t credits = player.Accounts().Credits();
 
 	if(cost > credits)
-		return "You don't have enough money to buy this outfit, you need a further " +
+		return "You don't have enough money to buy this outfit. You need a further " +
 			Format::CreditString(cost - credits);
 
 	// Add the cost to buy the required license.
@@ -362,7 +362,7 @@ ShopPanel::TransactionResult OutfitterPanel::CanPurchase() const
 	if(cost + licenseCost > credits)
 		return "You don't have enough money to buy this outfit because you also need to buy a "
 			"license for it. You need a further " +
-			Format::CreditString(licenseCost - credits);
+			Format::CreditString(cost + licenseCost - credits);
 
 	// Check that the player has any necessary licenses.
 	if(LicenseCost(selectedOutfit, false) < 0)
@@ -1096,7 +1096,7 @@ void OutfitterPanel::DrawOutfit(const Outfit &outfit, const Point &center, bool 
 
 
 
-bool OutfitterPanel::IsLicense(const string &name)
+static bool IsLicense(const string &name)
 {
 	static const string &LICENSE = " License";
 	if(name.length() < LICENSE.length())

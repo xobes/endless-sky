@@ -29,7 +29,19 @@ class PlayerInfo;
 class Point;
 class Ship;
 
+static bool IsLicense(const std::string &name) ;
 
+constexpr int checkboxSpacing = 20;
+
+// Button size/placement info:
+constexpr double BUTTON_ROW_PAD = 5.;
+constexpr double BUTTON_COL_PAD = 5.;
+// these button widths need to add up to 220 with the current right panel
+// width and column padding
+constexpr double BUTTON_1_WIDTH = 37.;
+constexpr double BUTTON_2_WIDTH = 73.;
+constexpr double BUTTON_3_WIDTH = 55.;
+constexpr double BUTTON_4_WIDTH = 55.;
 
 // Class representing the Outfitter UI panel, which allows you to buy new
 // outfits to install in your ship or to sell the ones you own. Any outfit you
@@ -78,7 +90,6 @@ private:
 	static bool ShipCanAdd(const Ship *ship, const Outfit *outfit);
 	static bool ShipCanRemove(const Ship *ship, const Outfit *outfit);
 	static void DrawOutfit(const Outfit &outfit, const Point &center, bool isSelected, bool isOwned);
-	static bool IsLicense(const std::string &name) ;
 	bool HasLicense(const std::string &name) const;
 	static std::string LicenseRoot(const std::string &name) ;
 	void CheckRefill();
@@ -113,18 +124,6 @@ private:
 	bool showStorage = true;
 	// Allow toggling whether outfits in cargo are shown.
 	bool showCargo = true;
-
-	const int checkboxSpacing = 20;
-
-	// Button size/placement info:
-	const double BUTTON_ROW_PAD = 5.;
-	const double BUTTON_COL_PAD = 5.;
-	// these button widths need to add up to 220 with the current right panel
-	// width and column padding
-	const double BUTTON_1_WIDTH = 37.;
-	const double BUTTON_2_WIDTH = 73.;
-	const double BUTTON_3_WIDTH = 55.;
-	const double BUTTON_4_WIDTH = 55.;
 
 	Sale<Outfit> outfitter;
 

@@ -272,7 +272,7 @@ void ShipyardPanel::Sell(bool storeOutfits)
 
 	int count = playerShips.size();
 	int initialCount = count;
-	string message = "";
+	string message;
 
 	if(storeOutfits && !planet->HasOutfitter())
 	{

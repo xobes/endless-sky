@@ -544,7 +544,7 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 	else if(key == 'b' || key == 's' || key == 'r' || key == 'c' || key == 'i' || key == 'u')
 	{
 		// Handle Transactions:
-		// _Buy, _Sell, [Send to] _Cargo, _Retain [in Storage], _Install, _Uninstall
+		// _Buy, _Sell, [Buy to] _Cargo, _Retain [in Storage], _Install, _Uninstall
 		// _Sell for Shipyard has two variants, 's' Sell Everything and 'r' Sell Hull, Retain Outfits
 		const auto result = CanDoTransaction(key);
 		if(result)
