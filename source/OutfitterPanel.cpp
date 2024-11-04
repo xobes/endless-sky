@@ -49,6 +49,18 @@ namespace {
 	// Label for the description field of the detail pane.
 	const string DESCRIPTION = "description";
 
+	constexpr int checkboxSpacing = 20;
+
+	// Button size/placement info:
+	constexpr double BUTTON_ROW_PAD = 5.;
+	constexpr double BUTTON_COL_PAD = 5.;
+	// these button widths need to add up to 220 with the current right panel
+	// width and column padding
+	constexpr double BUTTON_1_WIDTH = 37.;
+	constexpr double BUTTON_2_WIDTH = 73.;
+	constexpr double BUTTON_3_WIDTH = 55.;
+	constexpr double BUTTON_4_WIDTH = 55.;
+
 	// Determine the refillable ammunition a particular ship consumes or stores.
 	set<const Outfit *> GetRefillableAmmunition(const Ship &ship) noexcept
 	{
@@ -74,6 +86,19 @@ namespace {
 				toRefill.emplace(outfit->Ammo());
 		}
 		return toRefill;
+	}
+
+
+
+	static bool IsLicense(const string &name)
+	{
+		static const string &LICENSE = " License";
+		if(name.length() < LICENSE.length())
+			return false;
+		if(name.compare(name.length() - LICENSE.length(), LICENSE.length(), LICENSE))
+			return false;
+
+		return true;
 	}
 }
 
@@ -1092,19 +1117,6 @@ void OutfitterPanel::DrawOutfit(const Outfit &outfit, const Point &center, bool 
 	Point offset(-.5 * OUTFIT_SIZE, -.5 * OUTFIT_SIZE + 10.);
 	font.Draw({name, {OUTFIT_SIZE, Alignment::CENTER, Truncate::MIDDLE}},
 		center + offset, Color((isSelected | isOwned) ? .8 : .5, 0.));
-}
-
-
-
-static bool IsLicense(const string &name)
-{
-	static const string &LICENSE = " License";
-	if(name.length() < LICENSE.length())
-		return false;
-	if(name.compare(name.length() - LICENSE.length(), LICENSE.length(), LICENSE))
-		return false;
-
-	return true;
 }
 
 

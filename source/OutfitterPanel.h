@@ -29,20 +29,6 @@ class PlayerInfo;
 class Point;
 class Ship;
 
-static bool IsLicense(const std::string &name) ;
-
-constexpr int checkboxSpacing = 20;
-
-// Button size/placement info:
-constexpr double BUTTON_ROW_PAD = 5.;
-constexpr double BUTTON_COL_PAD = 5.;
-// these button widths need to add up to 220 with the current right panel
-// width and column padding
-constexpr double BUTTON_1_WIDTH = 37.;
-constexpr double BUTTON_2_WIDTH = 73.;
-constexpr double BUTTON_3_WIDTH = 55.;
-constexpr double BUTTON_4_WIDTH = 55.;
-
 // Class representing the Outfitter UI panel, which allows you to buy new
 // outfits to install in your ship or to sell the ones you own. Any outfit you
 // sell is available to be bought again until you close this panel, even if it
