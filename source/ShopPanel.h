@@ -75,7 +75,8 @@ protected:
 protected:
 	void DrawShip(const Ship &ship, const Point &center, bool isSelected);
 
-	static void DrawTooltip(const std::string& text, const Point& hoverPoint, const Color& textColor, const Color& backColor);
+	static void DrawTooltip(const std::string& text, const Point& hoverPoint, const Color& textColor,
+		const Color& backColor);
 
 	void CheckForMissions(Mission::Location location) const;
 

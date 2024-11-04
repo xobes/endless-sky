@@ -123,7 +123,7 @@ int OutfitterPanel::TileSize() const
 
 int OutfitterPanel::VisibilityCheckboxesSize() const
 {
-	return 80; // checkboxHeight = 20 x 4 checkboxes = 80; 
+	return 80; // checkboxHeight = 20 x 4 checkboxes = 80;
 }
 
 
@@ -1261,10 +1261,10 @@ void OutfitterPanel::DrawButtons()
 		Point(SIDEBAR_WIDTH, 1), *GameData::Colors().Get("shop side panel footer"));
 
 	// Set up font size and colors for the credits
-	const Font& font = FontSet::Get(14);
-	const Color& bright = *GameData::Colors().Get("bright");
-	const Color& dim = *GameData::Colors().Get("medium");
-	const Color& back = *GameData::Colors().Get("panel background");
+	const Font &font = FontSet::Get(14);
+	const Color &bright = *GameData::Colors().Get("bright");
+	const Color &dim = *GameData::Colors().Get("medium");
+	const Color &back = *GameData::Colors().Get("panel background");
 
 	// Draw the row for credits display
 	const Point creditsPoint(
@@ -1283,11 +1283,11 @@ void OutfitterPanel::DrawButtons()
 	font.Draw({ space, {SIDEBAR_WIDTH - 20, Alignment::RIGHT} }, cargoPoint, bright);
 
 	// Button Text colors
-	const Font& bigFont = FontSet::Get(18);
-	const Color& hover = *GameData::Colors().Get("hover");
-	const Color& active = *GameData::Colors().Get("active");
-	const Color& inactive = *GameData::Colors().Get("inactive");
-	const Color* textColor = &inactive;
+	const Font &bigFont = FontSet::Get(18);
+	const Color &hover = *GameData::Colors().Get("hover");
+	const Color &active = *GameData::Colors().Get("active");
+	const Color &inactive = *GameData::Colors().Get("inactive");
+	const Color *textColor = &inactive;
 	const Point buttonOneSize = Point(BUTTON_1_WIDTH, BUTTON_HEIGHT);
 	const Point buttonTwoSize = Point(BUTTON_2_WIDTH, BUTTON_HEIGHT);
 	const Point buttonThreeSize = Point(BUTTON_3_WIDTH, BUTTON_HEIGHT);
@@ -1298,7 +1298,7 @@ void OutfitterPanel::DrawButtons()
 	static const string BUY = "_Buy";
 	const Point buyCenter = Point(buttonOneX, rowOneY);
 	FillShader::Fill(buyCenter, buttonOneSize, back);
-    textColor = !CanBuy() ? &inactive : (hoverButton == 'b') ? &hover : &active;
+	textColor = !CanBuy() ? &inactive : (hoverButton == 'b') ? &hover : &active;
 	bigFont.Draw(BUY,
 		buyCenter - .5 * Point(bigFont.Width(BUY), bigFont.Height()),
 		*textColor);
@@ -1306,7 +1306,7 @@ void OutfitterPanel::DrawButtons()
 	static const string INSTALL = "_Install";
 	const Point installCenter = Point(buttonTwoX, rowOneY);
 	FillShader::Fill(installCenter, buttonTwoSize, back);
-    textColor = !CanInstall() ? &inactive : (hoverButton == 'i') ? &hover : &active;
+	textColor = !CanInstall() ? &inactive : (hoverButton == 'i') ? &hover : &active;
 	bigFont.Draw(INSTALL,
 		installCenter - .5 * Point(bigFont.Width(INSTALL), bigFont.Height()),
 		*textColor);
@@ -1314,7 +1314,7 @@ void OutfitterPanel::DrawButtons()
 	static const string CARGO = "_Cargo";
 	const Point cargoCenter = Point(buttonThreeX, rowOneY);
 	FillShader::Fill(cargoCenter, buttonThreeSize, back);
-    textColor = !(CanMoveToCargo() || CanBuyToCargo()) ? &inactive : (hoverButton == 'c') ? &hover : &active;
+	textColor = !(CanMoveToCargo() || CanBuyToCargo()) ? &inactive : (hoverButton == 'c') ? &hover : &active;
 	bigFont.Draw(CARGO,
 		cargoCenter - .5 * Point(bigFont.Width(CARGO), bigFont.Height()),
 		*textColor);
@@ -1329,11 +1329,11 @@ void OutfitterPanel::DrawButtons()
 	bigFont.Draw(SELL,
 		sellCenter - .5 * Point(bigFont.Width(SELL) + 2, bigFont.Height()),
 		*textColor);
-	
+
 	static const string UNINSTALL = "_Uninstall";
 	const Point uninstallCenter = Point(buttonTwoX, rowTwoY);
 	FillShader::Fill(uninstallCenter, buttonTwoSize, back);
-    textColor = !CanUninstall() ? &inactive : (hoverButton == 'u') ? &hover : &active;
+	textColor = !CanUninstall() ? &inactive : (hoverButton == 'u') ? &hover : &active;
 	bigFont.Draw(UNINSTALL,
 		uninstallCenter - .5 * Point(bigFont.Width(UNINSTALL), bigFont.Height()),
 		*textColor);
@@ -1341,7 +1341,7 @@ void OutfitterPanel::DrawButtons()
 	static const string STORE = "Sto_re";
 	const Point storageCenter = Point(buttonThreeX, rowTwoY);
 	FillShader::Fill(storageCenter, buttonThreeSize, back);
-    textColor = !CanMoveToStorage() ? &inactive : (hoverButton == 'r') ? &hover : &active;
+	textColor = !CanMoveToStorage() ? &inactive : (hoverButton == 'r') ? &hover : &active;
 	// The `Sto_re` text was too far right, hence the adjustment
 	bigFont.Draw(STORE,
 		storageCenter - .5 * Point(bigFont.Width(STORE) + 1, bigFont.Height()),
@@ -1364,7 +1364,7 @@ void OutfitterPanel::DrawButtons()
 
 	// Modifier Text that appears below Buy & Sell
 	int modifier = Modifier();
-	if (modifier > 1)
+	if(modifier > 1)
 	{
 		string mod = "x " + to_string(modifier);
 		int modWidth = font.Width(mod);
@@ -1378,12 +1378,12 @@ void OutfitterPanel::DrawButtons()
 
 	// Draw the tooltip for your full number of credits.
 	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 15));
-	if (creditsBox.Contains(ShopPanel::hoverPoint))
+	if(creditsBox.Contains(ShopPanel::hoverPoint))
 		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
-	else if (ShopPanel::hoverCount)
+	else if(ShopPanel::hoverCount)
 		--ShopPanel::hoverCount;
 
-	if (ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
+	if(ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
 	{
 		string text = Format::Number(player.Accounts().Credits()) + " credits";
 		ShopPanel::DrawTooltip(text, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
@@ -1397,11 +1397,11 @@ void OutfitterPanel::DrawButtons()
 char OutfitterPanel::CheckButton(int x, int y)
 {
 	// The Find button
-	if (x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
+	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
 		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
 		return 'f';
 
-	if (x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
+	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
 		return '\0';
 
 	// Check if not in a row of Buttons
@@ -1414,25 +1414,25 @@ char OutfitterPanel::CheckButton(int x, int y)
 	const double buttonTwoLeft = buttonThreeLeft - (.5 * BUTTON_3_WIDTH + .5 * BUTTON_2_WIDTH) - BUTTON_COL_PAD;
 	const double buttonOneLeft = buttonTwoLeft - (.5 * BUTTON_2_WIDTH + .5 * BUTTON_1_WIDTH) - BUTTON_COL_PAD;
 
-	if (rowOneTop < y && y <= rowOneTop + BUTTON_HEIGHT)
+	if(rowOneTop < y && y <= rowOneTop + BUTTON_HEIGHT)
 	{
-		if (buttonOneLeft <= x && x < buttonOneLeft + BUTTON_1_WIDTH)
+		if(buttonOneLeft <= x && x < buttonOneLeft + BUTTON_1_WIDTH)
 			return 'b'; // BUY
-		if (buttonTwoLeft <= x && x < buttonTwoLeft + BUTTON_2_WIDTH)
+		if(buttonTwoLeft <= x && x < buttonTwoLeft + BUTTON_2_WIDTH)
 			return 'i'; // INSTALL
-		if (buttonThreeLeft <= x && x < buttonThreeLeft + BUTTON_3_WIDTH)
+		if(buttonThreeLeft <= x && x < buttonThreeLeft + BUTTON_3_WIDTH)
 			return 'c'; // CARGO
 	}
 
-	if (rowTwoTop < y && y <= rowTwoTop + BUTTON_HEIGHT)
+	if(rowTwoTop < y && y <= rowTwoTop + BUTTON_HEIGHT)
 	{
-		if (buttonOneLeft <= x && x < buttonOneLeft + BUTTON_1_WIDTH)
+		if(buttonOneLeft <= x && x < buttonOneLeft + BUTTON_1_WIDTH)
 			return 's'; // SELL
-		if (buttonTwoLeft <= x && x < buttonTwoLeft + BUTTON_2_WIDTH)
+		if(buttonTwoLeft <= x && x < buttonTwoLeft + BUTTON_2_WIDTH)
 			return 'u'; // UNINSTALL
-		if (buttonThreeLeft <= x && x < buttonThreeLeft + BUTTON_3_WIDTH)
+		if(buttonThreeLeft <= x && x < buttonThreeLeft + BUTTON_3_WIDTH)
 			return 'r'; // STORE
-		if (buttonFourLeft <= x && x < buttonFourLeft + BUTTON_4_WIDTH)
+		if(buttonFourLeft <= x && x < buttonFourLeft + BUTTON_4_WIDTH)
 			return 'l'; // LEAVE
 	}
 

@@ -384,7 +384,6 @@ void ShipyardPanel::SellShipChassis()
 
 
 
-// ReSharper disable once CppDFAUnreachableFunctionCall
 void ShipyardPanel::SellShip(bool storeOutfits)
 {
 	for(Ship *ship : playerShips)
@@ -413,10 +412,10 @@ void ShipyardPanel::DrawButtons()
 		Point(Screen::Right() - SIDEBAR_WIDTH / 2, Screen::Bottom() - ButtonPanelHeight()),
 		Point(SIDEBAR_WIDTH, 1), *GameData::Colors().Get("shop side panel footer"));
 
-	const Font& font = FontSet::Get(14);
-	const Color& bright = *GameData::Colors().Get("bright");
-	const Color& dim = *GameData::Colors().Get("medium");
-	const Color& back = *GameData::Colors().Get("panel background");
+	const Font &font = FontSet::Get(14);
+	const Color &bright = *GameData::Colors().Get("bright");
+	const Color &dim = *GameData::Colors().Get("medium");
+	const Color &back = *GameData::Colors().Get("panel background");
 
 	const Point creditsPoint(
 		Screen::Right() - SIDEBAR_WIDTH + 10,
@@ -426,10 +425,10 @@ void ShipyardPanel::DrawButtons()
 	const auto credits = Format::CreditString(player.Accounts().Credits());
 	font.Draw({ credits, {SIDEBAR_WIDTH - 20, Alignment::RIGHT} }, creditsPoint, bright);
 
-	const Font& bigFont = FontSet::Get(18);
-	const Color& hover = *GameData::Colors().Get("hover");
-	const Color& active = *GameData::Colors().Get("active");
-	const Color& inactive = *GameData::Colors().Get("inactive");
+	const Font &bigFont = FontSet::Get(18);
+	const Color &hover = *GameData::Colors().Get("hover");
+	const Color &active = *GameData::Colors().Get("active");
+	const Color &inactive = *GameData::Colors().Get("inactive");
 
 	const Point buyCenter = Screen::BottomRight() - Point(210, 25);
 	FillShader::Fill(buyCenter, Point(60, 30), back);
@@ -462,7 +461,7 @@ void ShipyardPanel::DrawButtons()
 	static const string FIND = "_Find";
 
 	int modifier = Modifier();
-	if (modifier > 1)
+	if(modifier > 1)
 	{
 		string mod = "x " + to_string(modifier);
 		int modWidth = font.Width(mod);
@@ -471,12 +470,12 @@ void ShipyardPanel::DrawButtons()
 
 	// Draw the tooltip for your full number of credits.
 	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 15));
-	if (creditsBox.Contains(ShopPanel::hoverPoint))
+	if(creditsBox.Contains(ShopPanel::hoverPoint))
 		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
-	else if (ShopPanel::hoverCount)
+	else if(ShopPanel::hoverCount)
 		--ShopPanel::hoverCount;
 
-	if (ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
+	if(ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
 	{
 		string text = Format::Number(player.Accounts().Credits()) + " credits";
 		DrawTooltip(text, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
@@ -490,24 +489,24 @@ void ShipyardPanel::DrawButtons()
 char ShipyardPanel::CheckButton(int x, int y)
 {
 	// The Find button
-	if (x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
+	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
 		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
 		return 'f';
 
-	if (x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
+	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
 		return '\0';
 
-	if (y < Screen::Bottom() - 40 || y >= Screen::Bottom() - 10)
+	if(y < Screen::Bottom() - 40 || y >= Screen::Bottom() - 10)
 		return ' ';
 
 	x -= Screen::Right() - SIDEBAR_WIDTH;
-	if (x > 9 && x < 70)
+	if(x > 9 && x < 70)
 		// Buy
 		return 'b';
-	else if (x > 89 && x < 150)
+	else if(x > 89 && x < 150)
 		// Sell
 		return 's';
-	else if (x > 169 && x < 240)
+	else if(x > 169 && x < 240)
 		// Leave
 		return 'l';
 

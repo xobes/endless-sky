@@ -99,7 +99,7 @@ void ShopPanel::DrawTooltip(const string& text, const Point& hoverPoint, const C
 	wrap.SetWrapWidth(WIDTH - 2 * PAD);
 	wrap.Wrap(text);
 	int longest = wrap.LongestLineWidth();
-	if (longest < wrap.WrapWidth())
+	if(longest < wrap.WrapWidth())
 	{
 		wrap.SetWrapWidth(longest);
 		wrap.Wrap(text);
@@ -248,8 +248,7 @@ void ShopPanel::Buy()
 
 
 
-
-void ShopPanel::Sell(bool /*storeOutfits*/)
+void ShopPanel::Sell(bool /* storeOutfits */)
 {
 }
 
@@ -345,9 +344,9 @@ ShopPanel::TransactionResult ShopPanel::CanDoTransaction(const SDL_Keycode key) 
 			{
 				const auto canMove = CanMoveToCargo();
 				const auto canBuy = CanBuyToCargo();
-				if (canMove || canBuy)
+				if(canMove || canBuy)
 					return true;
-				if (!canBuy)
+				if(!canBuy)
 					return canBuy; // Return why we cannot buy
 			}
 			break;  // debug for now
@@ -373,7 +372,7 @@ void ShopPanel::DoTransaction(SDL_Keycode key)
 	{
 		case 's': // _Sell
 			if(isOutfitter)
-				for (int i = 0; i < modifier && CanSell(); ++i)
+				for(int i = 0; i < modifier && CanSell(); ++i)
 						Sell();
 			else
 				// Sell ship and outfits
@@ -381,7 +380,7 @@ void ShopPanel::DoTransaction(SDL_Keycode key)
 			break;
 		case 'r': // Ship and/or Move outfits to Storage
 			if(isOutfitter)
-				for (int i = 0; i < modifier && CanMoveToStorage(); ++i)
+				for(int i = 0; i < modifier && CanMoveToStorage(); ++i)
 					MoveToStorage();
 			else
 				// Sell ship, Retain outfits
@@ -393,7 +392,7 @@ void ShopPanel::DoTransaction(SDL_Keycode key)
 				// Move to Cargo or else Buy to _Cargo
 				if(CanMoveToCargo())
 				{
-					for (int i = 0; i < modifier && CanMoveToCargo(); ++i)
+					for(int i = 0; i < modifier && CanMoveToCargo(); ++i)
 						MoveToCargo();
 				}
 				else
@@ -402,7 +401,7 @@ void ShopPanel::DoTransaction(SDL_Keycode key)
 			break;
 		case 'u': // _Uninstall
 			if(isOutfitter)
-				for (int i = 0; i < modifier && CanUninstall(); ++i)
+				for(int i = 0; i < modifier && CanUninstall(); ++i)
 					Uninstall();
 			break;
 		case 'i': // _Install
@@ -542,25 +541,25 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		activePane = (activePane == ShopPane::Main ? ShopPane::Sidebar : ShopPane::Main);
 	else if(key == 'f')
 		GetUI()->Push(new Dialog(this, &ShopPanel::DoFind, "Search for:"));
-	else if (key == 'b' || key == 's' || key == 'r' || key == 'c' || key == 'i' || key == 'u')
+	else if(key == 'b' || key == 's' || key == 'r' || key == 'c' || key == 'i' || key == 'u')
 	{
 		// Handle Transactions:
 		// _Buy, _Sell, [Send to] _Cargo, _Retain [in Storage], _Install, _Uninstall
 		// _Sell for Shipyard has two variants, 's' Sell Everything and 'r' Sell Hull, Retain Outfits
 		const auto result = CanDoTransaction(key);
-		if (result)
+		if(result)
 		{
 			DoTransaction(key);
 
 			// Ship-based updates to cargo are handled when leaving.
 			// Ship-based selection changes are asynchronous, and handled by ShipyardPanel.
-			if (isOutfitter)
+			if(isOutfitter)
 			{
 				player.UpdateCargoCapacities();
 				CheckSelection();
 			}
 		}
-		else if (result.HasMessage())
+		else if(result.HasMessage())
 			GetUI()->Push(new Dialog(result.Message()));
 	}
 	else
