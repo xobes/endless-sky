@@ -42,52 +42,89 @@ class OutfitterPanel : public ShopPanel {
 public:
 	explicit OutfitterPanel(PlayerInfo &player);
 
-	virtual void Step() override;
+	void Step() override;
 
 
 protected:
-	virtual int TileSize() const override;
-	virtual int VisibilityCheckboxesSize() const override;
-	virtual bool HasItem(const std::string &name) const override;
-	virtual void DrawItem(const std::string &name, const Point &point) override;
-	virtual int DividerOffset() const override;
-	virtual int DetailWidth() const override;
-	virtual double DrawDetails(const Point &center) override;
-	virtual BuyResult CanBuy(bool onlyOwned = false) const override;
-	virtual void Buy(bool onlyOwned = false) override;
-	virtual bool CanSell(bool toStorage = false) const override;
-	virtual void Sell(bool toStorage = false) override;
-	virtual void FailSell(bool toStorage = false) const override;
-	virtual bool ShouldHighlight(const Ship *ship) override;
-	virtual void DrawKey() override;
-	virtual void ToggleForSale() override;
-	virtual void ToggleStorage() override;
-	virtual void ToggleCargo() override;
-	virtual int FindItem(const std::string &text) const override;
+	int TileSize() const override;
+	int VisibilityCheckboxesSize() const override;
+	bool HasItem(const std::string &name) const override;
+	void DrawItem(const std::string &name, const Point &point) override;
+	double ButtonPanelHeight() const override;
+	int DetailWidth() const override;
+	double DrawDetails(const Point &center) override;
+	TransactionResult CanBuyToCargo() const override;
+	void BuyToCargo() override;
+	TransactionResult CanBuy() const override;
+	void Buy() override;
+	TransactionResult CanSell() const override;
+	void Sell() override;
+	TransactionResult CanInstall() const override;
+	void Install() override;
+	TransactionResult CanUninstall() const override;
+	void Uninstall() override;
+	TransactionResult CanMoveToCargo() const override;
+	void MoveToCargo() override;
+	TransactionResult CanMoveToStorage() const override;
+	void MoveToStorage() override;
+	bool ShouldHighlight(const Ship *ship) override;
+	void DrawKey() override;
+	char CheckButton(int x, int y) override;
+	void DrawButtons() override;
+	int FindItem(const std::string &text) const override;
 
 
 private:
-	static bool ShipCanBuy(const Ship *ship, const Outfit *outfit);
-	static bool ShipCanSell(const Ship *ship, const Outfit *outfit);
+	static bool ShipCanAdd(const Ship *ship, const Outfit *outfit);
+	static bool ShipCanRemove(const Ship *ship, const Outfit *outfit);
 	static void DrawOutfit(const Outfit &outfit, const Point &center, bool isSelected, bool isOwned);
-	bool IsLicense(const std::string &name) const;
+	static bool IsLicense(const std::string &name) ;
 	bool HasLicense(const std::string &name) const;
-	std::string LicenseRoot(const std::string &name) const;
+	static std::string LicenseRoot(const std::string &name) ;
 	void CheckRefill();
 	void Refill();
 	// Shared code for reducing the selected ships to those that have the
 	// same quantity of the selected outfit.
-	const std::vector<Ship *> GetShipsToOutfit(bool isBuy = false) const;
+	std::vector<Ship *> GetShipsToOutfit(bool isBuy = false) const;
+
+	// Helper functions to make the cargo management code more readable
+	TransactionResult CanPurchase() const;
+	TransactionResult CanBeInstalled() const;
+	TransactionResult CanFitInCargo() const;
+	TransactionResult CanSellOrUninstall(const std::string &verb) const;
+	bool IsInShop() const;
+	void Buy(bool toCargo) const;
+	void SellOrUninstall(SDL_Keycode key) const;
+
+	// The visibility filter key is only displayed in the OutfitterPanel
+	void ToggleForSale();
+	void ToggleInstalled();
+	void ToggleStorage();
+	void ToggleCargo();
 
 private:
 	// Record whether we've checked if the player needs ammo refilled.
 	bool checkedRefill = false;
 	// Allow toggling whether outfits that are for sale are shown.
 	bool showForSale = true;
+	// Allow toggling whether installed outfits are shown.
+	bool showInstalled = true;
 	// Allow toggling whether stored outfits are shown.
 	bool showStorage = true;
 	// Allow toggling whether outfits in cargo are shown.
 	bool showCargo = true;
+
+	const int checkboxSpacing = 20;
+
+	// Button size/placement info:
+	const double BUTTON_ROW_PAD = 5.;
+	const double BUTTON_COL_PAD = 5.;
+	// these button widths need to add up to 220 with the current right panel
+	// width and column padding
+	const double BUTTON_1_WIDTH = 37.;
+	const double BUTTON_2_WIDTH = 73.;
+	const double BUTTON_3_WIDTH = 55.;
+	const double BUTTON_4_WIDTH = 55.;
 
 	Sale<Outfit> outfitter;
 
