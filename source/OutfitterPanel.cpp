@@ -1357,7 +1357,7 @@ void OutfitterPanel::DrawButtons()
 
 	// Find button
 	const Point findCenter = Screen::BottomRight() - Point(580, 20);
-	const Sprite* findIcon =
+	const Sprite *findIcon =
 		hoverButton == 'f' ? SpriteSet::Get("ui/find selected") : SpriteSet::Get("ui/find unselected");
 	SpriteShader::Draw(findIcon, findCenter);
 	static const string FIND = "_Find";
