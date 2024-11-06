@@ -400,7 +400,7 @@ ShopPanel::TransactionResult OutfitterPanel::CanPurchase() const
 
 
 // Checking where it will go (can it fit in fleet cargo), not where it will come from
-ShopPanel::TransactionResult OutfitterPanel::CanFitInCargo() const
+ShopPanel::TransactionResult OutfitterPanel::CanFitInCargo(bool returnReason) const
 {
 	// TODO: https://github.com/endless-sky/endless-sky/issues/10599
 
@@ -410,9 +410,15 @@ ShopPanel::TransactionResult OutfitterPanel::CanFitInCargo() const
 	if(!mass || freeCargo >= mass)
 		return true;
 
-	return "You cannot load this outfit into cargo, because it takes up "
-		+ Format::CargoString(mass, "mass") + " and your fleet has "
-		+ Format::CargoString(freeCargo, "cargo space") + " free.";
+	// don't waste time making strings that won't get used
+	if(returnReason)
+	{
+		return "You cannot load this outfit into cargo, because it takes up "
+			+ Format::CargoString(mass, "mass") + " and your fleet has "
+			+ Format::CargoString(freeCargo, "cargo space") + " free.";
+	}
+
+	return false;
 }
 
 
@@ -667,7 +673,7 @@ ShopPanel::TransactionResult OutfitterPanel::CanBuy() const
 // Perform Buy from shop, optionally to Cargo directly
 void OutfitterPanel::Buy(bool toCargo) const
 {
-	// by definition Buy is from Outfitter and Stock
+	// by definition Buy is from Outfitter (only)
 	if(int64_t licenseCost = LicenseCost(selectedOutfit, false))
 	{
 		player.Accounts().AddCredits(-licenseCost);
@@ -694,7 +700,7 @@ void OutfitterPanel::Buy(bool toCargo) const
 	}
 
 	int modifier = Modifier();
-	for(int i = 0; i < modifier && (CanBuy() || (toCargo && CanBuyToCargo())); ++i)
+	for(int i = 0; i < modifier && ((toCargo && CanBuyToCargo()) || CanBuy()); ++i)
 	{
 		// Buying into cargo, either from storage (free!) or from stock/supply.
 		if(toCargo)
@@ -726,25 +732,9 @@ void OutfitterPanel::Buy(bool toCargo) const
 				if(!CanBuy())
 					return;
 
-				// use cargo first
-				if(player.Cargo().Get(selectedOutfit))
-					player.Cargo().Remove(selectedOutfit);
-
-				// use storage second
-				else if(player.Storage().Get(selectedOutfit))
-					player.Storage().Remove(selectedOutfit);
-
-				// buy if there aren't any left to buy, bail
-				else if(!IsInShop())
-					return;
-
-				// buy from the Outfitter
-				else
-				{
-					int64_t price = player.StockDepreciation().Value(selectedOutfit, day);
-					player.Accounts().AddCredits(-price);
-					player.AddStock(selectedOutfit, -1);
-				}
+				int64_t price = player.StockDepreciation().Value(selectedOutfit, day);
+				player.Accounts().AddCredits(-price);
+				player.AddStock(selectedOutfit, -1);
 
 				// now Install it on this ship
 				ship->AddOutfit(selectedOutfit, 1);
@@ -773,7 +763,7 @@ ShopPanel::TransactionResult OutfitterPanel::CanBuyToCargo() const
 	TransactionResult canPurchase = CanPurchase();
 	if(!canPurchase)
 		return canPurchase;
-	return CanFitInCargo();
+	return CanFitInCargo(true);
 }
 
 
@@ -900,6 +890,7 @@ ShopPanel::TransactionResult OutfitterPanel::CanUninstall() const
 }
 
 
+
 // Check if the outfit is able to be uninstalled, return reasons why not
 void OutfitterPanel::Uninstall()
 {
@@ -909,21 +900,25 @@ void OutfitterPanel::Uninstall()
 
 
 // Check if the outfit is able to be moved to Cargo from Storage, return reasons why not
-ShopPanel::TransactionResult OutfitterPanel::CanMoveToCargo() const
+bool OutfitterPanel::CanMoveToCargo() const
 {
 	if(!planet || !selectedOutfit)
-		return "No outfit selected.";
+		// No outfit selected.
+		return false;
 
 	if(static_cast<bool>(selectedOutfit->Get("map")))
-		return "You cannot move maps around. Once you buy one, it is yours permanently.";
+		// You cannot move maps around. Once you buy one, it is yours permanently.
+		return false;
 
 	if(HasLicense(selectedOutfit->TrueName()))
-		return "You cannot move licenses around. Once you obtain one, it is yours permanently.";
+		// You cannot move licenses around. Once you obtain one, it is yours permanently.
+		return false;
 
 	if(!player.Storage().Get(selectedOutfit))
-		return "You don't have any of these outfits in storage to move to your cargo hold.";
+		// You don't have any of these outfits in storage to move to your cargo hold.
+		return false;
 
-	return CanFitInCargo();
+	return static_cast<bool>(CanFitInCargo());
 }
 
 

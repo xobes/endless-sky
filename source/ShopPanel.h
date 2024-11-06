@@ -101,7 +101,7 @@ protected:
 	virtual void Install();
 	virtual TransactionResult CanUninstall() const;
 	virtual void Uninstall();
-	virtual TransactionResult CanMoveToCargo() const;
+	virtual bool CanMoveToCargo() const;
 	virtual void MoveToCargo();
 	virtual TransactionResult CanMoveToStorage() const;
 	virtual void MoveToStorage();

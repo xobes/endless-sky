@@ -61,7 +61,7 @@ protected:
 	void Install() override;
 	TransactionResult CanUninstall() const override;
 	void Uninstall() override;
-	TransactionResult CanMoveToCargo() const override;
+	bool CanMoveToCargo() const override;
 	void MoveToCargo() override;
 	TransactionResult CanMoveToStorage() const override;
 	void MoveToStorage() override;
@@ -87,7 +87,7 @@ private:
 	// Helper functions to make the cargo management code more readable
 	TransactionResult CanPurchase() const;
 	TransactionResult CanBeInstalled() const;
-	TransactionResult CanFitInCargo() const;
+	TransactionResult CanFitInCargo(bool returnReason = false) const;
 	TransactionResult CanSellOrUninstall(const std::string &verb) const;
 	bool IsInShop() const;
 	void Buy(bool toCargo) const;

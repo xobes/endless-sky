@@ -286,7 +286,7 @@ void ShopPanel::Uninstall()
 
 
 
-ShopPanel::TransactionResult ShopPanel::CanMoveToCargo() const
+bool ShopPanel::CanMoveToCargo() const
 {
 	return false;
 }
