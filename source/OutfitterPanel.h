@@ -29,6 +29,8 @@ class PlayerInfo;
 class Point;
 class Ship;
 
+
+
 // Class representing the Outfitter UI panel, which allows you to buy new
 // outfits to install in your ship or to sell the ones you own. Any outfit you
 // sell is available to be bought again until you close this panel, even if it
@@ -52,19 +54,19 @@ protected:
 	int DetailWidth() const override;
 	double DrawDetails(const Point &center) override;
 	TransactionResult CanBuyToCargo() const override;
-	void BuyToCargo() override;
-	TransactionResult CanBuy() const override;
-	void Buy() override;
+	void BuyIntoCargo() override;
+	TransactionResult CanDoBuyButton () const override;
+	void DoBuyButton () override;
 	TransactionResult CanSell() const override;
 	void Sell() override;
 	TransactionResult CanInstall() const override;
 	void Install() override;
 	TransactionResult CanUninstall() const override;
 	void Uninstall() override;
-	bool CanMoveToCargo() const override;
-	void MoveToCargo() override;
+	bool CanMoveToCargoFromStorage() const override;
+	void MoveToCargoFromStorage() override;
 	TransactionResult CanMoveToStorage() const override;
-	void MoveToStorage() override;
+	void RetainInStorage() override;
 	bool ShouldHighlight(const Ship *ship) override;
 	void DrawKey() override;
 	char CheckButton(int x, int y) override;
@@ -77,23 +79,22 @@ private:
 	static bool ShipCanRemove(const Ship *ship, const Outfit *outfit);
 	static void DrawOutfit(const Outfit &outfit, const Point &center, bool isSelected, bool isOwned);
 	bool HasLicense(const std::string &name) const;
-	static std::string LicenseRoot(const std::string &name) ;
 	void CheckRefill();
 	void Refill();
 	// Shared code for reducing the selected ships to those that have the
 	// same quantity of the selected outfit.
 	std::vector<Ship *> GetShipsToOutfit(bool isBuy = false) const;
 
-	// Helper functions to make the cargo management code more readable
-	TransactionResult CanPurchase() const;
+	// Helper functions to make the cargo management code more readable.
+	TransactionResult CanPurchase(bool checkSpecialItems) const;
 	TransactionResult CanBeInstalled() const;
 	TransactionResult CanFitInCargo(bool returnReason = false) const;
 	TransactionResult CanSellOrUninstall(const std::string &verb) const;
 	bool IsInShop() const;
-	void Buy(bool toCargo) const;
-	void SellOrUninstall(SDL_Keycode key) const;
+	void BuyFromShopAndInstall() const;
+	void SellOrUninstallOne(SDL_Keycode contextKey) const;
 
-	// The visibility filter key is only displayed in the OutfitterPanel
+	// The visibility filter key is only displayed in the OutfitterPanel.
 	void ToggleForSale();
 	void ToggleInstalled();
 	void ToggleStorage();
@@ -113,7 +114,7 @@ private:
 
 	Sale<Outfit> outfitter;
 
-	// Keep track of how many of the outfitter help screens have been shown
+	// Keep track of whether the outfitter help screens have been shown.
 	bool checkedHelp = false;
 
 	int shipsHere = 0;

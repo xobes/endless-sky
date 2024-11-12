@@ -91,9 +91,15 @@ protected:
 	virtual void DrawButtons() = 0;
 	virtual char CheckButton(int x, int y) = 0;
 	virtual TransactionResult CanBuyToCargo() const;
+<<<<<<< HEAD
 	virtual void BuyToCargo();
 	virtual TransactionResult CanBuy() const;
 	virtual void Buy();
+=======
+	virtual void BuyIntoCargo();
+	virtual TransactionResult CanDoBuyButton () const;
+	virtual void DoBuyButton ();
+>>>>>>> outfitter_display_filters
 	virtual TransactionResult CanSell() const = 0;
 	virtual void Sell(bool storeOutfits);
 	virtual void Sell();
@@ -101,10 +107,17 @@ protected:
 	virtual void Install();
 	virtual TransactionResult CanUninstall() const;
 	virtual void Uninstall();
+<<<<<<< HEAD
 	virtual bool CanMoveToCargo() const;
 	virtual void MoveToCargo();
 	virtual TransactionResult CanMoveToStorage() const;
 	virtual void MoveToStorage();
+=======
+	virtual bool CanMoveToCargoFromStorage() const;
+	virtual void MoveToCargoFromStorage();
+	virtual TransactionResult CanMoveToStorage() const;
+	virtual void RetainInStorage();
+>>>>>>> outfitter_display_filters
 	virtual bool CanSellMultiple() const;
 	virtual bool ShouldHighlight(const Ship *ship);
 	virtual void DrawKey() {};

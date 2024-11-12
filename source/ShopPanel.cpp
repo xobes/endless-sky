@@ -654,7 +654,6 @@ bool ShopPanel::Click(int x, int y, int clicks)
 			return true;
 		}
 
-
 	return true;
 }
 
