@@ -234,11 +234,7 @@ ShopPanel::TransactionResult ShipyardPanel::CanBuy() const
 
 
 
-<<<<<<< HEAD
-void ShipyardPanel::Buy()
-=======
 void ShipyardPanel::DoBuyButton ()
->>>>>>> outfitter_display_filters
 {
 	int64_t licenseCost = LicenseCost(&selectedShip->Attributes());
 	if(licenseCost < 0)
@@ -283,13 +279,8 @@ void ShipyardPanel::Sell(bool storeOutfits)
 		message = "WARNING!\n\nThis planet has no Outfitter. "
 			"There is no way to retain the outfits in storage.\n\n";
 	}
-<<<<<<< HEAD
-	// never allow keeping outfits where they cannot be retrieved
-	// TODO: consider how to keep outfits in Cargo in the future
-=======
 	// Never allow keeping outfits where they cannot be retrieved.
 	// TODO: Consider how to keep outfits in Cargo in the future.
->>>>>>> outfitter_display_filters
 	storeOutfits &= planet->HasOutfitter();
 
 	if(!storeOutfits)
@@ -441,11 +432,7 @@ void ShipyardPanel::DrawButtons()
 
 	const Point buyCenter = Screen::BottomRight() - Point(210, 25);
 	FillShader::Fill(buyCenter, Point(60, 30), back);
-<<<<<<< HEAD
-	const Color *buyTextColor = !CanBuy() ? &inactive : hoverButton == 'b' ? &hover : &active;
-=======
 	const Color *buyTextColor = !CanDoBuyButton () ? &inactive : hoverButton == 'b' ? &hover : &active;
->>>>>>> outfitter_display_filters
 	string BUY = "_Buy";
 	bigFont.Draw(BUY,
 		buyCenter - .5 * Point(bigFont.Width(BUY), bigFont.Height()),
@@ -458,11 +445,7 @@ void ShipyardPanel::DrawButtons()
 		sellCenter - .5 * Point(bigFont.Width(SELL), bigFont.Height()),
 		CanSell() ? hoverButton == 's' ? hover : active : inactive);
 
-<<<<<<< HEAD
-	// TODO: add button for sell but retain outfits
-=======
 	// TODO: Add button for sell but retain outfits.
->>>>>>> outfitter_display_filters
 
 	const Point leaveCenter = Screen::BottomRight() - Point(45, 25);
 	FillShader::Fill(leaveCenter, Point(70, 30), back);
@@ -505,11 +488,7 @@ void ShipyardPanel::DrawButtons()
 // letter of the button (or ' ' if it's not on a button).
 char ShipyardPanel::CheckButton(int x, int y)
 {
-<<<<<<< HEAD
-	// The Find button
-=======
 	// Check the Find button.
->>>>>>> outfitter_display_filters
 	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
 		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
 		return 'f';
@@ -522,15 +501,6 @@ char ShipyardPanel::CheckButton(int x, int y)
 
 	x -= Screen::Right() - SIDEBAR_WIDTH;
 	if(x > 9 && x < 70)
-<<<<<<< HEAD
-		// Buy
-		return 'b';
-	else if(x > 89 && x < 150)
-		// Sell
-		return 's';
-	else if(x > 169 && x < 240)
-		// Leave
-=======
 		// Check if it's the _Buy button.
 		return 'b';
 	else if(x > 89 && x < 150)
@@ -538,7 +508,6 @@ char ShipyardPanel::CheckButton(int x, int y)
 		return 's';
 	else if(x > 169 && x < 240)
 		// Check if it's the _Leave button.
->>>>>>> outfitter_display_filters
 		return 'l';
 
 	return ' ';
