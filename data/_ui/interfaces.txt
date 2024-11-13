@@ -1183,7 +1183,7 @@ interface "hiring"
 		dimensions 480 1
 
 	label "bunks"
-		center -350 110
+		center -230 110
 		align left
 	string "flagship bunks"
 		center -10 110
