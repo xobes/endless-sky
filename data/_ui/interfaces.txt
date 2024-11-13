@@ -593,12 +593,12 @@ interface "hud"
 	# Player status.
 	anchor top right
 	
-	sprite "ui/status-world"
+	sprite "ui/status"
 		from 0 0
 		align top right
 	
 	string "location"
-		from -20 25
+		from -160 25
 		color "medium"
 		align right
 		width 140
@@ -612,60 +612,52 @@ interface "hud"
 		color "medium"
 		align right
 	
-	anchor top left
-	sprite "ui/status-ship-ring"
-		from   310 6
-		align top left
-
 	visible if "!fast hud sprites"
 	outline "player sprite"
-		center 378 74
+		center -75 155
 		dimensions 70 70
 	visible if "fast hud sprites"
 	image "player sprite"
-		center 378 74
+		center -75 155
 		dimensions 70 70
 	visible
 	ring "shields"
-		center 378 74
+		center -75 155
 		dimensions 120 120
 		color "shields"
 		size 1.5
 	ring "hull"
-		center 378 74
+		center -75 155
 		dimensions 110 110
 		color "hull"
 		size 1.5
 	ring "disabled hull"
-		center 378 74
+		center -75 155
 		dimensions 110 110
 		color "disabled hull"
 		size 1.5
-	sprite "ui/status-ship-bars"
-		from   255 6
-		align top left
 	bar "fuel"
-		from 261.5 202
+		from -53.5 425
 		dimensions 0 -192
 		color "fuel"
 		size 2
 	bar "energy"
-		from 281.5 202
+		from -33.5 415
 		dimensions 0 -192
 		color "energy"
 		size 2
 	bar "heat"
-		from 301.5 202
+		from -13.5 403
 		dimensions 0 -192
 		color "heat"
 		size 2
 	bar "overheat"
-		from 301.5 202
+		from -13.5 403
 		dimensions 0 -192
 		color "overheat"
 		size 2
 	bar "overheat blink"
-		from 301.5 202
+		from -13.5 403
 		dimensions 0 -192
 		color "dim"
 		size 2
@@ -685,99 +677,97 @@ interface "hud"
 	value "radar radius" 110
 	value "radar pointer radius" 130
 	
-	anchor top right
 	sprite "ui/navigation"
-		from 0 85
-		align top right
+		from 200 0
+		align top left
 	string "navigation mode"
-		from -160 105
+		from 215 20
 		align left
 		color "medium"
 	string "destination"
-		from -145 125
+		from 230 40
 		align left
 		color "medium"
 		width 135
 		truncate back
 	
-	anchor top left
 	sprite "ui/target"
-		from  450 0
+		from 0 240
 		align top left
 	point "target"
-		center  525 75
+		center 75 315
 		dimensions 140 140
 	value "target radius" 70
 	visible if "!fast hud sprites"
 	outline "target sprite"
-		center  525 75
+		center 75 315
 		dimensions 70 70
 		colored
 	visible if "fast hud sprites"
 	image "target sprite"
-		center  525 75
+		center 75 315
 		dimensions 70 70
 	visible
 	ring "target shields"
-		center  525 75
+		center 75 315
 		dimensions 120 120
 		color "shields"
 		size 1.5
 	ring "target hull"
-		center  525 75
+		center 75 315
 		dimensions 110 110
 		color "hull"
 		size 1.5
 	ring "target disabled hull"
-		center  525 75
+		center 75 315
 		dimensions 110 110
 		color "disabled hull"
 		size 1.5
 	
 	visible if "range display"
 	sprite "ui/range"
-		from  580 23
+		from 130 263
 		align top left
 	string "target range"
-		from  610 20
+		from 160 260
 		align top left
 	visible if "tactical display"
 	sprite "ui/tactical"
-		from  580 50
+		from 130 290
 		align top left
 	string "target crew"
-		from  612 58
+		from 162 298
 		align top left
 	string "target fuel"
-		from  612 78
+		from 162 318
 		align top left
 	string "target energy"
-		from  607 98
+		from 157 338
 		align top left
 	string "target heat"
-		from  597 118
+		from 147 358
 		align top left
 	visible
 	
 	string "target name"
-		center  525 155
+		center 75 395
 		color "bright"
 		width 150
 		truncate middle
 	string "target type"
-		center  525 175
+		center 75 415
 		color "medium"
 		width 150
 		truncate middle
 	string "target government"
-		center  525 195
+		center 75 435
 		color "medium"
 		width 150
 		truncate middle
 	point "faction markers"
-		center  525 195
+		center 75 435
 	string "mission target"
-		center  525 215
+		center 75 455
 		color "medium"
 	
 	# Other HUD elements:
@@ -788,8 +778,8 @@ interface "hud"
 		from 120 0 bottom left
 		to -110 -200 bottom right
 	box "ammo"
-		from 342 150 top left
-		to   413 202 top left
+		from -110 450 top right
+		to 0 0 bottom right
 	value "ammo icon height" 30
 	value "ammo icon width" 80
 	anchor top
