@@ -49,6 +49,16 @@ using namespace std;
 namespace {
 	// Label for the description field of the detail pane.
 	const string DESCRIPTION = "description";
+
+	// Button size/placement info:
+	constexpr double BUTTON_ROW_PAD = 10.;
+	constexpr double BUTTON_COL_PAD = 10.;
+	// These button widths need to add up to 200 with the current right panel
+	// width and column padding (above):
+	constexpr double BUTTON_1_WIDTH = 35.;
+	constexpr double BUTTON_2_WIDTH = 35.;
+	constexpr double BUTTON_3_WIDTH = 85.;
+	constexpr double BUTTON_4_WIDTH = 50.;
 }
 
 
@@ -386,115 +396,96 @@ void ShipyardPanel::SellShip(bool storeOutfits)
 
 
 
-void ShipyardPanel::DrawButtons()
+void ShipyardPanel::DrawButtonPanel()
 {
-	// The last 70 pixels on the end of the side panel are for the buttons:
-	Point buttonSize(SIDEBAR_WIDTH, ButtonPanelHeight());
-	FillShader::Fill(Screen::BottomRight() - .5 * buttonSize, buttonSize,
+	// There will be one row of buttons:
+	//  [ Buy  ] [ Sell ] [ Store  ] [ Leave ]
+	// Calculate row locations from bottom to top:
+	const double buttonRowY = Screen::BottomRight().Y() - .5 * BUTTON_HEIGHT - BUTTON_ROW_PAD;
+	// Calculate button positions from right to left:
+	const double buttonFourX = Screen::BottomRight().X() - .5 * BUTTON_4_WIDTH - BUTTON_COL_PAD;
+	const double buttonThreeX = buttonFourX - (.5 * BUTTON_4_WIDTH + .5 * BUTTON_3_WIDTH) - BUTTON_COL_PAD;
+	const double buttonTwoX = buttonThreeX - (.5 * BUTTON_3_WIDTH + .5 * BUTTON_2_WIDTH) - BUTTON_COL_PAD;
+	const double buttonOneX = buttonTwoX - (.5 * BUTTON_2_WIDTH + .5 * BUTTON_1_WIDTH) - BUTTON_COL_PAD;
+	const Point buttonOneSize = Point(BUTTON_1_WIDTH, BUTTON_HEIGHT);
+	const Point buttonTwoSize = Point(BUTTON_2_WIDTH, BUTTON_HEIGHT);
+	const Point buttonThreeSize = Point(BUTTON_3_WIDTH, BUTTON_HEIGHT);
+	const Point buttonFourSize = Point(BUTTON_4_WIDTH, BUTTON_HEIGHT);
+
+	// Draw the button panel (shop side panel footer).
+	const Point buttonPanelSize(SIDEBAR_WIDTH, ButtonPanelHeight());
+	FillShader::Fill(Screen::BottomRight() - .5 * buttonPanelSize, buttonPanelSize,
 		*GameData::Colors().Get("shop side panel background"));
 	FillShader::Fill(
 		Point(Screen::Right() - SIDEBAR_WIDTH / 2, Screen::Bottom() - ButtonPanelHeight()),
 		Point(SIDEBAR_WIDTH, 1), *GameData::Colors().Get("shop side panel footer"));
 
+	// Set up font size and colors for the credits.
 	const Font &font = FontSet::Get(14);
 	const Color &bright = *GameData::Colors().Get("bright");
 	const Color &dim = *GameData::Colors().Get("medium");
-	const Color &back = *GameData::Colors().Get("panel background");
 
+	// Draw the row for credits display.
 	const Point creditsPoint(
 		Screen::Right() - SIDEBAR_WIDTH + 10,
-		Screen::Bottom() - 65);
+		Screen::Bottom() - ButtonPanelHeight() + 5);
 	font.Draw("You have:", creditsPoint, dim);
-
 	const auto credits = Format::CreditString(player.Accounts().Credits());
 	font.Draw({ credits, {SIDEBAR_WIDTH - 20, Alignment::RIGHT} }, creditsPoint, bright);
 
+	// Define the button text colors.
 	const Font &bigFont = FontSet::Get(18);
 	const Color &hover = *GameData::Colors().Get("hover");
 	const Color &active = *GameData::Colors().Get("active");
 	const Color &inactive = *GameData::Colors().Get("inactive");
 
-	const Point buyCenter = Screen::BottomRight() - Point(210, 25);
-	FillShader::Fill(buyCenter, Point(60, 30), back);
-	const Color *buyTextColor = !CanDoBuyButton() ? &inactive : hoverButton == 'b' ? &hover : &active;
-	string BUY = "_Buy";
-	bigFont.Draw(BUY,
-		buyCenter - .5 * Point(bigFont.Width(BUY), bigFont.Height()),
-		*buyTextColor);
+	// Clear the buttonZones, they will be populated again as buttons are drawn.
+	buttonZones.clear();
 
-	const Point sellCenter = Screen::BottomRight() - Point(130, 25);
-	FillShader::Fill(sellCenter, Point(60, 30), back);
-	static const string SELL = "_Sell";
-	bigFont.Draw(SELL,
-		sellCenter - .5 * Point(bigFont.Width(SELL), bigFont.Height()),
-		playerShip ? hoverButton == 's' ? hover : active : inactive);
+	// Draw the buttons.
+	DrawButton(Point(buttonOneX, buttonRowY), buttonOneSize, bigFont,
+		!CanDoBuyButton() ? inactive : hoverButton == 'b' ? hover : active, "_Buy", 'b');
+	DrawButton(Point(buttonTwoX, buttonRowY), buttonTwoSize, bigFont,
+		playerShip ? hoverButton == 's' ? hover : active : inactive, "_Sell", 's');
+	DrawButton(Point(buttonThreeX, buttonRowY), buttonThreeSize, bigFont,
+		playerShip ? hoverButton == 's' ? hover : active : inactive, "_Sell Keep Outfits", 'r');
+	DrawButton(Point(buttonFourX, buttonRowY), buttonFourSize, bigFont,
+		hoverButton == 'l' ? hover : active, "_Leave", 'l');
 
-	// TODO: Add button for sell but retain outfits.
-
-	const Point leaveCenter = Screen::BottomRight() - Point(45, 25);
-	FillShader::Fill(leaveCenter, Point(70, 30), back);
-	static const string LEAVE = "_Leave";
-	bigFont.Draw(LEAVE,
-		leaveCenter - .5 * Point(bigFont.Width(LEAVE), bigFont.Height()),
-		hoverButton == 'l' ? hover : active);
-
+	// Draw the Find button.
 	const Point findCenter = Screen::BottomRight() - Point(580, 20);
 	const Sprite *findIcon =
 		hoverButton == 'f' ? SpriteSet::Get("ui/find selected") : SpriteSet::Get("ui/find unselected");
 	SpriteShader::Draw(findIcon, findCenter);
-	static const string FIND = "_Find";
 
+	// Draw the Modifier hover text that appears below the buy button when a modifier is being applied.
 	int modifier = Modifier();
 	if(modifier > 1)
 	{
 		string mod = "x " + to_string(modifier);
 		int modWidth = font.Width(mod);
-		font.Draw(mod, buyCenter + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonOneX, buttonRowY) + Point(-.5 * modWidth, 10.), dim);
 	}
+
+	// Draw tooltips for the button being hovered over:
+	string tooltip = GameData::Tooltip(string("shipyard: ") + hoverButton);
+	if(!tooltip.empty())
+		// Note: there is an offset between the cursor and tooltips in this case so that other
+		// buttons can be seen as the mouse moves around.
+		DrawTooltip(tooltip, hoverPoint + Point(-40, -60), dim, *GameData::Colors().Get("tooltip background"));
 
 	// Draw the tooltip for your full number of credits.
 	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 15));
-	if(creditsBox.Contains(ShopPanel::hoverPoint))
-		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
-	else if(ShopPanel::hoverCount)
-		--ShopPanel::hoverCount;
+	if(creditsBox.Contains(hoverPoint))
+		hoverCount += hoverCount < HOVER_TIME;
+	else if(hoverCount)
+		--hoverCount;
 
-	if(ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
+	if(hoverCount == HOVER_TIME)
 	{
-		string text = Format::Number(player.Accounts().Credits()) + " credits";
-		DrawTooltip(text, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
+		tooltip = Format::Number(player.Accounts().Credits()) + " credits";
+		DrawTooltip(tooltip, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
 	}
-}
-
-
-
-// Check if the given point is within the button zone, and if so return the
-// letter of the button (or ' ' if it's not on a button).
-char ShipyardPanel::CheckButton(int x, int y)
-{
-	// Check the Find button.
-	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
-		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
-		return 'f';
-
-	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
-		return '\0';
-
-	if(y < Screen::Bottom() - 40 || y >= Screen::Bottom() - 10)
-		return ' ';
-
-	x -= Screen::Right() - SIDEBAR_WIDTH;
-	if(x > 9 && x < 70)
-		// Check if it's the _Buy button.
-		return 'b';
-	else if(x > 89 && x < 150)
-		// Check if it's the _Sell button:
-		return 's';
-	else if(x > 169 && x < 240)
-		// Check if it's the _Leave button.
-		return 'l';
-
-	return ' ';
 }
 
 

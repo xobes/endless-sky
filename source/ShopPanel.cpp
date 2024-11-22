@@ -132,7 +132,7 @@ void ShopPanel::Draw()
 	DrawMain();
 	DrawShipsSidebar();
 	DrawDetailsSidebar();
-	DrawButtons();
+	DrawButtonPanel();
 	DrawKey();
 
 	shipInfo.DrawTooltips();
@@ -539,6 +539,28 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 	}
 
 	return true;
+}
+
+
+
+char ShopPanel::CheckButton(int x, int y)
+{
+	// Check the Find button.
+	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
+		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
+		return 'f';
+
+	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
+		return '\0';
+
+	const Point clickPoint(x, y);
+
+	// Check all the buttonZones.
+	for(const ClickZone<char> zone : buttonZones)
+		if(zone.Contains(clickPoint))
+			return zone.Value();
+
+	return '\0';
 }
 
 
@@ -1098,6 +1120,22 @@ int ShopPanel::DrawPlayerShipInfo(const Point &point)
 	shipInfo.DrawOutfits(Point(point.X(), point.Y() + attributesHeight));
 
 	return attributesHeight + shipInfo.OutfitsHeight();
+}
+
+
+
+void ShopPanel::DrawButton(Point center, Point dimensions, const Font &font, const Color &color,
+	const std::string &buttonText, char keyCode)
+{
+	// Add this button to the buttonZones:
+	buttonZones.emplace_back(center, dimensions, keyCode);
+
+	// Draw the button.
+	const Point buttonBorderOffset = Point(2, 2);
+	const Color &back = *GameData::Colors().Get("panel background");
+	FillShader::Fill(center, dimensions + buttonBorderOffset, color);
+	FillShader::Fill(center, dimensions, back);
+	font.Draw(buttonText, center - .5 * Point(font.Width(buttonText), font.Height()), color);
 }
 
 
