@@ -57,7 +57,7 @@ protected:
 	TransactionResult CanDoBuyButton() const override;
 	void DoBuyButton() override;
 	TransactionResult CanSellOrUninstall(const std::string &verb) const override;
-	void Sell(bool /* storeOutfits */) override;
+	void Sell(bool) override;
 	TransactionResult CanInstall() const override;
 	void Install() override;
 	void Uninstall() override;
@@ -66,8 +66,7 @@ protected:
 	void RetainInStorage() override;
 	bool ShouldHighlight(const Ship *ship) override;
 	void DrawKey() override;
-	char CheckButton(int x, int y) override;
-	void DrawButtons() override;
+	void DrawButtonPanel() override;
 	int FindItem(const std::string &text) const override;
 
 
