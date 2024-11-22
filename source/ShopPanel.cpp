@@ -222,6 +222,13 @@ void ShopPanel::CheckForMissions(Mission::Location location) const
 
 
 
+int ShopPanel::VisibilityCheckboxesSize() const
+{
+	return 0;
+}
+
+
+
 ShopPanel::TransactionResult ShopPanel::CanBuyToCargo() const
 {
 	return false;
@@ -236,7 +243,7 @@ ShopPanel::TransactionResult ShopPanel::CanDoBuyButton() const
 
 
 
-void ShopPanel::BuyToCargo()
+void ShopPanel::BuyIntoCargo()
 {
 }
 
@@ -274,24 +281,16 @@ void ShopPanel::Uninstall()
 
 
 
-bool ShopPanel::CanMoveToCargo() const
+bool ShopPanel::CanMoveToCargoFromStorage() const
 {
 	return false;
 }
 
 
 
-void ShopPanel::MoveToCargo()
+void ShopPanel::MoveToCargoFromStorage()
 {
 }
-
-
-
-ShopPanel::TransactionResult ShopPanel::CanMoveToStorage() const
-{
-	return false;
-}
-
 
 
 void ShopPanel::RetainInStorage()

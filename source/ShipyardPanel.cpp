@@ -184,7 +184,7 @@ double ShipyardPanel::DrawDetails(const Point &center)
 
 
 
-ShopPanel::TransactionResult ShipyardPanel::CanBuy() const
+ShopPanel::TransactionResult ShipyardPanel::CanDoBuyButton () const
 {
 	if(!selectedShip)
 		return false;
@@ -356,7 +356,6 @@ void ShipyardPanel::BuyShip(const string &name)
 
 void ShipyardPanel::SellShipAndOutfits()
 {
-	// false, as in: sell the outfits, don't put them in storage
 	SellShip(false);
 }
 
@@ -364,7 +363,6 @@ void ShipyardPanel::SellShipAndOutfits()
 
 void ShipyardPanel::SellShipChassis()
 {
-	// true, as in: keep the outfits in storage, only sell the ship
 	SellShip(true);
 }
 

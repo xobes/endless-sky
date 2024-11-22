@@ -82,7 +82,7 @@ protected:
 
 	// These are for the individual shop panels to override.
 	virtual int TileSize() const = 0;
-	virtual int VisibilityCheckboxesSize() const { return 0; };
+	virtual int VisibilityCheckboxesSize() const;
 	virtual bool HasItem(const std::string &name) const = 0;
 	virtual void DrawItem(const std::string &name, const Point &point) = 0;
 	virtual double ButtonPanelHeight() const = 0;
