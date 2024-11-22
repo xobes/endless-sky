@@ -55,9 +55,9 @@ namespace {
 	constexpr double BUTTON_COL_PAD = 10.;
 	// These button widths need to add up to 200 with the current right panel
 	// width and column padding (above):
-	constexpr double BUTTON_1_WIDTH = 35.;
-	constexpr double BUTTON_2_WIDTH = 35.;
-	constexpr double BUTTON_3_WIDTH = 85.;
+	constexpr double BUTTON_1_WIDTH = 40.;
+	constexpr double BUTTON_2_WIDTH = 40.;
+	constexpr double BUTTON_3_WIDTH = 75.;
 	constexpr double BUTTON_4_WIDTH = 50.;
 }
 
@@ -448,7 +448,7 @@ void ShipyardPanel::DrawButtonPanel()
 	DrawButton(Point(buttonTwoX, buttonRowY), buttonTwoSize, bigFont,
 		playerShip ? hoverButton == 's' ? hover : active : inactive, "_Sell", 's');
 	DrawButton(Point(buttonThreeX, buttonRowY), buttonThreeSize, bigFont,
-		playerShip ? hoverButton == 's' ? hover : active : inactive, "_Sell Keep Outfits", 'r');
+		playerShip ? hoverButton == 's' ? hover : active : inactive, "Sell H_ull", 'r');
 	DrawButton(Point(buttonFourX, buttonRowY), buttonFourSize, bigFont,
 		hoverButton == 'l' ? hover : active, "_Leave", 'l');
 
