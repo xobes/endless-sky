@@ -1342,7 +1342,7 @@ void OutfitterPanel::DrawButtonPanel()
 	// CanSellOrUninstall("store") is wholly inclusive of CanSellOrUninstall("uninstall"), no need to check both here,
 	// otherwise this would check if we can "store" or "uninstall".
 	DrawButton(Point(buttonTwoX, rowTwoY), buttonTwoSize, bigFont,
-		!CanSellOrUninstall("store") ? inactive : (hoverButton == 'u') ? hover : active, "_Uninstall", 'i');
+		!CanSellOrUninstall("store") ? inactive : (hoverButton == 'u') ? hover : active, "_Uninstall", 'u');
 	DrawButton(Point(buttonThreeX, rowTwoY), buttonThreeSize, bigFont,
 		!CanSellOrUninstall("store") ? inactive : (hoverButton == 'r') ? hover : active, "Sto_re", 'r');
 	DrawButton(Point(buttonFourX, rowTwoY), buttonFourSize, bigFont,
