@@ -74,6 +74,8 @@ protected:
 
 protected:
 	void DrawShip(const Ship &ship, const Point &center, bool isSelected);
+	void DrawButton(Point center, Point dimensions, const Font &font, const Color &color, const std::string &buttonText,
+		char);
 
 	static void DrawTooltip(const std::string &text, const Point &hoverPoint, const Color &textColor,
 		const Color &backColor);
@@ -87,8 +89,7 @@ protected:
 	virtual void DrawItem(const std::string &name, const Point &point) = 0;
 	virtual double ButtonPanelHeight() const = 0;
 	virtual double DrawDetails(const Point &center) = 0;
-	virtual void DrawButtons() = 0;
-	virtual char CheckButton(int x, int y) = 0;
+	virtual void DrawButtonPanel() = 0;
 	virtual TransactionResult CanBuyToCargo() const;
 	virtual void BuyIntoCargo();
 	virtual TransactionResult CanDoBuyButton() const;
@@ -118,6 +119,7 @@ protected:
 
 	int64_t LicenseCost(const Outfit *outfit, bool onlyOwned = false) const;
 
+	char CheckButton(int x, int y);
 	void CheckSelection();
 
 
@@ -188,6 +190,7 @@ protected:
 	double previousX = 0.;
 
 	std::vector<Zone> zones;
+	std::vector<ClickZone<char>> buttonZones;
 	std::vector<ClickZone<const Ship *>> shipZones;
 	std::vector<ClickZone<std::string>> categoryZones;
 

@@ -48,8 +48,7 @@ protected:
 	TransactionResult CanDoBuyButton() const override;
 	void DoBuyButton() override;
 	void Sell(bool storeOutfits) override;
-	char CheckButton(int x, int y) override;
-	void DrawButtons() override;
+	void DrawButtonPanel() override;
 	int FindItem(const std::string &text) const override;
 
 

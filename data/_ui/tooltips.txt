@@ -825,6 +825,16 @@ tip "outfitter: c"
 tip "outfitter: r"
 	`Retain in storage from cargo if available, otherwise uninstall from ship to retain in storage.`
 
+tip "shipyard: b"
+	`Buy <multiplier> of this ship.`
+
+tip "shipyard: s"
+	`Sell the selected ships and their outfits.`
+
+tip "shipyard: r"
+	`Sell the hulls of the selected ships, but retain the outfits in storage.`
+
+
 
 
 # Sale labels:

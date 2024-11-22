@@ -1270,11 +1270,11 @@ vector<Ship *> OutfitterPanel::GetShipsToOutfit(bool isBuy) const
 
 
 
-void OutfitterPanel::DrawButtons()
+void OutfitterPanel::DrawButtonPanel()
 {
 	// There will be two rows of buttons:
 	//  [ Buy  ] [  Install  ] [ Cargo ]
-	//  [ Sell ] [ Uninstall ] [ Keep  ] [ Leave ]
+	//  [ Sell ] [ Uninstall ] [ Store  ] [ Leave ]
 	// Calculate row locations from bottom to top:
 	const double rowTwoY = Screen::BottomRight().Y() - .5 * BUTTON_HEIGHT - BUTTON_ROW_PAD;
 	const double rowOneY = rowTwoY - BUTTON_HEIGHT - BUTTON_ROW_PAD;
@@ -1283,6 +1283,10 @@ void OutfitterPanel::DrawButtons()
 	const double buttonThreeX = buttonFourX - (.5 * BUTTON_4_WIDTH + .5 * BUTTON_3_WIDTH) - BUTTON_COL_PAD;
 	const double buttonTwoX = buttonThreeX - (.5 * BUTTON_3_WIDTH + .5 * BUTTON_2_WIDTH) - BUTTON_COL_PAD;
 	const double buttonOneX = buttonTwoX - (.5 * BUTTON_2_WIDTH + .5 * BUTTON_1_WIDTH) - BUTTON_COL_PAD;
+	const Point buttonOneSize = Point(BUTTON_1_WIDTH, BUTTON_HEIGHT);
+	const Point buttonTwoSize = Point(BUTTON_2_WIDTH, BUTTON_HEIGHT);
+	const Point buttonThreeSize = Point(BUTTON_3_WIDTH, BUTTON_HEIGHT);
+	const Point buttonFourSize = Point(BUTTON_4_WIDTH, BUTTON_HEIGHT);
 
 	// Draw the button panel (shop side panel footer).
 	const Point buttonPanelSize(SIDEBAR_WIDTH, ButtonPanelHeight());
@@ -1296,7 +1300,6 @@ void OutfitterPanel::DrawButtons()
 	const Font &font = FontSet::Get(14);
 	const Color &bright = *GameData::Colors().Get("bright");
 	const Color &dim = *GameData::Colors().Get("medium");
-	const Color &back = *GameData::Colors().Get("panel background");
 
 	// Draw the row for credits display.
 	const Point creditsPoint(
@@ -1319,88 +1322,37 @@ void OutfitterPanel::DrawButtons()
 	const Color &hover = *GameData::Colors().Get("hover");
 	const Color &active = *GameData::Colors().Get("active");
 	const Color &inactive = *GameData::Colors().Get("inactive");
-	const Color *textColor = &inactive;
-	const Point buttonOneSize = Point(BUTTON_1_WIDTH, BUTTON_HEIGHT);
-	const Point buttonTwoSize = Point(BUTTON_2_WIDTH, BUTTON_HEIGHT);
-	const Point buttonThreeSize = Point(BUTTON_3_WIDTH, BUTTON_HEIGHT);
-	const Point buttonFourSize = Point(BUTTON_4_WIDTH, BUTTON_HEIGHT);
-	const Point buttonBorderOffset = Point(2, 2);
+
+	// Clear the buttonZones, they will be populated again as buttons are drawn.
+	buttonZones.clear();
 
 	// Draw the first row of buttons.
-	static const string BUY = "_Buy";
-	const Point buyCenter = Point(buttonOneX, rowOneY);
-	textColor = !CanDoBuyButton() ? &inactive : (hoverButton == 'b') ? &hover : &active;
-	FillShader::Fill(buyCenter, buttonOneSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(buyCenter, buttonOneSize, back);
-	bigFont.Draw(BUY,
-		buyCenter - .5 * Point(bigFont.Width(BUY), bigFont.Height()),
-		*textColor);
-
-	static const string INSTALL = "_Install";
-	const Point installCenter = Point(buttonTwoX, rowOneY);
-	textColor = !CanInstall() ? &inactive : (hoverButton == 'i') ? &hover : &active;
-	FillShader::Fill(installCenter, buttonTwoSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(installCenter, buttonTwoSize, back);
-	bigFont.Draw(INSTALL,
-		installCenter - .5 * Point(bigFont.Width(INSTALL), bigFont.Height()),
-		*textColor);
-
-	static const string CARGO = "_Cargo";
-	const Point cargoCenter = Point(buttonThreeX, rowOneY);
-	textColor = !(CanMoveToCargoFromStorage() || CanBuyToCargo()) ? &inactive : (hoverButton == 'c') ? &hover : &active;
-	FillShader::Fill(cargoCenter, buttonThreeSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(cargoCenter, buttonThreeSize, back);
-	bigFont.Draw(CARGO,
-		cargoCenter - .5 * Point(bigFont.Width(CARGO), bigFont.Height()),
-		*textColor);
+	DrawButton(Point(buttonOneX, rowOneY), buttonOneSize, bigFont,
+		!CanDoBuyButton() ? inactive : hoverButton == 'b' ? hover : active, "_Buy", 'b');
+	DrawButton(Point(buttonTwoX, rowOneY), buttonTwoSize, bigFont,
+		!CanInstall() ? inactive : (hoverButton == 'i') ? hover : active, "_Install", 'i');
+	DrawButton(Point(buttonThreeX, rowOneY), buttonThreeSize, bigFont,
+		!(CanMoveToCargoFromStorage() || CanBuyToCargo()) ? inactive : (hoverButton == 'c') ? hover : active,
+		"_Cargo", 'c');
 
 	// Draw the second row of buttons.
-	static const string SELL = "_Sell";
-	const Point sellCenter = Point(buttonOneX, rowTwoY);
-	textColor = !CanSellOrUninstall("sell") ? &inactive : hoverButton == 's' ? &hover : &active;
-	FillShader::Fill(sellCenter, buttonOneSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(sellCenter, buttonOneSize, back);
-	// The `Sell` text was too far right, hence the adjustment.
-	bigFont.Draw(SELL,
-		sellCenter - .5 * Point(bigFont.Width(SELL) + 2, bigFont.Height()),
-		*textColor);
-
-	static const string UNINSTALL = "_Uninstall";
-	const Point uninstallCenter = Point(buttonTwoX, rowTwoY);
+	DrawButton(Point(buttonOneX, rowTwoY), buttonOneSize, bigFont,
+		!CanSellOrUninstall("sell") ? inactive : hoverButton == 's' ? hover : active, "_Sell", 's');
 	// CanSellOrUninstall("store") is here intentionally to support U moving items from Cargo to Storage.
 	// CanSellOrUninstall("store") is wholly inclusive of CanSellOrUninstall("uninstall"), no need to check both here,
 	// otherwise this would check if we can "store" or "uninstall".
-	textColor = !CanSellOrUninstall("store") ? &inactive : (hoverButton == 'u') ? &hover : &active;
-	FillShader::Fill(uninstallCenter, buttonTwoSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(uninstallCenter, buttonTwoSize, back);
-	bigFont.Draw(UNINSTALL,
-		uninstallCenter - .5 * Point(bigFont.Width(UNINSTALL), bigFont.Height()),
-		*textColor);
-
-	static const string STORE = "Sto_re";
-	const Point storageCenter = Point(buttonThreeX, rowTwoY);
-	textColor = !CanSellOrUninstall("store") ? &inactive : (hoverButton == 'r') ? &hover : &active;
-	FillShader::Fill(storageCenter, buttonThreeSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(storageCenter, buttonThreeSize, back);
-	// The `Sto_re` text was too far right, hence the adjustment.
-	bigFont.Draw(STORE,
-		storageCenter - .5 * Point(bigFont.Width(STORE) + 1, bigFont.Height()),
-		*textColor);
-
-	static const string LEAVE = "_Leave";
-	const Point leaveCenter = Point(buttonFourX, rowTwoY);
-	FillShader::Fill(leaveCenter, buttonFourSize + buttonBorderOffset, *textColor);
-	FillShader::Fill(leaveCenter, buttonFourSize, back);
-	bigFont.Draw(LEAVE,
-		leaveCenter - .5 * Point(bigFont.Width(LEAVE), bigFont.Height()),
-		hoverButton == 'l' ? hover : active);
+	DrawButton(Point(buttonTwoX, rowTwoY), buttonTwoSize, bigFont,
+		!CanSellOrUninstall("store") ? inactive : (hoverButton == 'u') ? hover : active, "_Uninstall", 'i');
+	DrawButton(Point(buttonThreeX, rowTwoY), buttonThreeSize, bigFont,
+		!CanSellOrUninstall("store") ? inactive : (hoverButton == 'r') ? hover : active, "Sto_re", 'r');
+	DrawButton(Point(buttonFourX, rowTwoY), buttonFourSize, bigFont,
+		hoverButton == 'l' ? hover : active, "_Leave", 'l');
 
 	// Draw the Find button.
 	const Point findCenter = Screen::BottomRight() - Point(580, 20);
 	const Sprite *findIcon =
 		hoverButton == 'f' ? SpriteSet::Get("ui/find selected") : SpriteSet::Get("ui/find unselected");
 	SpriteShader::Draw(findIcon, findCenter);
-	static const string FIND = "_Find";
 
 	// Draw the Modifier hover text that appears below the buttons when a modifier
 	// is being applied.
@@ -1409,17 +1361,16 @@ void OutfitterPanel::DrawButtons()
 	{
 		string mod = "x " + to_string(modifier);
 		int modWidth = font.Width(mod);
-		font.Draw(mod, buyCenter + Point(-.5 * modWidth, 10.), dim);
-		font.Draw(mod, sellCenter + Point(-.5 * modWidth, 10.), dim);
-		font.Draw(mod, installCenter + Point(-.5 * modWidth, 10.), dim);
-		font.Draw(mod, uninstallCenter + Point(-.5 * modWidth, 10.), dim);
-		font.Draw(mod, cargoCenter + Point(-.5 * modWidth, 10.), dim);
-		font.Draw(mod, storageCenter + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonOneX, rowOneY) + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonTwoX, rowOneY) + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonThreeX, rowOneY) + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonOneX, rowTwoY) + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonTwoX, rowTwoY) + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonThreeX, rowTwoY) + Point(-.5 * modWidth, 10.), dim);
 	}
 
 	// Draw tooltips for the button being hovered over:
-	string tooltip;
-	tooltip = GameData::Tooltip(string("outfitter: ") + hoverButton);
+	string tooltip = GameData::Tooltip(string("outfitter: ") + hoverButton);
 	if(!tooltip.empty())
 		// Note: there is an offset between the cursor and tooltips in this case so that other
 		// buttons can be seen as the mouse moves around.
@@ -1428,72 +1379,17 @@ void OutfitterPanel::DrawButtons()
 	// Draw the tooltip for your full number of credits and free cargo space
 	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 30));
 	if(creditsBox.Contains(hoverPoint))
-		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
-	else if(ShopPanel::hoverCount)
-		--ShopPanel::hoverCount;
+		hoverCount += hoverCount < HOVER_TIME;
+	else if(hoverCount)
+		--hoverCount;
 
-	if(ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
+	if(hoverCount == HOVER_TIME)
 	{
 		tooltip = Format::Number(player.Accounts().Credits()) + " credits" + "\n" +
 			Format::Number(player.Cargo().Free()) + " tons free out of " +
 			Format::Number(player.Cargo().Size()) + " tons total capacity";
 		DrawTooltip(tooltip, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
 	}
-}
-
-
-
-// Check if the given point is within the button zone, and if so return the
-// letter of the button (or ' ' if it's not on a button).
-char OutfitterPanel::CheckButton(int x, int y)
-{
-	// Check the Find button.
-	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
-		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
-		return 'f';
-
-	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
-		return '\0';
-
-	// Calculate the tops of the button rows, from bottom to top.
-	const double rowTwoTop = Screen::Bottom() - BUTTON_HEIGHT - BUTTON_ROW_PAD;
-	const double rowOneTop = rowTwoTop - BUTTON_HEIGHT - BUTTON_ROW_PAD;
-	// Calculate the left side of the buttons, from right to left.
-	const double buttonFourLeft = Screen::Right() - BUTTON_4_WIDTH - BUTTON_COL_PAD;
-	const double buttonThreeLeft = buttonFourLeft - (.5 * BUTTON_4_WIDTH + .5 * BUTTON_3_WIDTH) - BUTTON_COL_PAD;
-	const double buttonTwoLeft = buttonThreeLeft - (.5 * BUTTON_3_WIDTH + .5 * BUTTON_2_WIDTH) - BUTTON_COL_PAD;
-	const double buttonOneLeft = buttonTwoLeft - (.5 * BUTTON_2_WIDTH + .5 * BUTTON_1_WIDTH) - BUTTON_COL_PAD;
-
-	if(rowOneTop < y && y <= rowOneTop + BUTTON_HEIGHT)
-	{
-		// Check if it's the _Buy button.
-		if(buttonOneLeft <= x && x < buttonOneLeft + BUTTON_1_WIDTH)
-			return 'b';
-		// Check if it's the _Install button.
-		if(buttonTwoLeft <= x && x < buttonTwoLeft + BUTTON_2_WIDTH)
-			return 'i';
-		// Check if it's the _Cargo button.
-		if(buttonThreeLeft <= x && x < buttonThreeLeft + BUTTON_3_WIDTH)
-			return 'c';
-	}
-
-	if(rowTwoTop < y && y <= rowTwoTop + BUTTON_HEIGHT)
-	{
-		// Check if it's the _Sell button:
-		if(buttonOneLeft <= x && x < buttonOneLeft + BUTTON_1_WIDTH)
-			return 's';
-		// Check if it's the _Uninstall button.
-		if(buttonTwoLeft <= x && x < buttonTwoLeft + BUTTON_2_WIDTH)
-			return 'u';
-		// Check if it's the Sto_re button.
-		if(buttonThreeLeft <= x && x < buttonThreeLeft + BUTTON_3_WIDTH)
-			return 'r';
-		// Check if it's the _Leave button.
-		if(buttonFourLeft <= x && x < buttonFourLeft + BUTTON_4_WIDTH)
-			return 'l';
-	}
-
-	return ' ';
 }
 
 
