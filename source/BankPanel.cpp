@@ -254,7 +254,7 @@ void BankPanel::Draw()
 		table.Draw("[apply]", selected);
 	}
 
-	Information info;
+	info.ClearConditions();
 	if((crewSalariesOwed || maintenanceDue) && player.Accounts().Credits() > 0)
 		info.SetCondition("can pay");
 	else
