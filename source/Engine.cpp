@@ -1123,8 +1123,8 @@ void Engine::Draw() const
 	{
 		if(!outline.sprite)
 			continue;
-		Point size(highlightSprite->Width() * player.Flagship()->Scale().X(),
-			highlightSprite->Height() * player.Flagship()->Scale().Y());
+		Point size(outline.sprite->Width() * player.Flagship()->Scale().X(),
+			outline.sprite->Height() * player.Flagship()->Scale().Y());
 		OutlineShader::Draw(outline.sprite, outline.position, size, outline.color, outline.unit, outline.frame);
 	}
 
