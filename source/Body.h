@@ -35,8 +35,10 @@ class Body {
 public:
 	// Constructors.
 	Body() = default;
-	Body(const Sprite *sprite, Point position, Point velocity = Point(), Angle facing = Angle(), double zoom = 1.);
-	Body(const Body &sprite, Point position, Point velocity = Point(), Angle facing = Angle(), double zoom = 1.);
+	Body(const Sprite *sprite, Point position, Point velocity = Point(), Angle facing = Angle(),
+		double zoom = 1., Point scale = Point(1, 1));
+	Body(const Body &sprite, Point position, Point velocity = Point(), Angle facing = Angle(),
+		double zoom = 1., Point scale = Point(1, 1));
 
 	// Check that this Body has a sprite and that the sprite has at least one frame.
 	bool HasSprite() const;
@@ -60,7 +62,7 @@ public:
 	const Angle &Facing() const;
 	Point Unit() const;
 	double Zoom() const;
-	double Scale() const;
+	Point Scale() const;
 
 	// Check if this object is marked for removal from the game.
 	bool ShouldBeRemoved() const;
@@ -98,12 +100,12 @@ protected:
 	Point position;
 	Point velocity;
 	Angle angle;
+	Point scale = Point(1, 1);
 	Point center;
 	Point rotatedCenter;
 	// A zoom of 1 means the sprite should be drawn at half size. For objects
 	// whose sprites should be full size, use zoom = 2.
 	float zoom = 1.f;
-	float scale = 1.f;
 
 	double alpha = 1.;
 
