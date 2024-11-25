@@ -399,7 +399,7 @@ public:
 	const uint_fast8_t ReverseHeldFrames() const;
 	const uint_fast8_t TurnRightHeldFrames() const;
 	const uint_fast8_t TurnLeftHeldFrames() const;
-	static const inline uint_fast8_t MaximumThrusterHeldframes() { return 16; };
+	static const inline uint_fast8_t MaximumThrusterHeldFrames() { return 16; };
 
 	// This ship just got hit by a weapon. Take damage according to the
 	// DamageDealt from that weapon. The return value is a ShipEvent type,

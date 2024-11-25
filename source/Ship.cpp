@@ -4691,9 +4691,9 @@ void Ship::DoMovement(bool &isUsingAfterburner)
 				isSteering = true;
 				steeringDirection = commands.Turn();
 				if(steeringDirection < 0.)
-					turnLeftHeldFrames = min(Ship::MaximumThrusterHeldframes(), static_cast<uint_fast8_t>(turnLeftHeldFrames + 2));
+					turnLeftHeldFrames = min(Ship::MaximumThrusterHeldFrames(), static_cast<uint_fast8_t>(turnLeftHeldFrames + 2));
 				else
-					turnRightHeldFrames = min(Ship::MaximumThrusterHeldframes(), static_cast<uint_fast8_t>(turnRightHeldFrames + 2));
+					turnRightHeldFrames = min(Ship::MaximumThrusterHeldFrames(), static_cast<uint_fast8_t>(turnRightHeldFrames + 2));
 				// If turning at a fraction of the full rate (either from lack of
 				// energy or because of tracking a target), only consume a fraction
 				// of the turning energy and produce a fraction of the heat.
@@ -4755,9 +4755,9 @@ void Ship::DoMovement(bool &isUsingAfterburner)
 				thrust = attributes.Get(isThrusting ? "thrust" : "reverse thrust");
 
 				if(isReversing)
-					reverseHeldFrames = min(Ship::MaximumThrusterHeldframes(), static_cast<uint_fast8_t>(reverseHeldFrames + 2));
+					reverseHeldFrames = min(Ship::MaximumThrusterHeldFrames(), static_cast<uint_fast8_t>(reverseHeldFrames + 2));
 				else
-					thrusterHeldFrames = min(Ship::MaximumThrusterHeldframes(), static_cast<uint_fast8_t>(thrusterHeldFrames + 2));
+					thrusterHeldFrames = min(Ship::MaximumThrusterHeldFrames(), static_cast<uint_fast8_t>(thrusterHeldFrames + 2));
 
 				if(thrust)
 				{
