@@ -48,7 +48,8 @@ Body::Body(const Body &sprite, Point position, Point velocity, Angle facing, dou
 	this->velocity = velocity;
 	this->angle = facing;
 	this->zoom = zoom;
-	this->scale = scale;
+	// Be sure to keep the existing scale for this Body and scale that by this new scale.
+	this->scale = scale * sprite.Scale();
 }
 
 
