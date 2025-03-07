@@ -16,6 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "PlayerInfoPanel.h"
 
 #include "text/alignment.hpp"
+#include "audio/Audio.h"
 #include "Command.h"
 #include "text/Font.h"
 #include "text/FontSet.h"
@@ -50,7 +51,7 @@ namespace {
 
 	// Draw a list of (string, value) pairs.
 	void DrawList(vector<pair<int64_t, string>> &list, Table &table, const string &title,
-		int maxCount = 0, bool drawValues = true)
+		int64_t titleValue, int maxCount = 0, bool drawValues = true)
 	{
 		if(list.empty())
 			return;
@@ -71,7 +72,7 @@ namespace {
 		table.DrawGap(10);
 		table.DrawUnderline(dim);
 		table.Draw(title, *GameData::Colors().Get("bright"));
-		table.Advance();
+		table.Draw(titleValue, dim);
 		table.DrawGap(5);
 
 		for(const auto &it : list)
@@ -101,7 +102,7 @@ namespace {
 			return false;
 		else if(rhs->GetSystem() == nullptr)
 			return true;
-		return lhs->GetSystem()->Name() < rhs->GetSystem()->Name();
+		return lhs->GetSystem()->DisplayName() < rhs->GetSystem()->DisplayName();
 	}
 
 	bool CompareShields(const shared_ptr<Ship> &lhs, const shared_ptr<Ship> &rhs)
@@ -177,7 +178,15 @@ PlayerInfoPanel::PlayerInfoPanel(PlayerInfo &player)
 PlayerInfoPanel::PlayerInfoPanel(PlayerInfo &player, InfoPanelState panelState)
 	: player(player), panelState(panelState)
 {
+	Audio::Pause();
 	SetInterruptible(false);
+}
+
+
+
+PlayerInfoPanel::~PlayerInfoPanel()
+{
+	Audio::Resume();
 }
 
 
@@ -198,8 +207,8 @@ void PlayerInfoPanel::Draw()
 	DrawBackdrop();
 
 	// Fill in the information for how this interface should be drawn.
-	info.ClearConditions();
-	info.SetCondition("player tab");
+	Information interfaceInfo;
+	interfaceInfo.SetCondition("player tab");
 	if(panelState.CanEdit() && !panelState.Ships().empty())
 	{
 		bool allParked = true;
@@ -217,8 +226,8 @@ void PlayerInfoPanel::Draw()
 			}
 		if(hasOtherShips)
 		{
-			info.SetCondition(allParked ? "show unpark all" : "show park all");
-			info.SetCondition(allParkedSystem ? "show unpark system" : "show park system");
+			interfaceInfo.SetCondition(allParked ? "show unpark all" : "show park all");
+			interfaceInfo.SetCondition(allParkedSystem ? "show unpark system" : "show park system");
 		}
 
 		// If ships are selected, decide whether the park or unpark button
@@ -238,8 +247,8 @@ void PlayerInfoPanel::Draw()
 			}
 			if(parkable)
 			{
-				info.SetCondition("can park");
-				info.SetCondition(allParked ? "show unpark" : "show park");
+				interfaceInfo.SetCondition("can park");
+				interfaceInfo.SetCondition(allParked ? "show unpark" : "show park");
 			}
 		}
 
@@ -247,16 +256,16 @@ void PlayerInfoPanel::Draw()
 		// show the save order button. Any manual sort by the player
 		// is applied immediately and doesn't need this button.
 		if(panelState.CanEdit() && panelState.CurrentSort())
-			info.SetCondition("show save order");
+			interfaceInfo.SetCondition("show save order");
 	}
 
-	info.SetCondition("three buttons");
+	interfaceInfo.SetCondition("three buttons");
 	if(player.HasLogs())
-		info.SetCondition("enable logbook");
+		interfaceInfo.SetCondition("enable logbook");
 
 	// Draw the interface.
 	const Interface *infoPanelUi = GameData::Interfaces().Get("info panel");
-	infoPanelUi->Draw(info, this);
+	infoPanelUi->Draw(interfaceInfo, this);
 
 	// Draw the player and fleet info sections.
 	menuZones.clear();
@@ -665,19 +674,19 @@ void PlayerInfoPanel::DrawPlayer(const Rectangle &bounds)
 	for(const auto &it : player.Accounts().SalariesIncome())
 		salary.emplace_back(it.second, it.first);
 	sort(salary.begin(), salary.end(), std::greater<>());
-	DrawList(salary, table, "salary:", 4);
+	DrawList(salary, table, "salary:", player.Accounts().SalariesIncomeTotal(), 4);
 
 	vector<pair<int64_t, string>> tribute;
 	for(const auto &it : player.GetTribute())
 		tribute.emplace_back(it.second, it.first->TrueName());
 	sort(tribute.begin(), tribute.end(), std::greater<>());
-	DrawList(tribute, table, "tribute:", 4);
+	DrawList(tribute, table, "tribute:", player.GetTributeTotal(), 4);
 
 	int maxRows = static_cast<int>(250. - 30. - table.GetPoint().Y()) / 20;
 	vector<pair<int64_t, string>> licenses;
 	for(const auto &it : player.Licenses())
 		licenses.emplace_back(1, it);
-	DrawList(licenses, table, "licenses:", maxRows, false);
+	DrawList(licenses, table, "licenses:", licenses.size(), maxRows, false);
 }
 
 
@@ -771,7 +780,7 @@ void PlayerInfoPanel::DrawFleet(const Rectangle &bounds)
 		table.Draw(ship.DisplayModelName());
 
 		const System *system = ship.GetSystem();
-		table.Draw(system ? (player.KnowsName(*system) ? system->Name() : "???") : "");
+		table.Draw(system ? (player.KnowsName(*system) ? system->DisplayName() : "???") : "");
 
 		string shields = to_string(static_cast<int>(100. * max(0., ship.Shields()))) + "%";
 		table.Draw(shields);

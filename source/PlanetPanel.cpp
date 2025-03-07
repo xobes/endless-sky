@@ -18,6 +18,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Information.h"
 
 #include "text/alignment.hpp"
+#include "audio/Audio.h"
 #include "BankPanel.h"
 #include "Command.h"
 #include "ConversationPanel.h"
@@ -69,6 +70,15 @@ PlanetPanel::PlanetPanel(PlayerInfo &player, function<void()> callback)
 	GameData::Preload(queue, planet.Landscape());
 	queue.Wait();
 	queue.ProcessSyncTasks();
+
+	Audio::Pause();
+}
+
+
+
+PlanetPanel::~PlanetPanel()
+{
+	Audio::Resume();
 }
 
 
@@ -110,7 +120,7 @@ void PlanetPanel::Step()
 
 void PlanetPanel::Draw()
 {
-	info.ClearConditions();
+	Information info;
 	info.SetSprite("land", planet.Landscape());
 
 	const Ship *flagship = player.Flagship();
