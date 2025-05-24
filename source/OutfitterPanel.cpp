@@ -1293,7 +1293,7 @@ vector<Ship *> OutfitterPanel::GetShipsToOutfit(bool isBuy) const
 
 
 
-void OutfitterPanel::DrawButtonPanel()
+void OutfitterPanel::DrawButtons()
 {
 	// There will be two rows of buttons:
 	//  [ Buy  ] [  Install  ] [  Cargo  ]

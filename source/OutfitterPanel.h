@@ -66,7 +66,7 @@ protected:
 	void RetainInStorage() override;
 	bool ShouldHighlight(const Ship *ship) override;
 	void DrawKey() override;
-	void DrawButtonPanel() override;
+	void DrawButtons() override;
 	int FindItem(const std::string &text) const override;
 
 
