@@ -79,10 +79,9 @@ protected:
 	};
 
 
+
 protected:
 	void DrawShip(const Ship &ship, const Point &center, bool isSelected);
-	void DrawButton(Point center, Point dimensions, const Font &font, const Color &color, const std::string &buttonText,
-		char);
 
 	static void DrawTooltip(const std::string &text, const Point &hoverPoint, const Color &textColor,
 		const Color &backColor);
@@ -112,6 +111,7 @@ protected:
 	virtual bool CanSellMultiple() const;
 	virtual bool ShouldHighlight(const Ship *ship);
 	virtual void DrawKey() {};
+	
 
 	// Only override the ones you need; the default action is to return false.
 	bool KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress) override;
@@ -126,6 +126,8 @@ protected:
 
 	int64_t LicenseCost(const Outfit *outfit, bool onlyOwned = false) const;
 
+	void DrawButton(const std::string &name, const Point &center, const Point &buttonSize, bool isActive,
+		bool hovering, char keyCode);
 	char CheckButton(int x, int y);
 	void CheckSelection();
 
