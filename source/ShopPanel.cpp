@@ -1176,14 +1176,9 @@ void ShopPanel::DrawButton(const std::string &name, const Point &center, const P
 	const Color &inactive = *GameData::Colors().Get("inactive");
 	
 	const Color *color = !isActive ? &inactive : hovering ? &hover : &active;
-	const Point buttonBorderOffset = Point(2, 2);
 	const Color &back = *GameData::Colors().Get("panel background");
 	
-	// Draw border first
-	FillShader::Fill(center, buttonSize + buttonBorderOffset, *color);
-	// Then draw the button foreground
 	FillShader::Fill(center, buttonSize, back);
-	// Finally draw the text
 	bigFont.Draw(name, center - .5 * Point(bigFont.Width(name), bigFont.Height()), *color);
 	
 	// Add this button to the buttonZones:
