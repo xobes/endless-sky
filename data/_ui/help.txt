@@ -168,7 +168,6 @@ help "cargo management"
 	`You can use the following keyboard shortcuts or the buttons to move outfits around:`
 	`- "B" to buy and install outfits`
 	`- "S" to sell outfits from cargo, planetary storage, or your ship (in that order)`
-	`- "U" to uninstall outfits from your ship to your cargo hold, with spillover ending up in planetary storage`
 	`- "U" to uninstall outfits from your ship and leave them in planetary storage, or move outfits from cargo to planetary storage (in that order)`
 	`- "I" to install outfits from cargo and/or storage (in that order)`
 	`- "C" to move outfits from planetary storage and/or the outfitter (after paying) and move them to cargo`
