@@ -882,7 +882,6 @@ tip "shipyard: r"
 
 
 
-
 # Sale labels:
 tip "empty hull:"
 	`Price the ship itself would sell for without any outfits installed.`

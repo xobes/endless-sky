@@ -393,7 +393,7 @@ void ShipyardPanel::SellShip(bool storeOutfits)
 
 
 
-void ShipyardPanel::DrawButtonPanel()
+void ShipyardPanel::DrawButtons()
 {
 	// There will be one row of buttons:
 	//  [ Buy  ] [ Sell ] [ Store  ] [ Leave ]
