@@ -152,7 +152,7 @@ void ShopPanel::Draw()
 	DrawMain();
 	DrawShipsSidebar();
 	DrawDetailsSidebar();
-	DrawButtonPanel();
+	DrawButtons();
 	DrawKey();
 
 	// Draw the Find button.

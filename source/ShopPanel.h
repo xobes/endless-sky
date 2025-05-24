@@ -95,7 +95,7 @@ protected:
 	virtual void DrawItem(const std::string &name, const Point &point) = 0;
 	virtual double ButtonPanelHeight() const = 0;
 	virtual double DrawDetails(const Point &center) = 0;
-	virtual void DrawButtonPanel() = 0;
+	virtual void DrawButtons() = 0;
 	virtual TransactionResult CanBuyToCargo() const;
 	virtual void BuyIntoCargo();
 	virtual TransactionResult CanDoBuyButton() const;
@@ -111,7 +111,6 @@ protected:
 	virtual bool CanSellMultiple() const;
 	virtual bool ShouldHighlight(const Ship *ship);
 	virtual void DrawKey() {};
-	
 
 	// Only override the ones you need; the default action is to return false.
 	bool KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress) override;
