@@ -25,6 +25,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+class ConditionsStore;
 class DataNode;
 class Ship;
 class Sprite;
@@ -65,9 +66,11 @@ public:
 
 public:
 	StartConditions() = default;
-	explicit StartConditions(const DataNode &node);
+	explicit StartConditions(const DataNode &node, const ConditionsStore *globalConditions,
+		const ConditionsStore *playerConditions);
 
-	void Load(const DataNode &node);
+	void Load(const DataNode &node, const ConditionsStore *globalConditions,
+		const ConditionsStore *playerConditions);
 	// Finish loading the ship definitions.
 	void FinishLoading();
 
@@ -75,7 +78,7 @@ public:
 	// Any ships given to the player must also be valid models.
 	bool IsValid() const;
 
-	const ConditionSet &GetConditions() const noexcept;
+	const ConditionAssignments &GetConditions() const noexcept;
 	const std::vector<Ship> &Ships() const noexcept;
 
 	// Get this start's intro conversation.
@@ -92,10 +95,10 @@ public:
 	const std::string &GetDebt() const noexcept;
 
 	// Determine whether this StartConditions should be displayed to the player.
-	bool Visible(const ConditionsStore &conditionsStore) const;
+	bool Visible() const;
 	// Set the current state of this StartConditions. This influences what
 	// information from the above getters is returned.
-	void SetState(const ConditionsStore &conditionsStore);
+	void SetState();
 	bool IsUnlocked() const;
 
 
@@ -108,7 +111,7 @@ private:
 
 private:
 	// Conditions that will be set for any pilot that begins with this scenario.
-	ConditionSet conditions;
+	ConditionAssignments conditions;
 	// Ships that a new pilot begins with (rather than being required to purchase one).
 	std::vector<Ship> ships;
 

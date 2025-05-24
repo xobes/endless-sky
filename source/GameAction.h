@@ -15,7 +15,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "ConditionSet.h"
+#include "ConditionAssignments.h"
 #include "ShipManager.h"
 
 #include <cstdint>
@@ -49,11 +49,11 @@ class GameAction {
 public:
 	GameAction() = default;
 	// Construct and Load() at the same time.
-	GameAction(const DataNode &node);
+	GameAction(const DataNode &node, const ConditionsStore *playerConditions);
 
-	void Load(const DataNode &node);
+	void Load(const DataNode &node, const ConditionsStore *playerConditions);
 	// Process a single sibling node.
-	void LoadSingle(const DataNode &child);
+	void LoadSingle(const DataNode &child, const ConditionsStore *playerConditions);
 	void Save(DataWriter &out) const;
 
 	// Determine if this GameAction references content that is not fully defined.
@@ -110,5 +110,5 @@ private:
 	// When this action is performed, the mission that called this action is failed.
 	bool failCaller = false;
 
-	ConditionSet conditions;
+	ConditionAssignments conditions;
 };

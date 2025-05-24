@@ -15,12 +15,12 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShipyardPanel.h"
 
-#include "text/alignment.hpp"
+#include "text/Alignment.h"
 #include "comparators/BySeriesAndIndex.h"
 #include "ClickZone.h"
 #include "Dialog.h"
 #include "text/DisplayText.h"
-#include "FillShader.h"
+#include "shader/FillShader.h"
 #include "text/Font.h"
 #include "text/FontSet.h"
 #include "text/Format.h"
@@ -36,8 +36,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "ShipNameDialog.h"
 #include "image/Sprite.h"
 #include "image/SpriteSet.h"
-#include "SpriteShader.h"
-#include "text/truncate.hpp"
+#include "shader/SpriteShader.h"
+#include "text/Truncate.h"
 #include "UI.h"
 
 #include <algorithm>
@@ -63,17 +63,14 @@ namespace {
 
 
 
-ShipyardPanel::ShipyardPanel(PlayerInfo &player)
-	: ShopPanel(player, false), modifier(0)
+ShipyardPanel::ShipyardPanel(PlayerInfo &player, Sale<Ship> stock)
+	: ShopPanel(player, false), modifier(0), shipyard(stock)
 {
 	for(const auto &it : GameData::Ships())
 		catalog[it.second.Attributes().Category()].push_back(it.first);
 
 	for(pair<const string, vector<string>> &it : catalog)
 		sort(it.second.begin(), it.second.end(), BySeriesAndIndex<Ship>());
-
-	if(player.GetPlanet())
-		shipyard = player.GetPlanet()->Shipyard();
 }
 
 
@@ -143,7 +140,7 @@ double ShipyardPanel::DrawDetails(const Point &center)
 		if(shipSprite)
 		{
 			const float spriteScale = min(1.f, (INFOBAR_WIDTH - 60.f) / max(shipSprite->Width(), shipSprite->Height()));
-			const int swizzle = selectedShip->CustomSwizzle() >= 0
+			const Swizzle *swizzle = selectedShip->CustomSwizzle()
 				? selectedShip->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 			SpriteShader::Draw(shipSprite, spriteCenter, spriteScale, swizzle);
 		}
@@ -272,8 +269,8 @@ void ShipyardPanel::Sell(bool storeOutfits)
 
 	if(storeOutfits && !planet->HasOutfitter())
 	{
-		message = "WARNING!\n\nThis planet has no Outfitter. "
-			"There is no way to retain the outfits in storage.\n\n";
+		message = "WARNING: This planet has no Outfitter. "
+			"There is no way to retain the outfits in storage.\n";
 	}
 	// Never allow keeping outfits where they cannot be retrieved.
 	// TODO: Consider how to keep outfits in Cargo in the future.
@@ -433,30 +430,18 @@ void ShipyardPanel::DrawButtonPanel()
 	const auto credits = Format::CreditString(player.Accounts().Credits());
 	font.Draw({ credits, {SIDEBAR_WIDTH - 20, Alignment::RIGHT} }, creditsPoint, bright);
 
-	// Define the button text colors.
-	const Font &bigFont = FontSet::Get(18);
-	const Color &hover = *GameData::Colors().Get("hover");
-	const Color &active = *GameData::Colors().Get("active");
-	const Color &inactive = *GameData::Colors().Get("inactive");
-
 	// Clear the buttonZones, they will be populated again as buttons are drawn.
 	buttonZones.clear();
 
 	// Draw the buttons.
-	DrawButton(Point(buttonOneX, buttonRowY), buttonOneSize, bigFont,
-		!CanDoBuyButton() ? inactive : hoverButton == 'b' ? hover : active, "_Buy", 'b');
-	DrawButton(Point(buttonTwoX, buttonRowY), buttonTwoSize, bigFont,
-		playerShip ? hoverButton == 's' ? hover : active : inactive, "_Sell", 's');
-	DrawButton(Point(buttonThreeX, buttonRowY), buttonThreeSize, bigFont,
-		playerShip ? hoverButton == 's' ? hover : active : inactive, "Sell H_ull", 'r');
-	DrawButton(Point(buttonFourX, buttonRowY), buttonFourSize, bigFont,
-		hoverButton == 'l' ? hover : active, "_Leave", 'l');
-
-	// Draw the Find button.
-	const Point findCenter = Screen::BottomRight() - Point(580, 20);
-	const Sprite *findIcon =
-		hoverButton == 'f' ? SpriteSet::Get("ui/find selected") : SpriteSet::Get("ui/find unselected");
-	SpriteShader::Draw(findIcon, findCenter);
+	ShopPanel::DrawButton("_Buy", Point(buttonOneX, buttonRowY), buttonOneSize,
+		static_cast<bool>(CanDoBuyButton()), hoverButton == 'b', 'b');
+	ShopPanel::DrawButton("_Sell", Point(buttonTwoX, buttonRowY), buttonTwoSize,
+		true, hoverButton == 's', 's');
+	ShopPanel::DrawButton("Sell H_ull", Point(buttonThreeX, buttonRowY), buttonThreeSize,
+		true, hoverButton == 'r', 'r');
+	ShopPanel::DrawButton("_Leave", Point(buttonFourX, buttonRowY), buttonFourSize,
+		true, hoverButton == 'l', 'l');
 
 	// Draw the Modifier hover text that appears below the buy button when a modifier is being applied.
 	int modifier = Modifier();
@@ -487,7 +472,6 @@ void ShipyardPanel::DrawButtonPanel()
 		DrawTooltip(tooltip, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
 	}
 }
-
 
 
 int ShipyardPanel::FindItem(const string &text) const

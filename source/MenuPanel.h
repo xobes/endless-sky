@@ -32,6 +32,7 @@ class UI;
 class MenuPanel : public Panel {
 public:
 	MenuPanel(PlayerInfo &player, UI &gamePanels);
+	virtual ~MenuPanel();
 
 	virtual void Step() override;
 	virtual void Draw() override;
@@ -52,6 +53,11 @@ private:
 	UI &gamePanels;
 
 	const Interface *mainMenuUi;
+
+	double animation = 0.;
+	double xSpeed = 0.;
+	double ySpeed = 0.;
+	double yAmplitude = 0.;
 
 	std::vector<std::string> credits;
 	long long int scroll = 0;

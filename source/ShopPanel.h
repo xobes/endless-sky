@@ -17,7 +17,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Panel.h"
 
-#include "CategoryList.h"
 #include "ClickZone.h"
 #include "Mission.h"
 #include "OutfitInfoDisplay.h"
@@ -31,6 +30,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+class CategoryList;
 class Outfit;
 class Planet;
 class PlayerInfo;
@@ -41,6 +41,13 @@ class Ship;
 // Class representing the common elements of both the shipyard panel and the
 // outfitter panel (e.g. the sidebar with the ships you own).
 class ShopPanel : public Panel {
+public:
+	enum class UninstallAction {
+		Uninstall,
+		Store,
+		Sell,
+	};
+
 public:
 	explicit ShopPanel(PlayerInfo &player, bool isOutfitter);
 
@@ -94,7 +101,7 @@ protected:
 	virtual void BuyIntoCargo();
 	virtual TransactionResult CanDoBuyButton() const;
 	virtual void DoBuyButton();
-	virtual TransactionResult CanSellOrUninstall(const std::string &verb) const;
+	virtual TransactionResult CanUninstall(UninstallAction action) const;
 	virtual void Sell(bool storeOutfits) = 0;
 	virtual TransactionResult CanInstall() const;
 	virtual void Install();
@@ -217,7 +224,7 @@ private:
 	bool SetScrollToTop();
 	bool SetScrollToBottom();
 	void SideSelect(int count);
-	void SideSelect(Ship *ship);
+	void SideSelect(Ship *ship, int clicks = 1);
 	void MainAutoScroll(const std::vector<Zone>::const_iterator &selected);
 	void MainLeft();
 	void MainRight();
@@ -230,4 +237,6 @@ private:
 private:
 	std::string shipName;
 	std::string warningType;
+
+	bool checkedHelp = false;
 };

@@ -15,12 +15,13 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShopPanel.h"
 
-#include "text/alignment.hpp"
-#include "CategoryTypes.h"
+#include "text/Alignment.h"
+#include "CategoryList.h"
+#include "CategoryType.h"
 #include "Color.h"
 #include "Dialog.h"
 #include "text/DisplayText.h"
-#include "FillShader.h"
+#include "shader/FillShader.h"
 #include "text/Font.h"
 #include "text/FontSet.h"
 #include "text/Format.h"
@@ -29,10 +30,10 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "MapOutfitterPanel.h"
 #include "MapShipyardPanel.h"
 #include "Mission.h"
-#include "OutlineShader.h"
+#include "shader/OutlineShader.h"
 #include "Planet.h"
 #include "PlayerInfo.h"
-#include "PointerShader.h"
+#include "shader/PointerShader.h"
 #include "Preferences.h"
 #include "Sale.h"
 #include "Screen.h"
@@ -41,8 +42,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Ship.h"
 #include "image/Sprite.h"
 #include "image/SpriteSet.h"
-#include "SpriteShader.h"
-#include "text/truncate.hpp"
+#include "shader/SpriteShader.h"
+#include "text/Truncate.h"
 #include "UI.h"
 #include "text/WrappedText.h"
 
@@ -115,10 +116,29 @@ void ShopPanel::DrawTooltip(const string& text, const Point& hoverPoint, const C
 
 void ShopPanel::Step()
 {
-	// If the player has acquired a second ship for the first time, explain to
-	// them how to reorder the ships in their fleet.
-	if(player.Ships().size() > 1)
-		DoHelp("multiple ships");
+	if(!checkedHelp && GetUI()->IsTop(this) && player.Ships().size() > 1)
+	{
+		if(DoHelp("multiple ships"))
+		{
+			// Nothing to do here, just don't want to execute the other branch.
+		}
+		else if(!Preferences::Has("help: shop with multiple ships"))
+		{
+			set<string> modelNames;
+			for(const auto &it : player.Ships())
+			{
+				if(!CanShowInSidebar(*it, player.GetPlanet()))
+					continue;
+				if(modelNames.contains(it->DisplayModelName()))
+				{
+					DoHelp("shop with multiple ships");
+					break;
+				}
+				modelNames.insert(it->DisplayModelName());
+			}
+		}
+		checkedHelp = true;
+	}
 }
 
 
@@ -134,6 +154,13 @@ void ShopPanel::Draw()
 	DrawDetailsSidebar();
 	DrawButtonPanel();
 	DrawKey();
+
+	// Draw the Find button.
+	const Point findCenter = Screen::BottomRight() - Point(580, 20);
+	const Sprite *findIcon =
+		hoverButton == 'f' ? SpriteSet::Get("ui/find selected") : SpriteSet::Get("ui/find unselected");
+	SpriteShader::Draw(findIcon, findCenter);
+	static const string FIND = "_Find";
 
 	shipInfo.DrawTooltips();
 	outfitInfo.DrawTooltips();
@@ -161,7 +188,7 @@ void ShopPanel::Draw()
 		}
 		else
 		{
-			int swizzle = dragShip->CustomSwizzle() >= 0
+			const Swizzle *swizzle = dragShip->CustomSwizzle()
 				? dragShip->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 			SpriteShader::Draw(sprite, dragPoint, scale, swizzle);
 		}
@@ -187,7 +214,7 @@ void ShopPanel::DrawShip(const Ship &ship, const Point &center, bool isSelected)
 
 	const Sprite *thumbnail = ship.Thumbnail();
 	const Sprite *sprite = ship.GetSprite();
-	int swizzle = ship.CustomSwizzle() >= 0 ? ship.CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
+	const Swizzle *swizzle = ship.CustomSwizzle() ? ship.CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 	if(thumbnail)
 		SpriteShader::Draw(thumbnail, center + Point(0., 10.), 1., swizzle);
 	else if(sprite)
@@ -255,7 +282,7 @@ void ShopPanel::DoBuyButton()
 
 
 
-ShopPanel::TransactionResult ShopPanel::CanSellOrUninstall(const std::string &verb) const
+ShopPanel::TransactionResult ShopPanel::CanUninstall(ShopPanel::UninstallAction action) const
 {
 	return false;
 }
@@ -330,6 +357,20 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		{
 			if(isOutfitter)
 				DoHelp("outfitter with multiple ships", true);
+
+			set<string> modelNames;
+			for(const auto &it : player.Ships())
+			{
+				if(!CanShowInSidebar(*it, player.GetPlanet()))
+					continue;
+				if(modelNames.contains(it->DisplayModelName()))
+				{
+					DoHelp("shop with multiple ships", true);
+					break;
+				}
+				modelNames.insert(it->DisplayModelName());
+			}
+
 			DoHelp("multiple ships", true);
 		}
 		if(isOutfitter)
@@ -386,6 +427,15 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		return SetScrollToTop();
 	else if(key == SDLK_END)
 		return SetScrollToBottom();
+	else if(key == 'k' || (key == 'p' && (mod & KMOD_SHIFT)))
+	{
+		const Ship *flagship = player.Flagship();
+		bool anyEscortUnparked = any_of(playerShips.begin(), playerShips.end(),
+			[&](const Ship *ship){ return ship != flagship && !ship->IsParked() && !ship->IsDisabled(); });
+		for(const Ship *ship : playerShips)
+			if(ship != flagship)
+				player.ParkShip(ship, anyEscortUnparked);
+	}
 	else if(key >= '0' && key <= '9')
 	{
 		int group = key - '0';
@@ -443,13 +493,10 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		// In the Shipyard: Sell selected ships and outfits.
 		// In the Outfitter: Sell <modifier> of the selected outfit from each selected ship.
 		if(isOutfitter)
-		{
-			result = CanSellOrUninstall("sell");
-		}
+			result = CanUninstall(UninstallAction::Sell);
 		else
-		{
 			result = playerShip;
-		}
+
 		if(result)
 			Sell(false);
 	}
@@ -460,14 +507,12 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		// of the selected ships.
 		if(isOutfitter)
 		{
-			result = CanSellOrUninstall("store");
+			result = CanUninstall(UninstallAction::Store);
 			if(result)
 				RetainInStorage();
 		}
 		else if(playerShip)
-		{
 			Sell(true);
-		}
 	}
 	else if(key == 'c' && isOutfitter)
 	{
@@ -476,9 +521,7 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		// Note: If the outfit is not able to be moved from storage or bought into cargo, give an error based on the buy
 		// condition.
 		if(CanMoveToCargoFromStorage())
-		{
 			MoveToCargoFromStorage();
-		}
 		else
 		{
 			// Selected outfit cannot be moved from storage, try buying:
@@ -504,32 +547,24 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 			// else move up to <multiple> outfits from cargo into storage.
 			// Note: If the outfit is not able to be uninstalled or moved from cargo, give an error based on the
 			// uninstall condition.
-			result = CanSellOrUninstall("uninstall");
+			result = CanUninstall(UninstallAction::Uninstall);
 			if(result)
-			{
 				Uninstall();
-			}
-			else if(CanSellOrUninstall("store"))
+			else if(CanUninstall(UninstallAction::Store))
 			{
 				RetainInStorage();
 				result = true;
 			}
 		}
 		else if(playerShip)
-		{
 			// Shipyard, old behavior, treat 'u' the same as 'r': Sell ship and retain the outfits in storage.
 			Sell(true);
-		}
 	}
 	else
-	{
 		return false;
-	}
 
 	if(result.HasMessage())
-	{
 		GetUI()->Push(new Dialog(result.Message()));
-	}
 	else if(isOutfitter)
 	{
 		// Ship-based updates to cargo are handled when leaving.
@@ -568,8 +603,16 @@ char ShopPanel::CheckButton(int x, int y)
 bool ShopPanel::Click(int x, int y, int clicks)
 {
 	dragShip = nullptr;
-	// Handle clicks on the buttons.
-	char button = CheckButton(x, y);
+
+	char button = '\0';
+	// Check the Find button.
+	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
+		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
+		button = 'f';
+	else
+		// Handle clicks on the buttons.
+		button = CheckButton(x, y);
+
 	if(button)
 		return DoKey(button);
 
@@ -642,7 +685,7 @@ bool ShopPanel::Click(int x, int y, int clicks)
 				{
 					dragShip = ship.get();
 					dragPoint.Set(x, y);
-					SideSelect(dragShip);
+					SideSelect(dragShip, clicks);
 					break;
 				}
 
@@ -774,7 +817,7 @@ int64_t ShopPanel::LicenseCost(const Outfit *outfit, bool onlyOwned) const
 	if((owned && onlyOwned) || player.Stock(outfit) > 0)
 		return 0;
 
-	const Sale<Outfit> &available = player.GetPlanet()->Outfitter();
+	const Sale<Outfit> &available = player.GetPlanet()->OutfitterStock();
 
 	int64_t cost = 0;
 	for(const string &name : outfit->Licenses())
@@ -894,7 +937,7 @@ void ShopPanel::DrawShipsSidebar()
 			}
 			else
 			{
-				int swizzle = ship->CustomSwizzle() >= 0 ? ship->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
+				const Swizzle *swizzle = ship->CustomSwizzle() ? ship->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 				SpriteShader::Draw(sprite, point, scale, swizzle);
 			}
 		}
@@ -1233,7 +1276,7 @@ void ShopPanel::SideSelect(int count)
 
 
 
-void ShopPanel::SideSelect(Ship *ship)
+void ShopPanel::SideSelect(Ship *ship, int clicks)
 {
 	bool shift = (SDL_GetModState() & KMOD_SHIFT);
 	bool control = (SDL_GetModState() & (KMOD_CTRL | KMOD_GUI));
@@ -1255,14 +1298,57 @@ void ShopPanel::SideSelect(Ship *ship)
 		}
 	}
 	else if(!control)
-		playerShips.clear();
-	else if(playerShips.contains(ship))
 	{
-		playerShips.erase(ship);
-		if(playerShip == ship)
-			playerShip = playerShips.empty() ? nullptr : *playerShips.begin();
-		CheckSelection();
-		return;
+		playerShips.clear();
+		if(clicks > 1)
+			for(const shared_ptr<Ship> &it : player.Ships())
+			{
+				if(!CanShowInSidebar(*it, player.GetPlanet()))
+					continue;
+				if(it.get() != ship && it->Imitates(*ship))
+					playerShips.insert(it.get());
+			}
+	}
+	else
+	{
+		if(clicks > 1)
+		{
+			vector<Ship *> similarShips;
+			// If the ship isn't selected now, it was selected at the beginning of the whole "double click" action,
+			// because the first click was handled normally.
+			bool unselect = !playerShips.contains(ship);
+			for(const shared_ptr<Ship> &it : player.Ships())
+			{
+				if(!CanShowInSidebar(*it, player.GetPlanet()))
+					continue;
+				if(it.get() != ship && it->Imitates(*ship))
+				{
+					similarShips.push_back(it.get());
+					unselect &= playerShips.contains(it.get());
+				}
+			}
+			for(Ship *it : similarShips)
+			{
+				if(unselect)
+					playerShips.erase(it);
+				else
+					playerShips.insert(it);
+			}
+			if(unselect && find(similarShips.begin(), similarShips.end(), playerShip) != similarShips.end())
+			{
+				playerShip = playerShips.empty() ? nullptr : *playerShips.begin();
+				CheckSelection();
+				return;
+			}
+		}
+		else if(playerShips.contains(ship))
+		{
+			playerShips.erase(ship);
+			if(playerShip == ship)
+				playerShip = playerShips.empty() ? nullptr : *playerShips.begin();
+			CheckSelection();
+			return;
+		}
 	}
 
 	playerShip = ship;
