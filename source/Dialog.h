@@ -117,6 +117,7 @@ protected:
 	std::function<void(bool)> boolFun;
 	std::function<bool(const std::string &)> validateFun;
 
+	bool doingInput = intFun || stringFun;
 	bool canCancel;
 	bool okIsActive;
 	bool isMission;

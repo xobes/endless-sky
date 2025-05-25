@@ -310,11 +310,11 @@ bool Dialog::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool i
 {
 	auto it = KEY_MAP.find(key);
 	bool isCloseRequest = key == SDLK_ESCAPE || (key == 'w' && (mod & (KMOD_CTRL | KMOD_GUI)));
-	if(stringFun && Clipboard::KeyDown(input, key, mod))
+	if(doingInput && stringFun && Clipboard::KeyDown(input, key, mod))
 	{
 		// Input handled by Clipboard.
 	}
-	else if((it != KEY_MAP.end() || (key >= ' ' && key <= '~')) && !isMission && (intFun || stringFun) && !isCloseRequest)
+	else if(doingInput && (it != KEY_MAP.end() || (key >= ' ' && key <= '~')) && !isMission && (intFun || stringFun) && !isCloseRequest)
 	{
 		int ascii = (it != KEY_MAP.end()) ? it->second : key;
 		char c = ((mod & KMOD_SHIFT) ? SHIFT[ascii] : ascii);
@@ -333,20 +333,23 @@ bool Dialog::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool i
 		if(validateFun)
 			isOkDisabled = !validateFun(input);
 	}
-	else if((key == SDLK_DELETE || key == SDLK_BACKSPACE) && !input.empty())
+	else if(doingInput && (key == SDLK_DELETE || key == SDLK_BACKSPACE) && !input.empty())
 	{
 		input.erase(input.length() - 1);
 		if(validateFun)
 			isOkDisabled = !validateFun(input);
 	}
 	else if(key == SDLK_TAB && canCancel)
+	{
 		okIsActive = !okIsActive;
+		doingInput = false;
+	}
 	else if(key == SDLK_LEFT)
 		okIsActive = !canCancel;
 	else if(key == SDLK_RIGHT)
 		okIsActive = true;
 	else if(key == SDLK_RETURN || key == SDLK_KP_ENTER || isCloseRequest
-			|| (isMission && (key == 'a' || key == 'd')))
+			|| (isMission && (key == 'a' || key == 'd')) || (key == SDLK_SPACE && !doingInput))
 	{
 		// Shortcuts for "accept" and "decline."
 		if(key == 'a' || (!canCancel && isCloseRequest))
