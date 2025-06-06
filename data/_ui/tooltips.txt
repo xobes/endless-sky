@@ -863,13 +863,13 @@ tip "outfitter: i"
 	`_Install on ship from cargo or storage, in that order.`
 
 tip "outfitter: u"
-	`_Uninstall from ship to storage or move outfits from cargo to storage, in that order.`
+    `_Uninstall from ship to storage or move outfits from cargo to storage, in that order.`
 
 tip "outfitter: c"
-	`Transfer to _cargo from planetary storage if possible, else buy from outfitter and place in cargo.`
+    `Transfer outfit from planetary storage to _cargo if possible, else buy from outfitter and place in cargo.`
 
 tip "outfitter: r"
-	`_Retain in storage from cargo if available, otherwise uninstall from ship to retain in storage.`
+    `Move outfit from cargo or ship into planetary sto_rage, in that order.`
 
 tip "shipyard: b"
 	`_Buy <multiplier> of this ship.`
