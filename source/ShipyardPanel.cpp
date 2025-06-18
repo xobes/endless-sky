@@ -51,14 +51,10 @@ namespace {
 	const string DESCRIPTION = "description";
 
 	// Button size/placement info:
-	constexpr double BUTTON_ROW_PAD = 10.;
-	constexpr double BUTTON_COL_PAD = 10.;
-	// These button widths need to add up to 200 with the current right panel
-	// width and column padding (above):
-	constexpr double BUTTON_1_WIDTH = 40.;
-	constexpr double BUTTON_2_WIDTH = 40.;
-	constexpr double BUTTON_3_WIDTH = 75.;
-	constexpr double BUTTON_4_WIDTH = 50.;
+	constexpr double BUTTON_ROW_START_PAD = 4.;
+	constexpr double BUTTON_ROW_PAD = 6.;
+	constexpr double BUTTON_COL_PAD = 6.;
+	constexpr double BUTTON_WIDTH = 75.;
 }
 
 
@@ -114,7 +110,7 @@ void ShipyardPanel::DrawItem(const string &name, const Point &point)
 
 double ShipyardPanel::ButtonPanelHeight() const
 {
-	return BUTTON_HEIGHT + 40;
+	return 2 * BUTTON_HEIGHT + 40;
 }
 
 
@@ -392,22 +388,16 @@ void ShipyardPanel::SellShip(bool storeOutfits)
 }
 
 
-
 void ShipyardPanel::DrawButtons()
 {
-	// There will be one row of buttons:
-	//  [ Buy  ] [ Sell ] [ Store  ] [ Leave ]
-	// Calculate row locations from bottom to top:
-	const double buttonRowY = Screen::BottomRight().Y() - .5 * BUTTON_HEIGHT - BUTTON_ROW_PAD;
-	// Calculate button positions from right to left:
-	const double buttonFourX = Screen::BottomRight().X() - .5 * BUTTON_4_WIDTH - BUTTON_COL_PAD;
-	const double buttonThreeX = buttonFourX - (.5 * BUTTON_4_WIDTH + .5 * BUTTON_3_WIDTH) - BUTTON_COL_PAD;
-	const double buttonTwoX = buttonThreeX - (.5 * BUTTON_3_WIDTH + .5 * BUTTON_2_WIDTH) - BUTTON_COL_PAD;
-	const double buttonOneX = buttonTwoX - (.5 * BUTTON_2_WIDTH + .5 * BUTTON_1_WIDTH) - BUTTON_COL_PAD;
-	const Point buttonOneSize = Point(BUTTON_1_WIDTH, BUTTON_HEIGHT);
-	const Point buttonTwoSize = Point(BUTTON_2_WIDTH, BUTTON_HEIGHT);
-	const Point buttonThreeSize = Point(BUTTON_3_WIDTH, BUTTON_HEIGHT);
-	const Point buttonFourSize = Point(BUTTON_4_WIDTH, BUTTON_HEIGHT);
+	// There will be two rows of buttons:
+	//  [    Buy    ] [    Sell    ] [ Sell Hull ] 
+	//                               [   Leave   ]
+	const double rowOffsetY = BUTTON_HEIGHT + BUTTON_ROW_PAD;
+	const double rowBaseY = Screen::BottomRight().Y() - 1.5 * rowOffsetY - BUTTON_ROW_START_PAD;
+	const double buttonOffsetX = BUTTON_WIDTH + BUTTON_COL_PAD;
+	const double buttonCenterX = Screen::Right() - SIDEBAR_WIDTH / 2;
+	const Point buttonSize{BUTTON_WIDTH, BUTTON_HEIGHT};
 
 	// Draw the button panel (shop side panel footer).
 	const Point buttonPanelSize(SIDEBAR_WIDTH, ButtonPanelHeight());
@@ -427,29 +417,32 @@ void ShipyardPanel::DrawButtons()
 		Screen::Right() - SIDEBAR_WIDTH + 10,
 		Screen::Bottom() - ButtonPanelHeight() + 5);
 	font.Draw("You have:", creditsPoint, dim);
-	const auto credits = Format::CreditString(player.Accounts().Credits());
-	font.Draw({ credits, {SIDEBAR_WIDTH - 20, Alignment::RIGHT} }, creditsPoint, bright);
+	const string &credits = Format::CreditString(player.Accounts().Credits());
+	font.Draw({credits, {SIDEBAR_WIDTH - 20, Alignment::RIGHT}}, creditsPoint, bright);
 
 	// Clear the buttonZones, they will be populated again as buttons are drawn.
 	buttonZones.clear();
 
-	// Draw the buttons.
-	ShopPanel::DrawButton("_Buy", Point(buttonOneX, buttonRowY), buttonOneSize,
+	// Row 1
+	ShopPanel::DrawButton("_Buy", Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 0), buttonSize,
 		static_cast<bool>(CanDoBuyButton()), hoverButton == 'b', 'b');
-	ShopPanel::DrawButton("_Sell", Point(buttonTwoX, buttonRowY), buttonTwoSize,
-		true, hoverButton == 's', 's');
-	ShopPanel::DrawButton("Sell H_ull", Point(buttonThreeX, buttonRowY), buttonThreeSize,
-		true, hoverButton == 'r', 'r');
-	ShopPanel::DrawButton("_Leave", Point(buttonFourX, buttonRowY), buttonFourSize,
+	ShopPanel::DrawButton("_Sell", Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 0), buttonSize,
+		static_cast<bool>(playerShips.size()), hoverButton == 's', 's');
+	ShopPanel::DrawButton("Sell H_ull", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 0), buttonSize,
+		static_cast<bool>(playerShips.size()), hoverButton == 'r', 'r');
+	// Row 2
+	ShopPanel::DrawButton("_Leave", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 1), buttonSize,
 		true, hoverButton == 'l', 'l');
 
-	// Draw the Modifier hover text that appears below the buy button when a modifier is being applied.
+	// Draw the Modifier hover text that appears below the buttons when a modifier
+	// is being applied.
 	int modifier = Modifier();
 	if(modifier > 1)
 	{
 		string mod = "x " + to_string(modifier);
 		int modWidth = font.Width(mod);
-		font.Draw(mod, Point(buttonOneX, buttonRowY) + Point(-.5 * modWidth, 10.), dim);
+		font.Draw(mod, Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 0)
+		+ Point(-.5 * modWidth, 10.), dim);
 	}
 
 	// Draw tooltips for the button being hovered over:
@@ -460,16 +453,16 @@ void ShipyardPanel::DrawButtons()
 		DrawTooltip(tooltip, hoverPoint + Point(-40, -60), dim, *GameData::Colors().Get("tooltip background"));
 
 	// Draw the tooltip for your full number of credits.
-	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 15));
+	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 30));
 	if(creditsBox.Contains(hoverPoint))
-		hoverCount += hoverCount < HOVER_TIME;
-	else if(hoverCount)
-		--hoverCount;
+		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
+	else if(ShopPanel::hoverCount)
+		--ShopPanel::hoverCount;
 
-	if(hoverCount == HOVER_TIME)
+	if(ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
 	{
-		tooltip = Format::Number(player.Accounts().Credits()) + " credits";
-		DrawTooltip(tooltip, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
+		string text = Format::Number(player.Accounts().Credits()) + " credits";
+		DrawTooltip(text, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
 	}
 }
 
