@@ -392,7 +392,7 @@ void ShipyardPanel::SellShip(bool storeOutfits)
 void ShipyardPanel::DrawButtons()
 {
 	// There will be two rows of buttons:
-	//  [    Buy    ] [    Sell    ] [ Sell Hull ] 
+	//  [    Buy    ] [    Sell    ] [ Sell Hull ]
 	//                               [   Leave   ]
 	const double rowOffsetY = BUTTON_HEIGHT + BUTTON_ROW_PAD;
 	const double rowBaseY = Screen::BottomRight().Y() - 1.5 * rowOffsetY - BUTTON_ROW_START_PAD;
