@@ -388,6 +388,7 @@ void ShipyardPanel::SellShip(bool storeOutfits)
 }
 
 
+
 void ShipyardPanel::DrawButtons()
 {
 	// There will be two rows of buttons:
