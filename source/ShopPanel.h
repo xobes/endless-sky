@@ -42,18 +42,10 @@ class Ship;
 // outfitter panel (e.g. the sidebar with the ships you own).
 class ShopPanel : public Panel {
 public:
-	enum class UninstallAction {
-		Uninstall,
-		Store,
-		Sell,
-	};
-
-public:
 	explicit ShopPanel(PlayerInfo &player, bool isOutfitter);
 
 	virtual void Step() override;
-
-	void Draw() override;
+	virtual void Draw() override;
 
 
 protected:
@@ -80,7 +72,6 @@ protected:
 	};
 
 
-
 protected:
 	void DrawShip(const Ship &ship, const Point &center, bool isSelected);
 
@@ -97,19 +88,8 @@ protected:
 	virtual double ButtonPanelHeight() const = 0;
 	virtual double DrawDetails(const Point &center) = 0;
 	virtual void DrawButtons() = 0;
-	virtual TransactionResult CanBuyToCargo() const;
-	virtual void BuyIntoCargo();
-	virtual TransactionResult CanDoBuyButton() const;
-	virtual void DoBuyButton();
-	virtual TransactionResult CanUninstall(UninstallAction action) const;
-	virtual void Sell(bool storeOutfits) = 0;
-	virtual TransactionResult CanInstall() const;
-	virtual void Install();
-	virtual void Uninstall();
-	virtual bool CanMoveToCargoFromStorage() const;
-	virtual void MoveToCargoFromStorage();
-	virtual void RetainInStorage();
-	virtual bool CanSellMultiple() const;
+	virtual TransactionResult HandleShortcuts(char key) = 0;
+
 	virtual bool ShouldHighlight(const Ship *ship);
 	virtual void DrawKey() {};
 
@@ -131,8 +111,6 @@ protected:
 	char CheckButton(int x, int y);
 	void CheckSelection();
 
-
-protected:
 	class Zone : public ClickZone<const Ship *> {
 	public:
 		explicit Zone(Point center, Point size, const Ship *ship);
@@ -151,8 +129,6 @@ protected:
 		Info
 	};
 
-
-protected:
 	static constexpr int SIDEBAR_PADDING = 5;
 	static constexpr int SIDEBAR_CONTENT = 250;
 	static constexpr int SIDEBAR_WIDTH = SIDEBAR_CONTENT + SIDEBAR_PADDING;
@@ -162,9 +138,12 @@ protected:
 	static constexpr int SHIP_SIZE = 250;
 	static constexpr int OUTFIT_SIZE = 183;
 	static constexpr int HOVER_TIME = 60;
+	// Button size/placement info:
+	static constexpr double BUTTON_ROW_START_PAD = 4.;
+	static constexpr double BUTTON_ROW_PAD = 6.;
+	static constexpr double BUTTON_COL_PAD = 6.;
+	static constexpr double BUTTON_WIDTH = 75.;
 
-
-protected:
 	PlayerInfo &player;
 	// Remember the current day, for calculating depreciation.
 	int day;
@@ -199,7 +178,6 @@ protected:
 	double previousX = 0.;
 
 	std::vector<Zone> zones;
-	std::vector<ClickZone<char>> buttonZones;
 	std::vector<ClickZone<const Ship *>> shipZones;
 	std::vector<ClickZone<std::string>> categoryZones;
 
