@@ -178,6 +178,7 @@ protected:
 	double previousX = 0.;
 
 	std::vector<Zone> zones;
+	std::vector<ClickZone<char>> buttonZones;
 	std::vector<ClickZone<const Ship *>> shipZones;
 	std::vector<ClickZone<std::string>> categoryZones;
 

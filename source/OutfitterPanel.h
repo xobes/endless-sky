@@ -59,7 +59,6 @@ protected:
 	virtual double DrawDetails(const Point &center) override;
 	virtual bool ShouldHighlight(const Ship *ship) override;
 	virtual void DrawKey() override;
-	virtual char CheckButton(int x, int y) override;
 
 	void DrawButtons() override;
 	int FindItem(const std::string &text) const override;

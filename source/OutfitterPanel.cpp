@@ -424,65 +424,6 @@ void OutfitterPanel::DrawKey()
 
 
 
-// Check if the given point is within the button zone, and if so return the
-// letter of the button (or ' ' if it's not on a button).
-char OutfitterPanel::CheckButton(int x, int y)
-{
-	const double rowOffsetY = BUTTON_HEIGHT + BUTTON_ROW_PAD;
-	const double rowBaseY = Screen::BottomRight().Y() - 3. * rowOffsetY - BUTTON_ROW_START_PAD;
-	const double buttonOffsetX = BUTTON_WIDTH + BUTTON_COL_PAD;
-	const double w = BUTTON_WIDTH / 2;
-	const double buttonCenterX = Screen::Right() - SIDEBAR_WIDTH / 2;
-
-	// Check the Find button.
-	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
-		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
-		return 'f';
-
-	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
-		return '\0';
-
-	// Row 1
-	if(rowBaseY < y && y <= rowBaseY + BUTTON_HEIGHT)
-	{
-		// Check if it's the _Buy button.
-		if(buttonCenterX + buttonOffsetX * -1 - w <= x && x < buttonCenterX + buttonOffsetX * -1 + w)
-			return 'b';
-		// Check if it's the _Install button.
-		if(buttonCenterX + buttonOffsetX * 0 - w <= x && x < buttonCenterX + buttonOffsetX * 0 + w)
-			return 'i';
-		// Check if it's the _Cargo button.
-		if(buttonCenterX + buttonOffsetX * 1 - w <= x && x < buttonCenterX + buttonOffsetX * 1 + w)
-			return 'c';
-	}
-
-	// Row 2
-	if(rowBaseY + rowOffsetY < y && y <= rowBaseY + rowOffsetY + BUTTON_HEIGHT)
-	{
-		// Check if it's the _Sell button:
-		if(buttonCenterX + buttonOffsetX * -1 - w <= x && x < buttonCenterX + buttonOffsetX * -1 + w)
-			return 's';
-		// Check if it's the _Uninstall button.
-		if(buttonCenterX + buttonOffsetX * 0 - w <= x && x < buttonCenterX + buttonOffsetX * 0 + w)
-			return 'u';
-		// Check if it's the Sto_re button.
-		if(buttonCenterX + buttonOffsetX * 1 - w <= x && x < buttonCenterX + buttonOffsetX * 1 + w)
-			return 'r';
-	}
-
-	// Row 3
-	if(rowBaseY + rowOffsetY * 2 < y && y <= rowBaseY + rowOffsetY * 2 + BUTTON_HEIGHT)
-	{
-		// Check if it's the _Leave button.
-		if(buttonCenterX + buttonOffsetX * 1 - w <= x && x < buttonCenterX + buttonOffsetX * 1 + w)
-			return 'l';
-	}
-
-	return ' ';
-}
-
-
-
 void OutfitterPanel::DrawButtons()
 {
 	// There will be two rows of buttons:
@@ -536,11 +477,11 @@ void OutfitterPanel::DrawButtons()
 		(CanMoveToCargoFromStorage() || CanBuyToCargo()), hoverButton == 'c', 'c');
 	// Row 2
 	ShopPanel::DrawButton("_Sell", Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 1), buttonSize,
-		static_cast<bool>(CanUninstall(ShopPanel::UninstallAction::Sell)), hoverButton == 's', 's');
+		static_cast<bool>(CanUninstall(UninstallAction::Sell)), hoverButton == 's', 's');
 	ShopPanel::DrawButton("_Uninstall", Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 1), buttonSize,
-		static_cast<bool>(CanUninstall(ShopPanel::UninstallAction::Uninstall)), hoverButton == 'u', 'u');
+		static_cast<bool>(CanUninstall(UninstallAction::Uninstall)), hoverButton == 'u', 'u');
 	ShopPanel::DrawButton("Sto_re", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 1), buttonSize,
-		static_cast<bool>(CanUninstall(ShopPanel::UninstallAction::Store)), hoverButton == 'r', 'r');
+		static_cast<bool>(CanUninstall(UninstallAction::Store)), hoverButton == 'r', 'r');
 	// Row 3
 	ShopPanel::DrawButton("_Leave", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 2), buttonSize,
 		true, hoverButton == 'l', 'l');

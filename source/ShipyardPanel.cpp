@@ -104,7 +104,7 @@ void ShipyardPanel::DrawItem(const string &name, const Point &point)
 
 double ShipyardPanel::ButtonPanelHeight() const
 {
-	return BUTTON_HEIGHT + 40;
+	return 2 * BUTTON_HEIGHT + 40;
 }
 
 
