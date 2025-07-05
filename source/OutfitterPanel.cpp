@@ -469,21 +469,28 @@ void OutfitterPanel::DrawButtons()
 	buttonZones.clear();
 
 	// Row 1
-	ShopPanel::DrawButton("_Buy", Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 0), buttonSize,
+	ShopPanel::DrawButton("_Buy",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 0), buttonSize),
 		static_cast<bool>(CanDoBuyButton()), hoverButton == 'b', 'b');
-	ShopPanel::DrawButton("_Install", Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 0), buttonSize,
+	ShopPanel::DrawButton("_Install",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 0), buttonSize),
 		static_cast<bool>(CanInstall()), hoverButton == 'i', 'i');
-	ShopPanel::DrawButton("_Cargo", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 0), buttonSize,
+	ShopPanel::DrawButton("_Cargo",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 0), buttonSize),
 		(CanMoveToCargoFromStorage() || CanBuyToCargo()), hoverButton == 'c', 'c');
 	// Row 2
-	ShopPanel::DrawButton("_Sell", Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 1), buttonSize,
+	ShopPanel::DrawButton("_Sell",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 1), buttonSize),
 		static_cast<bool>(CanUninstall(UninstallAction::Sell)), hoverButton == 's', 's');
-	ShopPanel::DrawButton("_Uninstall", Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 1), buttonSize,
+	ShopPanel::DrawButton("_Uninstall",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 1), buttonSize),
 		static_cast<bool>(CanUninstall(UninstallAction::Uninstall)), hoverButton == 'u', 'u');
-	ShopPanel::DrawButton("Sto_re", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 1), buttonSize,
+	ShopPanel::DrawButton("Sto_re",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 1), buttonSize),
 		static_cast<bool>(CanUninstall(UninstallAction::Store)), hoverButton == 'r', 'r');
 	// Row 3
-	ShopPanel::DrawButton("_Leave", Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 2), buttonSize,
+	ShopPanel::DrawButton("_Leave",
+		Rectangle(Point(buttonCenterX + buttonOffsetX * 1, rowBaseY + rowOffsetY * 2), buttonSize),
 		true, hoverButton == 'l', 'l');
 
 	// Draw the Modifier hover text that appears below the buttons when a modifier
