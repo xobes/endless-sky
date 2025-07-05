@@ -21,6 +21,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Mission.h"
 #include "OutfitInfoDisplay.h"
 #include "Point.h"
+#include "Rectangle.h"
 #include "ScrollBar.h"
 #include "ScrollVar.h"
 #include "ShipInfoDisplay.h"
@@ -106,9 +107,7 @@ protected:
 
 	int64_t LicenseCost(const Outfit *outfit, bool onlyOwned = false) const;
 
-	void DrawButton(const std::string &name, const Point &center, const Point &buttonSize, bool isActive,
-		bool hovering, char keyCode);
-	char CheckButton(int x, int y);
+	void DrawButton(const std::string &name, const Rectangle, bool isActive, bool hovering, char keyCode);
 	void CheckSelection();
 
 	class Zone : public ClickZone<const Ship *> {
@@ -218,6 +217,12 @@ private:
 private:
 	std::string shipName;
 	std::string warningType;
+
+	// Define the colors used by DrawButton, implemented at the class level to avoid repeat lookups from GameData
+	const Color &hover;
+	const Color &active;
+	const Color &inactive;
+	const Color &back;
 
 	bool checkedHelp = false;
 };

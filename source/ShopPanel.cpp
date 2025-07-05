@@ -82,7 +82,11 @@ ShopPanel::ShopPanel(PlayerInfo &player, bool isOutfitter)
 	: player(player), day(player.GetDate().DaysSinceEpoch()),
 	planet(player.GetPlanet()), isOutfitter(isOutfitter), playerShip(player.Flagship()),
 	categories(GameData::GetCategory(isOutfitter ? CategoryType::OUTFIT : CategoryType::SHIP)),
-	collapsed(player.Collapsed(isOutfitter ? "outfitter" : "shipyard"))
+	collapsed(player.Collapsed(isOutfitter ? "outfitter" : "shipyard")),
+	hover(*GameData::Colors().Get("hover")),
+	active(*GameData::Colors().Get("active")),
+	inactive(*GameData::Colors().Get("inactive")),
+	back(*GameData::Colors().Get("panel background"))
 {
 	if(playerShip)
 		playerShips.insert(playerShip);
@@ -419,28 +423,6 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 	CheckSelection();
 
 	return true;
-}
-
-
-
-char ShopPanel::CheckButton(int x, int y)
-{
-	// Check the Find button.
-	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
-		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
-		return 'f';
-
-	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
-		return '\0';
-
-	const Point clickPoint(x, y);
-
-	// Check all the buttonZones.
-	for(const ClickZone<char> zone : buttonZones)
-		if(zone.Contains(clickPoint))
-			return zone.Value();
-
-	return '\0';
 }
 
 
@@ -1011,26 +993,6 @@ int ShopPanel::DrawPlayerShipInfo(const Point &point)
 }
 
 
-void ShopPanel::DrawButton(const std::string &name, const Point &center, const Point &buttonSize, bool isActive,
-	bool hovering, char keyCode)
-{
-	// Define the colors and font
-	const Font &bigFont = FontSet::Get(18);
-	const Color &hover = *GameData::Colors().Get("hover");
-	const Color &active = *GameData::Colors().Get("active");
-	const Color &inactive = *GameData::Colors().Get("inactive");
-
-	const Color *color = !isActive ? &inactive : hovering ? &hover : &active;
-	const Color &back = *GameData::Colors().Get("panel background");
-
-	FillShader::Fill(center, buttonSize, back);
-	bigFont.Draw(name, center - .5 * Point(bigFont.Width(name), bigFont.Height()), *color);
-
-	// Add this button to the buttonZones:
-	buttonZones.emplace_back(center, buttonSize, keyCode);
-}
-
-
 
 bool ShopPanel::DoScroll(double dy, int steps)
 {
@@ -1347,6 +1309,21 @@ void ShopPanel::MainDown()
 
 	selectedShip = it->GetShip();
 	selectedOutfit = it->GetOutfit();
+}
+
+
+
+void ShopPanel::DrawButton(const string &name, const Rectangle buttonShape, bool isActive,
+	bool hovering, char keyCode)
+{
+	const Font &bigFont = FontSet::Get(18);
+	const Color *color = !isActive ? &inactive : hovering ? &hover : &active;
+
+	FillShader::Fill(buttonShape.Center(), buttonShape.Dimensions(), back);
+	bigFont.Draw(name, buttonShape.Center() - .5 * Point(bigFont.Width(name), bigFont.Height()), *color);
+
+	// Add this button to the buttonZones:
+	buttonZones.emplace_back(buttonShape, keyCode);
 }
 
 
