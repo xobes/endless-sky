@@ -431,14 +431,7 @@ bool ShopPanel::Click(int x, int y, int clicks)
 {
 	dragShip = nullptr;
 
-	char button = '\0';
-	// Check the Find button.
-	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
-		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
-		button = 'f';
-	else
-		// Handle clicks on the buttons.
-		button = CheckButton(x, y);
+	char button = CheckButton(x, y);
 
 	if(button)
 		return DoKey(button);
@@ -1441,4 +1434,25 @@ vector<ShopPanel::Zone>::const_iterator ShopPanel::Selected() const
 			break;
 
 	return it;
+}
+
+
+
+// Check if the given point is within the button zone, and if so return the
+// letter of the button (or '\0' if it's not on a button).
+char ShopPanel::CheckButton(int x, int y)
+{
+	// Check the Find button.
+	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
+		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
+		return 'f';
+
+	const Point clickPoint(x, y);
+
+	// Check all the buttonZones.
+	for(const ClickZone<char> zone : buttonZones)
+		if(zone.Contains(clickPoint))
+			return zone.Value();
+
+	return '\0';
 }

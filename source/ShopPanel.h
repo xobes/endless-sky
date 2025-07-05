@@ -212,6 +212,9 @@ private:
 	void MainDown();
 	void CategoryAdvance(const std::string &category);
 	std::vector<Zone>::const_iterator Selected() const;
+	// Check if the given point is within the button zone, and if so return the
+	// letter of the button (or ' ' if it's not on a button).
+	char CheckButton(int x, int y);
 
 
 private:
