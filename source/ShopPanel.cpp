@@ -15,8 +15,9 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShopPanel.h"
 
-#include "text/alignment.hpp"
-#include "CategoryTypes.h"
+#include "text/Alignment.h"
+#include "CategoryList.h"
+#include "CategoryType.h"
 #include "Color.h"
 #include "Dialog.h"
 #include "text/DisplayText.h"
@@ -42,7 +43,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "image/Sprite.h"
 #include "image/SpriteSet.h"
 #include "shader/SpriteShader.h"
-#include "text/truncate.hpp"
+#include "text/Truncate.h"
 #include "UI.h"
 #include "text/WrappedText.h"
 
@@ -151,8 +152,15 @@ void ShopPanel::Draw()
 	DrawMain();
 	DrawShipsSidebar();
 	DrawDetailsSidebar();
-	DrawButtonPanel();
+	DrawButtons();
 	DrawKey();
+
+	// Draw the Find button.
+	const Point findCenter = Screen::BottomRight() - Point(580, 20);
+	const Sprite *findIcon =
+		hoverButton == 'f' ? SpriteSet::Get("ui/find selected") : SpriteSet::Get("ui/find unselected");
+	SpriteShader::Draw(findIcon, findCenter);
+	static const string FIND = "_Find";
 
 	shipInfo.DrawTooltips();
 	outfitInfo.DrawTooltips();
@@ -180,7 +188,7 @@ void ShopPanel::Draw()
 		}
 		else
 		{
-			int swizzle = dragShip->CustomSwizzle() >= 0
+			const Swizzle *swizzle = dragShip->CustomSwizzle()
 				? dragShip->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 			SpriteShader::Draw(sprite, dragPoint, scale, swizzle);
 		}
@@ -206,7 +214,7 @@ void ShopPanel::DrawShip(const Ship &ship, const Point &center, bool isSelected)
 
 	const Sprite *thumbnail = ship.Thumbnail();
 	const Sprite *sprite = ship.GetSprite();
-	int swizzle = ship.CustomSwizzle() >= 0 ? ship.CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
+	const Swizzle *swizzle = ship.CustomSwizzle() ? ship.CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 	if(thumbnail)
 		SpriteShader::Draw(thumbnail, center + Point(0., 10.), 1., swizzle);
 	else if(sprite)
@@ -248,86 +256,9 @@ int ShopPanel::VisibilityCheckboxesSize() const
 
 
 
-ShopPanel::TransactionResult ShopPanel::CanBuyToCargo() const
-{
-	return false;
-}
-
-
-
-ShopPanel::TransactionResult ShopPanel::CanDoBuyButton() const
-{
-	return false;
-}
-
-
-
-void ShopPanel::BuyIntoCargo()
-{
-}
-
-
-
-void ShopPanel::DoBuyButton()
-{
-}
-
-
-
-ShopPanel::TransactionResult ShopPanel::CanUninstall(ShopPanel::UninstallAction action) const
-{
-	return false;
-}
-
-
-
-ShopPanel::TransactionResult ShopPanel::CanInstall() const
-{
-	return false;
-}
-
-
-
-void ShopPanel::Install()
-{
-}
-
-
-
-void ShopPanel::Uninstall()
-{
-}
-
-
-
-bool ShopPanel::CanMoveToCargoFromStorage() const
-{
-	return false;
-}
-
-
-
-void ShopPanel::MoveToCargoFromStorage()
-{
-}
-
-
-void ShopPanel::RetainInStorage()
-{
-}
-
-
-
-bool ShopPanel::CanSellMultiple() const
-{
-	return true;
-}
-
-
-
 bool ShopPanel::ShouldHighlight(const Ship *ship)
 {
-	return (hoverButton == 's');
+	return (hoverButton == 's' || hoverButton == 'r');
 }
 
 
@@ -335,13 +266,13 @@ bool ShopPanel::ShouldHighlight(const Ship *ship)
 // Only override the ones you need; the default action is to return false.
 bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress)
 {
-	TransactionResult result = false;
 	if(key == 'l' || key == 'd' || key == SDLK_ESCAPE
 			|| (key == 'w' && (mod & (KMOD_CTRL | KMOD_GUI))))
 	{
 		if(!isOutfitter)
 			player.UpdateCargoCapacities();
 		GetUI()->Pop(this);
+		UI::PlaySound(UI::UISound::NORMAL);
 	}
 	else if(command.Has(Command::HELP))
 	{
@@ -349,6 +280,20 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		{
 			if(isOutfitter)
 				DoHelp("outfitter with multiple ships", true);
+
+			set<string> modelNames;
+			for(const auto &it : player.Ships())
+			{
+				if(!CanShowInSidebar(*it, player.GetPlanet()))
+					continue;
+				if(modelNames.contains(it->DisplayModelName()))
+				{
+					DoHelp("shop with multiple ships", true);
+					break;
+				}
+				modelNames.insert(it->DisplayModelName());
+			}
+
 			DoHelp("multiple ships", true);
 		}
 		if(isOutfitter)
@@ -458,98 +403,20 @@ bool ShopPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		activePane = (activePane == ShopPane::Main ? ShopPane::Sidebar : ShopPane::Main);
 	else if(key == 'f')
 		GetUI()->Push(new Dialog(this, &ShopPanel::DoFind, "Search for:"));
-	else if(key == 'b')
-	{
-		// Outfitter: Buy and install up to <modifier> outfits for each selected ship.
-		// Shipyard: Buy up to <modifier> ships.
-		result = CanDoBuyButton();
-		if(result)
-			DoBuyButton();
-	}
-	else if(key == 's')
-	{
-		// In the Shipyard: Sell selected ships and outfits.
-		// In the Outfitter: Sell <modifier> of the selected outfit from each selected ship.
-		if(isOutfitter)
-			result = CanUninstall(UninstallAction::Sell);
-		else
-			result = playerShip;
-
-		if(result)
-			Sell(false);
-	}
-	else if(key == 'r')
-	{
-		// In the Shipyard: Sell selected ships and move outfits to Storage.
-		// In the Outfitter: Move <modifier> of the selected outfit to storage from either cargo (first) or else each
-		// of the selected ships.
-		if(isOutfitter)
-		{
-			result = CanUninstall(UninstallAction::Store);
-			if(result)
-				RetainInStorage();
-		}
-		else if(playerShip)
-			Sell(true);
-	}
-	else if(key == 'c' && isOutfitter)
-	{
-		// Either move up to <multiple> outfits into cargo from storage if any are in storage, or else buy up to
-		// <modifier> outfits into cargo.
-		// Note: If the outfit is not able to be moved from storage or bought into cargo, give an error based on the buy
-		// condition.
-		if(CanMoveToCargoFromStorage())
-			MoveToCargoFromStorage();
-		else
-		{
-			// Selected outfit cannot be moved from storage, try buying:
-			result = CanBuyToCargo();
-			if(result)
-				BuyIntoCargo();
-		}
-	}
-	else if(key == 'i' && isOutfitter)
-	{
-		// Install up to <modifier> outfits from already owned equipment into each selected ship.
-		result = CanInstall();
-		if(result)
-			Install();
-	}
-	else if(key == 'u')
-	{
-		// In the Shipyard: Sell selected ships and move outfits to Storage (previous behavior).
-		// In the Outfitter: Move <modifier> of the selected outfit to storage from each selected ship or from cargo.
-		if(isOutfitter)
-		{
-			// Uninstall up to <multiple> outfits from each of the selected ships if any are available to uninstall, or
-			// else move up to <multiple> outfits from cargo into storage.
-			// Note: If the outfit is not able to be uninstalled or moved from cargo, give an error based on the
-			// uninstall condition.
-			result = CanUninstall(UninstallAction::Uninstall);
-			if(result)
-				Uninstall();
-			else if(CanUninstall(UninstallAction::Store))
-			{
-				RetainInStorage();
-				result = true;
-			}
-		}
-		else if(playerShip)
-			// Shipyard, old behavior, treat 'u' the same as 'r': Sell ship and retain the outfits in storage.
-			Sell(true);
-	}
 	else
-		return false;
-
-	if(result.HasMessage())
-		GetUI()->Push(new Dialog(result.Message()));
-	else if(isOutfitter)
 	{
-		// Ship-based updates to cargo are handled when leaving.
-		// Ship-based selection changes are asynchronous, and handled by ShipyardPanel.
-		player.UpdateCargoCapacities();
-		CheckSelection();
+		TransactionResult result = HandleShortcuts(static_cast<char>(key));
+		if(result.HasMessage())
+			GetUI()->Push(new Dialog(result.Message()));
+		else if(isOutfitter)
+		{
+			// Ship-based updates to cargo are handled when leaving.
+			// Ship-based selection changes are asynchronous, and handled by ShipyardPanel.
+			player.UpdateCargoCapacities();
+		}
 	}
+
+	CheckSelection();
 
 	return true;
 }
@@ -581,8 +448,16 @@ char ShopPanel::CheckButton(int x, int y)
 bool ShopPanel::Click(int x, int y, int clicks)
 {
 	dragShip = nullptr;
-	// Handle clicks on the buttons.
-	char button = CheckButton(x, y);
+
+	char button = '\0';
+	// Check the Find button.
+	if(x > Screen::Right() - SIDEBAR_WIDTH - 342 && x < Screen::Right() - SIDEBAR_WIDTH - 316 &&
+		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
+		button = 'f';
+	else
+		// Handle clicks on the buttons.
+		button = CheckButton(x, y);
+
 	if(button)
 		return DoKey(button);
 
@@ -787,7 +662,7 @@ int64_t ShopPanel::LicenseCost(const Outfit *outfit, bool onlyOwned) const
 	if((owned && onlyOwned) || player.Stock(outfit) > 0)
 		return 0;
 
-	const Sale<Outfit> &available = player.GetPlanet()->Outfitter();
+	const Sale<Outfit> &available = player.GetPlanet()->OutfitterStock();
 
 	int64_t cost = 0;
 	for(const string &name : outfit->Licenses())
@@ -907,7 +782,7 @@ void ShopPanel::DrawShipsSidebar()
 			}
 			else
 			{
-				int swizzle = ship->CustomSwizzle() >= 0 ? ship->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
+				const Swizzle *swizzle = ship->CustomSwizzle() ? ship->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 				SpriteShader::Draw(sprite, point, scale, swizzle);
 			}
 		}
@@ -1136,19 +1011,23 @@ int ShopPanel::DrawPlayerShipInfo(const Point &point)
 }
 
 
-
-void ShopPanel::DrawButton(Point center, Point dimensions, const Font &font, const Color &color,
-	const std::string &buttonText, char keyCode)
+void ShopPanel::DrawButton(const std::string &name, const Point &center, const Point &buttonSize, bool isActive,
+	bool hovering, char keyCode)
 {
-	// Add this button to the buttonZones:
-	buttonZones.emplace_back(center, dimensions, keyCode);
+	// Define the colors and font
+	const Font &bigFont = FontSet::Get(18);
+	const Color &hover = *GameData::Colors().Get("hover");
+	const Color &active = *GameData::Colors().Get("active");
+	const Color &inactive = *GameData::Colors().Get("inactive");
 
-	// Draw the button.
-	const Point buttonBorderOffset = Point(2, 2);
+	const Color *color = !isActive ? &inactive : hovering ? &hover : &active;
 	const Color &back = *GameData::Colors().Get("panel background");
-	FillShader::Fill(center, dimensions + buttonBorderOffset, color);
-	FillShader::Fill(center, dimensions, back);
-	font.Draw(buttonText, center - .5 * Point(font.Width(buttonText), font.Height()), color);
+
+	FillShader::Fill(center, buttonSize, back);
+	bigFont.Draw(name, center - .5 * Point(bigFont.Width(name), bigFont.Height()), *color);
+
+	// Add this button to the buttonZones:
+	buttonZones.emplace_back(center, buttonSize, keyCode);
 }
 
 
@@ -1275,7 +1154,7 @@ void ShopPanel::SideSelect(Ship *ship, int clicks)
 			{
 				if(!CanShowInSidebar(*it, player.GetPlanet()))
 					continue;
-				if(it.get() != ship && it->Immitates(*ship))
+				if(it.get() != ship && it->Imitates(*ship))
 					playerShips.insert(it.get());
 			}
 	}
@@ -1291,7 +1170,7 @@ void ShopPanel::SideSelect(Ship *ship, int clicks)
 			{
 				if(!CanShowInSidebar(*it, player.GetPlanet()))
 					continue;
-				if(it.get() != ship && it->Immitates(*ship))
+				if(it.get() != ship && it->Imitates(*ship))
 				{
 					similarShips.push_back(it.get());
 					unselect &= playerShips.contains(it.get());

@@ -399,6 +399,9 @@ tip "hull protection:"
 tip "hull repair multiplier:"
 	`Modifies the amount of hull strength repaired per second by the given factor.`
 
+tip "cloaked repair multiplier:"
+	`Modifies the amount of hull strength repaired per second by the given factor while a cloaking device is active.`
+
 tip "illegal:"
 	`Amount of credits you can be fined for carrying this outfit.`
 
@@ -645,6 +648,9 @@ tip "delayed shield generation:"
 tip "shield generation multiplier:"
 	`Modifies the amount of shield points recharged per second by the given factor.`
 
+tip "cloaked regen multiplier:"
+	`Modifies the amount of shield points recharged per second by the given factor while a cloaking device is active.`
+
 tip "high shield permeability:"
 	`This percentage of all incoming damage bypasses shields and applies directly to the hull when at full shields.`
 
@@ -848,32 +854,31 @@ tip "scan concealment:"
 
 # Shop Tips:
 tip "outfitter: b"
-	`_Buy from outfitter and install on ship.`
+	`Buy from outfitter and install on ship.`
 
 tip "outfitter: s"
-	`_Sell from cargo, storage or ship, in that order.`
+	`Sell from cargo, storage or ship, in that order.`
 
 tip "outfitter: i"
-	`_Install on ship from cargo or storage, in that order.`
+	`Install on ship from cargo or storage, in that order.`
 
 tip "outfitter: u"
-	`_Uninstall from ship to storage or move outfits from cargo to storage, in that order.`
+	`Uninstall from ship to storage or move outfits from cargo to storage, in that order.`
 
 tip "outfitter: c"
-	`Transfer to _cargo from planetary storage if possible, else buy from outfitter and place in cargo.`
+	`Transfer outfit from planetary storage to cargo if possible, else buy from outfitter and place in cargo.`
 
 tip "outfitter: r"
-	`_Retain in storage from cargo if available, otherwise uninstall from ship to retain in storage.`
+	`Move outfit from cargo or ship into planetary storage, in that order.`
 
 tip "shipyard: b"
-	`_Buy <multiplier> of this ship.`
+	`Buy <multiplier> of this ship.`
 
 tip "shipyard: s"
-	`_Sell the selected ships and their outfits.`
+	`Sell the selected ships and their outfits.`
 
 tip "shipyard: r"
-	`Sell the h_ulls of the selected ships, but _retain the outfits in storage.`
-
+	`Sell the hulls of the selected ships, but retain the outfits in storage.`
 
 
 
@@ -1250,6 +1255,9 @@ tip "no steering!"
 tip "insufficient bunks?"
 	`This ship does not have enough bunks for its crew. It could become unresponsive at random times.`
 
+tip "insufficient heat?"
+	`This ship is too cold to use some of its engines while idle. Its movement may be hindered if it does not have another way of generating heat.`
+
 tip "afterburner only?"
 	`This ship's only thruster is an afterburner. It may be unable to move if the afterburner runs out of fuel.`
 
@@ -1361,6 +1369,9 @@ tip "Fire secondary weapon"
 tip "Toggle cloaking device"
 	`Activate or deactivate your fleet's cloaking devices, if any are installed.`
 
+tip "Turret aim override (hold)"
+	`Turrets aim towards your cursor when this key is held. If the "Aim turrets with mouse" setting is enabled, it will do the opposite.`
+
 tip "Mouse turning (hold)"
 	`Cause your flagship to turn toward your mouse if this key is held. To have mouse turning always active, activate the "Control ship with mouse" setting. If that setting is active, holding this key deactivates mouse turning.`
 
@@ -1372,6 +1383,9 @@ tip "Toggle fullscreen"
 
 tip "Toggle fast-forward"
 	`Toggle a 3x speed fast-forward. Fast-forward may be automatically deactivated by the "Interrupt fast-forward" setting. If the key is set to caps-lock then the caps-lock state will be used to determine the fast-forward state.`
+
+tip "Pause"
+	`Stop time in the game. You can still select ships, give commands, and interact with menus.`
 
 tip "Show help"
 	`Display the help dialogs that are relevant to your current UI panel and situation. Uses the same help dialogs from the "Reactivate first-time help" setting, forcing them to appear even if they have already appeared before.`
@@ -1431,8 +1445,14 @@ tip "Draw background haze"
 tip "Draw starfield"
 	`Draw the background starfield when in flight.`
 
+tip "Fixed starfield zoom"
+	`Draw the background starfield with a fixed zoom level instead of changing with the view zoom level.`
+
 tip "Parallax background"
 	`Add parallax to objects in the background (haze and starfield). If set to fancy, create three layers of parallax. If set to fast, create one layer of parallax.`
+
+tip "Animate main menu background"
+	`Animate the background stars and haze in the main menu.`
 
 tip "Show hyperspace flash"
 	`Create a white flash when hyperspacing between systems.`
@@ -1467,6 +1487,9 @@ tip "   Show neutral overlays"
 tip "Show missile overlays"
 	`Display an overlay on hostile missiles. The overlay indicates the danger of the missiles, with more powerful missiles relative to your flagship's HP being indicated more intensely.`
 
+tip "Turret overlays"
+	`Display overlays on your flagship's turrets with blindspots. Setting this to "blindspots only" shows the overlays only when the blindspots are blocking the turrets' fire.`
+
 tip "Show asteroid scanner overlay"
 	`If an asteroid scanner is installed on your flagship, display an overlay for nearby asteroids.`
 
@@ -1493,6 +1516,9 @@ tip "Extra fleet status messages"
 
 tip "Control ship with mouse"
 	`If active, your flagship will always turn toward your mouse. For activating mouse turning on a key press, see the "Mouse turning (hold)" control.`
+
+tip "Aim turrets with mouse"
+	`If active, your turrets will target your mouse position. See the "Turret aim override (hold)" keybind to toggle based on a held key.`
 
 tip "Automatic aiming"
 	`Automatically turn your ship towards your target to aim fixed weapons.`
