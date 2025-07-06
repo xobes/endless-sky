@@ -250,8 +250,8 @@ void ShipyardPanel::DrawButtons()
 		DrawTooltip(tooltip, hoverPoint + Point(-40, -60), dim, *GameData::Colors().Get("tooltip background"));
 
 	// Draw the tooltip for your full number of credits.
-	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 30));
-	if(creditsBox.Contains(hoverPoint))
+	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 15));
+	if(creditsBox.Contains(ShopPanel::hoverPoint))
 		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
 	else if(ShopPanel::hoverCount)
 		--ShopPanel::hoverCount;
@@ -262,6 +262,7 @@ void ShipyardPanel::DrawButtons()
 		DrawTooltip(text, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
 	}
 }
+
 
 
 int ShipyardPanel::FindItem(const string &text) const
