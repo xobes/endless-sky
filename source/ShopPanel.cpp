@@ -1447,7 +1447,7 @@ char ShopPanel::CheckButton(int x, int y)
 		y > Screen::Bottom() - 31 && y < Screen::Bottom() - 4)
 		return 'f';
 
-	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - BUTTON_HEIGHT)
+	if(x < Screen::Right() - SIDEBAR_WIDTH || y < Screen::Bottom() - ButtonPanelHeight())
 		return '\0';
 
 	const Point clickPoint(x, y);
