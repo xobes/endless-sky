@@ -75,7 +75,6 @@ protected:
 
 
 	virtual double ButtonPanelHeight() const override;
-	virtual char CheckButton(int x, int y) override;
 	void DrawButtons() override;
 	TransactionResult HandleShortcuts(char key) override;
 
