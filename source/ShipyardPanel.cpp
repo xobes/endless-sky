@@ -104,7 +104,8 @@ void ShipyardPanel::DrawItem(const string &name, const Point &point)
 
 double ShipyardPanel::ButtonPanelHeight() const
 {
-	return 2 * BUTTON_HEIGHT + 40;
+	// The 50 = (3 x 10 (pad) + 20 x 1 (text)) for the credit information line.
+	return 50 + BUTTON_HEIGHT * 2 + BUTTON_ROW_PAD * 1;
 }
 
 
@@ -208,7 +209,7 @@ void ShipyardPanel::DrawButtons()
 	// Draw the row for credits display.
 	const Point creditsPoint(
 		Screen::Right() - SIDEBAR_WIDTH + 10,
-		Screen::Bottom() - ButtonPanelHeight() + 5);
+		Screen::Bottom() - ButtonPanelHeight() + 10);
 	font.Draw("You have:", creditsPoint, dim);
 	const string &credits = Format::CreditString(player.Accounts().Credits());
 	font.Draw({credits, {SIDEBAR_WIDTH - 20, Alignment::RIGHT}}, creditsPoint, bright);
