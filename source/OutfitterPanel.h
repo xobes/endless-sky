@@ -73,7 +73,6 @@ protected:
 
 	int FindItem(const std::string &text) const override;
 
-
 	virtual double ButtonPanelHeight() const override;
 	void DrawButtons() override;
 	TransactionResult HandleShortcuts(char key) override;
