@@ -225,10 +225,14 @@ void Dialog::Draw()
 			inputPos.Y() - .5 * font.Height());
 		const auto inputText = DisplayText(input, {static_cast<int>(Width() - HORIZONTAL_PADDING - INPUT_HORIZONTAL_PADDING),
 				Truncate::FRONT});
-		font.Draw(inputText, stringPos, bright);
+		font.Draw(inputText, stringPos, inputFocused ? bright : dim);
 
-		Point barPos(stringPos.X() + font.FormattedWidth(inputText) + INPUT_TOP_PADDING, inputPos.Y());
-		FillShader::Fill(barPos, Point(1., INPUT_HEIGHT - INPUT_VERTICAL_PADDING), dim);
+		// Draw cursor bar only if input is focused.
+		if(inputFocused)
+		{
+			Point barPos(stringPos.X() + font.FormattedWidth(inputText) + INPUT_TOP_PADDING, inputPos.Y());
+			FillShader::Fill(barPos, Point(1., INPUT_HEIGHT - INPUT_VERTICAL_PADDING), dim);
+		}
 	}
 }
 
@@ -265,11 +269,11 @@ bool Dialog::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool i
 {
 	auto it = KEY_MAP.find(key);
 	bool isCloseRequest = key == SDLK_ESCAPE || (key == 'w' && (mod & (KMOD_CTRL | KMOD_GUI)));
-	if(stringFun && Clipboard::KeyDown(input, key, mod))
+	if(inputFocused && stringFun && Clipboard::KeyDown(input, key, mod))
 	{
 		// Input handled by Clipboard.
 	}
-	else if((it != KEY_MAP.end() || (key >= ' ' && key <= '~')) && !isMission && (intFun || stringFun) && !isCloseRequest)
+	else if(inputFocused && (it != KEY_MAP.end() || (key >= ' ' && key <= '~')) && !isMission && (intFun || stringFun) && !isCloseRequest)
 	{
 		int ascii = (it != KEY_MAP.end()) ? it->second : key;
 		char c = ((mod & KMOD_SHIFT) ? SHIFT[ascii] : ascii);
@@ -288,20 +292,54 @@ bool Dialog::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool i
 		if(validateFun)
 			isOkDisabled = !validateFun(input);
 	}
-	else if((key == SDLK_DELETE || key == SDLK_BACKSPACE) && !input.empty())
+	else if(inputFocused && (key == SDLK_DELETE || key == SDLK_BACKSPACE) && !input.empty())
 	{
 		input.erase(input.length() - 1);
 		if(validateFun)
 			isOkDisabled = !validateFun(input);
 	}
-	else if(key == SDLK_TAB && canCancel)
-		okIsActive = !okIsActive;
+	else if(key == SDLK_TAB)
+	{
+		// if there is an input field
+		if(!isMission && (intFun || stringFun))
+		{
+			if(canCancel)
+			{
+				// Cycle focus input->OK->Cancel->input
+				if(inputFocused)
+				{
+					// Focused on input, <tab> will switch to OK being active, input no longer focused.
+					okIsActive = true;
+					inputFocused = false;
+				}
+				else // Input is not focused.
+				{
+					if(okIsActive)
+						// Switch from OK->Cancel, no change in focus.
+						okIsActive = false;
+					else // Cancel is focused, switch to input focus, with OK active (so that Enter will trigger OK).
+					{
+						inputFocused = true;
+						okIsActive = true;
+					}
+				}
+			}
+			else // Input with OK button.
+			{
+				// Cycle focus input->OK->input; okIsActive will always be true.
+				inputFocused = !inputFocused;
+			}
+		}
+		else // No input field, tab cycles through buttons.
+			if(canCancel)
+				okIsActive = !okIsActive;
+	}
 	else if(key == SDLK_LEFT)
 		okIsActive = !canCancel;
 	else if(key == SDLK_RIGHT)
 		okIsActive = true;
 	else if(key == SDLK_RETURN || key == SDLK_KP_ENTER || isCloseRequest
-			|| (isMission && (key == 'a' || key == 'd')))
+			|| (isMission && (key == 'a' || key == 'd')) || (key == SDLK_SPACE && !inputFocused))
 	{
 		// Shortcuts for "accept" and "decline."
 		if(key == 'a' || (!canCancel && isCloseRequest))
