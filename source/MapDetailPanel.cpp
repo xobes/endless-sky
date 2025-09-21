@@ -364,10 +364,39 @@ bool MapDetailPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command
 
 
 
-bool MapDetailPanel::Click(int x, int y, int clicks)
+bool MapDetailPanel::Click(int x, int y, MouseButton button, int clicks)
 {
-	if(scroll.Scrollable() && scrollbar.SyncClick(scroll, x, y, clicks))
+	if(scroll.Scrollable() && scrollbar.SyncClick(scroll, x, y, button, clicks))
 		return true;
+
+	if(button == MouseButton::RIGHT)
+	{
+		if(!Preferences::Has("System map sends move orders"))
+			return true;
+		// TODO: rewrite the map panels to be driven from interfaces.txt so these XY
+		// positions aren't hard-coded.
+		else if(x >= Screen::Right() - 240 && y >= Screen::Top() + 10 && y <= Screen::Top() + 270)
+		{
+			// Only handle clicks on the actual orbits element, rather than the whole UI region.
+			// (Note: this isn't perfect, and the clickable area extends into the angled sides a bit.)
+			const Point orbitCenter(Screen::TopRight() + Point(-120., 160.));
+			auto uiClick = Point(x, y) - orbitCenter;
+			if(uiClick.Length() > 130)
+				return true;
+
+			// Only issue movement orders if the player is in-flight.
+			if(player.GetPlanet())
+				GetUI()->Push(new Dialog("You cannot issue fleet movement orders while docked."));
+			else if(!player.CanView(*selectedSystem))
+				GetUI()->Push(new Dialog("You must visit this system before you can send your fleet there."));
+			else
+				player.SetEscortDestination(selectedSystem, uiClick / scale);
+		}
+		return true;
+	}
+
+	if(button != MouseButton::LEFT)
+		return MapPanel::Click(x, y, button, clicks);
 
 	const Interface *planetCardInterface = GameData::Interfaces().Get("map planet card");
 	const double planetCardWidth = planetCardInterface->GetValue("width");
@@ -466,39 +495,10 @@ bool MapDetailPanel::Click(int x, int y, int clicks)
 	}
 
 	// The click was not on an interface element, so check if it was on a system.
-	MapPanel::Click(x, y, clicks);
+	MapPanel::Click(x, y, button, clicks);
 	// If the system just changed, the selected planet is no longer valid.
 	if(selectedPlanet && !selectedPlanet->IsInSystem(selectedSystem))
 		selectedPlanet = nullptr;
-	return true;
-}
-
-
-
-bool MapDetailPanel::RClick(int x, int y)
-{
-	if(!Preferences::Has("System map sends move orders"))
-		return true;
-	// TODO: rewrite the map panels to be driven from interfaces.txt so these XY
-	// positions aren't hard-coded.
-	else if(x >= Screen::Right() - 240 && y >= Screen::Top() + 10 && y <= Screen::Top() + 270)
-	{
-		// Only handle clicks on the actual orbits element, rather than the whole UI region.
-		// (Note: this isn't perfect, and the clickable area extends into the angled sides a bit.)
-		const Point orbitCenter(Screen::TopRight() + Point(-120., 160.));
-		auto uiClick = Point(x, y) - orbitCenter;
-		if(uiClick.Length() > 130)
-			return true;
-
-		// Only issue movement orders if the player is in-flight.
-		if(player.GetPlanet())
-			GetUI()->Push(new Dialog("You cannot issue fleet movement orders while docked."));
-		else if(!player.CanView(*selectedSystem))
-			GetUI()->Push(new Dialog("You must visit this system before you can send your fleet there."));
-		else
-			player.SetEscortDestination(selectedSystem, uiClick / scale);
-	}
-
 	return true;
 }
 
@@ -737,8 +737,7 @@ void MapDetailPanel::DrawInfo()
 		(planetCards.size()) * planetCardHeight) : 0.;
 	Point size(planetWidth, planetPanelHeight);
 	// This needs to fill from the start of the screen.
-	FillShader::Fill(Screen::TopLeft() + Point(size.X() / 2., size.Y() / 2.),
-		size, back);
+	FillShader::Fill(Rectangle::FromCorner(Screen::TopLeft(), size), back);
 
 	const double startingX = mapInterface->GetValue("starting X");
 	Point uiPoint(Screen::Left() + startingX, Screen::Top());
@@ -819,24 +818,27 @@ void MapDetailPanel::DrawInfo()
 	uiPoint.Y() -= (tradeSprite->Height() / 2. - textMargin);
 
 	// Don't "compare" prices if the current system is uninhabited and thus has no prices to compare to.
-	bool noCompare = (!player.GetSystem() || !player.GetSystem()->IsInhabited(player.Flagship()));
+	bool noCompare = !player.GetSystem() || !player.GetSystem()->IsInhabited(player.Flagship());
 	int value = 0;
 	double lowCompare = 0;
 	double highCompare = 0;
 
 	// When comparing prices, determine min/max deltas in order to represent commodity delta prices for displayed
 	// commodities as a gradient.
-	if(!noCompare && canView && selectedSystem->IsInhabited(player.Flagship()))
+	bool otherIsInhabited = selectedSystem->IsInhabited(player.Flagship());
+	if(!noCompare && canView && otherIsInhabited)
 	{
 		for(const Trade::Commodity &commodity : GameData::Commodities())
 		{
 			value = selectedSystem->Trade(commodity.name);
-			int localValue = (player.GetSystem() ? player.GetSystem()->Trade(commodity.name) : 0);
+			int localValue = player.GetSystem()->Trade(commodity.name);
 			if(value && localValue)
 			{
 				value -= localValue;
-				lowCompare = value < lowCompare ? value : lowCompare;
-				highCompare = value > highCompare ? value : highCompare;
+				if(value < lowCompare)
+					lowCompare = value;
+				if(value > highCompare)
+					highCompare = value;
 			}
 		}
 	}
@@ -846,12 +848,12 @@ void MapDetailPanel::DrawInfo()
 		bool isSelected = false;
 		if(static_cast<unsigned>(this->commodity) < GameData::Commodities().size())
 			isSelected = (&commodity == &GameData::Commodities()[this->commodity]);
-		Color color = isSelected ? medium : dim;
+		const Color &color = isSelected ? medium : dim;
 
 		font.Draw(commodity.name, uiPoint, color);
 
 		string price;
-		if(canView && selectedSystem->IsInhabited(player.Flagship()))
+		if(canView && otherIsInhabited)
 		{
 			value = selectedSystem->Trade(commodity.name);
 			int localValue = (player.GetSystem() ? player.GetSystem()->Trade(commodity.name) : 0);
@@ -878,38 +880,33 @@ void MapDetailPanel::DrawInfo()
 		font.Draw({price, alignRight}, uiPoint, color);
 
 		if(isSelected)
-			// const Point &center, const Point &angle, float width, float height, float offset, const Color &color
-				PointerShader::Draw(uiPoint + Point(0., 7.), Point(1., 0.), 10.f, 10.f, 0.f, color);
+			PointerShader::Draw(uiPoint + Point(0., 7.), Point(1., 0.), 10.f, 10.f, 0.f, color);
 
-		// Draw colored icons, when values are displayed.
-		if(canView && selectedSystem->IsInhabited(player.Flagship()))
+		// Draw colored icons when values are displayed.
+		if(canView && otherIsInhabited)
 		{
 			if(!noCompare && player.GetSystem() != selectedSystem)
 			{
-				// Determine the relative negative-ness or positive-ness of the value compared to low/high.
+				// Determine the relative negativeness or positiveness of the value compared to low/high.
 				// Note: if value is negative, lowCompare will be negative and if value is positive, highCompare will be
-				//       positive.
+				// positive.
 				double v = 0;
 				if(value < 0)
-					v = static_cast<double>(value) / abs(lowCompare);
+					v = value / abs(lowCompare);
 				else if(value > 0)
-					v = static_cast<double>(value) / highCompare;
-				color = MapColor(v);
+					v = value / highCompare;
 				// Draw up/down/equals arrows based on price delta (value).
-				PointerShader::Draw(uiPoint + Point(143, 7. + (-7 * v)), Point(0., 1), 20.f,
-					static_cast<float>(-14. * v), 0.f, color);
+				PointerShader::Draw(uiPoint + Point(143, 7. - 7 * v), Point(0., 1), 20.f,
+					static_cast<float>(-14. * v), 0.f, MapColor(v));
 			}
 			else
 			{
-				double halfCompare = 1;
-				if(canView && selectedSystem->IsInhabited(player.Flagship()))
-				{
-					halfCompare = (0.5 * (commodity.high - commodity.low));
-					// Avoid divide by zero, though this really shouldn't be a problem.
-					halfCompare = (halfCompare < 1) ? 1 : halfCompare;
-				}
+				double halfCompare = .5 * (commodity.high - commodity.low);
+				// Avoid divide by zero, though this really shouldn't be a problem.
+				if(halfCompare < 1)
+					halfCompare = 1;
 				RingShader::Draw(uiPoint + Point(143, 8), OUTER, INNER,
-					MapColor((static_cast<double>(value) - (commodity.low + halfCompare)) / halfCompare));
+					MapColor((value - (commodity.low + halfCompare)) / halfCompare));
 			}
 		}
 
