@@ -1279,7 +1279,7 @@ void OutfitterPanel::DrawButtons()
 	// Clear the buttonZones, they will be populated again as buttons are drawn.
 	buttonZones.clear();
 
-	// Row 1
+	// Row 1.
 	DrawButton("_Buy", Rectangle(Point(buttonCenterX + buttonOffsetX * -1, rowBaseY + rowOffsetY * 0), buttonSize),
 		ButtonActive('b'), hoverButton == 'b', 'b');
 	DrawButton("_Install", Rectangle(Point(buttonCenterX + buttonOffsetX * 0, rowBaseY + rowOffsetY * 0), buttonSize),
