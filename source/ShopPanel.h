@@ -88,8 +88,8 @@ protected:
 	virtual double DrawDetails(const Point &center) = 0;
 	virtual void DrawButtons() = 0;
 	virtual TransactionResult HandleShortcuts(char key) = 0;
-
 	virtual bool ShouldHighlight(const Ship *ship);
+	virtual void DrawKey();
 
 	// Only override the ones you need; the default action is to return false.
 	virtual bool KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress) override;

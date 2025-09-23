@@ -233,9 +233,9 @@ bool TradingPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, 
 		Buy(1);
 	else if(key == SDLK_MINUS || key == SDLK_KP_MINUS || key == SDLK_BACKSPACE || key == SDLK_DELETE)
 		Buy(-1);
-	else if(key == 'u' || key == 'B' || (key == 'b' && (mod & KMOD_SHIFT)))
+	else if(key == 'u' || (key == 'b' && (mod & KMOD_SHIFT)))
 		Buy(1000000000);
-	else if(key == 'e' || key == 'S' || (key == 's' && (mod & KMOD_SHIFT)))
+	else if(key == 'e' || (key == 's' && (mod & KMOD_SHIFT)))
 	{
 		for(const auto &it : player.Cargo().Commodities())
 		{
@@ -255,7 +255,7 @@ bool TradingPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, 
 			player.Cargo().Remove(commodity, amount);
 		}
 	}
-	else if((key == 'P' || (key == 'p' && (mod & KMOD_SHIFT))) && player.Cargo().MinablesSizePrecise())
+	else if((key == SDLK_F23 || (key == 'p' && (mod & KMOD_SHIFT))) && player.Cargo().MinablesSizePrecise())
 	{
 		if(Preferences::Has("Confirm 'Sell Specials' button"))
 			GetUI()->Push(new Dialog([this]() { SellOutfitsOrMinables(true); },
@@ -264,7 +264,7 @@ bool TradingPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, 
 		else
 			SellOutfitsOrMinables(true);
 	}
-	else if((key == 'L' || (key == 'l' && (mod & KMOD_SHIFT))) && canSellOutfits)
+	else if((key == SDLK_F24 || (key == 'l' && (mod & KMOD_SHIFT))) && canSellOutfits)
 	{
 		if(Preferences::Has("Confirm 'Sell Outfits' button"))
 			GetUI()->Push(new Dialog([this]() { SellOutfitsOrMinables(false); },

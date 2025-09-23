@@ -434,7 +434,7 @@ void ShipyardPanel::Sell(bool storeOutfits)
 
 
 
-void ShipyardPanel::BuyShip(const string &name)
+bool ShipyardPanel::BuyShip(const string &name)
 {
 	int64_t licenseCost = LicenseCost(&selectedShip->Attributes());
 	if(licenseCost)
@@ -462,6 +462,7 @@ void ShipyardPanel::BuyShip(const string &name)
 	playerShips.clear();
 	playerShips.insert(playerShip);
 	CheckSelection();
+
 	// Close dialog
 	return true;
 }
