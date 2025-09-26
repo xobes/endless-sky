@@ -88,9 +88,12 @@ protected:
 	virtual double ButtonPanelHeight() const = 0;
 	virtual double DrawDetails(const Point &center) = 0;
 	virtual void DrawButtons() = 0;
-	virtual TransactionResult HandleShortcuts(char key) = 0;
-	virtual bool ShouldHighlight(const Ship *ship);
 	virtual void DrawKey();
+	virtual char CheckButton(int x, int y) = 0;
+	virtual TransactionResult HandleShortcuts(char key) = 0;
+
+	virtual bool ShouldHighlight(const Ship *ship);
+	virtual void DrawKey() {};
 
 	// Only override the ones you need; the default action is to return false.
 	virtual bool KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress) override;
@@ -135,13 +138,13 @@ protected:
 	static constexpr int SIDEBAR_WIDTH = SIDEBAR_CONTENT + SIDEBAR_PADDING;
 	static constexpr int INFOBAR_WIDTH = 300;
 	static constexpr int SIDE_WIDTH = SIDEBAR_WIDTH + INFOBAR_WIDTH;
-	static constexpr int BUTTON_HEIGHT = 30;
 	static constexpr int SHIP_SIZE = 250;
 	static constexpr int OUTFIT_SIZE = 183;
 	// Button size/placement info:
 	static constexpr double BUTTON_ROW_START_PAD = 10.;
 	static constexpr double BUTTON_ROW_PAD = 5.;
 	static constexpr double BUTTON_COL_PAD = 5.;
+	static constexpr double BUTTON_HEIGHT = 30.;
 	static constexpr double BUTTON_WIDTH = 75.;
 
 
@@ -194,11 +197,14 @@ protected:
 	bool delayedAutoScroll = false;
 	Point hoverPoint;
 
+	Tooltip shipsTooltip;
+	Tooltip creditsTooltip;
+	Tooltip buttonsTooltip;
+
 
 private:
 	void DrawShipsSidebar();
 	void DrawDetailsSidebar();
-	void DrawButtons();
 	void DrawMain();
 
 	int DrawPlayerShipInfo(const Point &point);
@@ -223,8 +229,12 @@ private:
 private:
 	std::string shipName;
 	std::string warningType;
-	Tooltip shipsTooltip;
-	Tooltip creditsTooltip;
+
+	// Define the colors used by DrawButton, implemented at the class level to avoid repeat lookups from GameData.
+	const Color &hover;
+	const Color &active;
+	const Color &inactive;
+	const Color &back;
 
 	bool checkedHelp = false;
 };

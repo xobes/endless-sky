@@ -45,7 +45,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "shader/SpriteShader.h"
 #include "text/Truncate.h"
 #include "UI.h"
-#include "text/WrappedText.h"
 
 #include "opengl.h"
 #include <SDL2/SDL.h>
@@ -86,6 +85,8 @@ ShopPanel::ShopPanel(PlayerInfo &player, bool isOutfitter)
 	shipsTooltip(250, Alignment::LEFT, Tooltip::Direction::DOWN_LEFT, Tooltip::Corner::TOP_LEFT,
 		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium")),
 	creditsTooltip(250, Alignment::LEFT, Tooltip::Direction::UP_LEFT, Tooltip::Corner::TOP_RIGHT,
+		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium")),
+	buttonsTooltip(250, Alignment::LEFT, Tooltip::Direction::DOWN_LEFT, Tooltip::Corner::TOP_LEFT,
 		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium")),
 	hover(*GameData::Colors().Get("hover")),
 	active(*GameData::Colors().Get("active")),
@@ -235,36 +236,9 @@ void ShopPanel::CheckForMissions(Mission::Location location) const
 
 
 
-void ShopPanel::FailSell(bool toStorage) const
+int ShopPanel::VisibilityCheckboxesSize() const
 {
-}
-
-
-
-bool ShopPanel::CanSellMultiple() const
-{
-	return true;
-}
-
-
-
-// Helper function for UI buttons to determine if the selected item is
-// already owned. Affects if "Install" is shown for already owned items
-// or if "Buy" is shown for items not yet owned.
-//
-// If we are buying into cargo, then items in cargo don't count as already
-// owned, but they count as "already installed" in cargo.
-bool ShopPanel::IsAlreadyOwned() const
-{
-	return (playerShip && selectedOutfit && player.Cargo().Get(selectedOutfit))
-		|| player.Storage().Get(selectedOutfit);
-}
-
-
-
-bool ShopPanel::ShouldHighlight(const Ship *ship)
-{
-	return (hoverButton == 's');
+	return 0;
 }
 
 
@@ -275,9 +249,9 @@ void ShopPanel::DrawKey()
 
 
 
-int ShopPanel::VisibilityCheckboxesSize() const
+bool ShopPanel::ShouldHighlight(const Ship *ship)
 {
-	return 0;
+	return (hoverButton == 's');
 }
 
 
@@ -649,7 +623,7 @@ void ShopPanel::DoFind(const string &text)
 
 int64_t ShopPanel::LicenseCost(const Outfit *outfit, bool onlyOwned) const
 {
-	// onlyOwned represents that `outfit` is being transferred from Cargo or Storage
+	// onlyOwned represents that `outfit` is being transferred from Cargo or Storage.
 
 	// If the player is attempting to install an outfit from cargo, storage, or that they just
 	// sold to the shop, then ignore its license requirement, if any. (Otherwise there

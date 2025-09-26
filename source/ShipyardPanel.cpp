@@ -205,6 +205,7 @@ void ShipyardPanel::DrawButtons()
 	const Font &font = FontSet::Get(14);
 	const Color &bright = *GameData::Colors().Get("bright");
 	const Color &dim = *GameData::Colors().Get("medium");
+	const Color &back = *GameData::Colors().Get("panel background");
 
 	// Draw the row for credits display.
 	const Point creditsPoint(
@@ -246,21 +247,29 @@ void ShipyardPanel::DrawButtons()
 	// Draw tooltips for the button being hovered over:
 	string tooltip = GameData::Tooltip(string("shipyard: ") + hoverButton);
 	if(!tooltip.empty())
-		// Note: there is an offset between the cursor and tooltips in this case so that other
-		// buttons can be seen as the mouse moves around.
-		DrawTooltip(tooltip, hoverPoint + Point(-40, -60), dim, *GameData::Colors().Get("tooltip background"));
+		buttonsTooltip.IncrementCount();
+	else
+		buttonsTooltip.DecrementCount();
+
+	if(buttonsTooltip.ShouldDraw())
+	{
+		buttonsTooltip.SetZone(buttonsFooter);
+		buttonsTooltip.SetText(tooltip, true);
+		buttonsTooltip.Draw();
+	}
 
 	// Draw the tooltip for your full number of credits.
 	const Rectangle creditsBox = Rectangle::FromCorner(creditsPoint, Point(SIDEBAR_WIDTH - 20, 15));
-	if(creditsBox.Contains(ShopPanel::hoverPoint))
-		ShopPanel::hoverCount += ShopPanel::hoverCount < ShopPanel::HOVER_TIME;
-	else if(ShopPanel::hoverCount)
-		--ShopPanel::hoverCount;
+	if(creditsBox.Contains(hoverPoint))
+		creditsTooltip.IncrementCount();
+	else
+		creditsTooltip.DecrementCount();
 
-	if(ShopPanel::hoverCount == ShopPanel::HOVER_TIME)
+	if(creditsTooltip.ShouldDraw())
 	{
-		string text = Format::Number(player.Accounts().Credits()) + " credits";
-		DrawTooltip(text, hoverPoint, dim, *GameData::Colors().Get("tooltip background"));
+		creditsTooltip.SetZone(creditsBox);
+		creditsTooltip.SetText(Format::Number(player.Accounts().Credits()) + " credits", true);
+		creditsTooltip.Draw();
 	}
 }
 
@@ -498,7 +507,6 @@ void ShipyardPanel::SellShip(bool storeOutfits)
 	if(playerShip)
 		playerShips.insert(playerShip);
 }
-
 
 
 
