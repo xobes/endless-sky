@@ -195,8 +195,8 @@ void ShipyardPanel::DrawButtons()
 
 	// Draw the button panel (shop side panel footer).
 	const Point buttonPanelSize(SIDEBAR_WIDTH, ButtonPanelHeight());
-	FillShader::Fill(Screen::BottomRight() - .5 * buttonPanelSize, buttonPanelSize,
-		*GameData::Colors().Get("shop side panel background"));
+	const Rectangle buttonsFooter(Screen::BottomRight() - .5 * buttonPanelSize, buttonPanelSize);
+	FillShader::Fill(buttonsFooter, *GameData::Colors().Get("shop side panel background"));
 	FillShader::Fill(
 		Point(Screen::Right() - SIDEBAR_WIDTH / 2, Screen::Bottom() - ButtonPanelHeight()),
 		Point(SIDEBAR_WIDTH, 1), *GameData::Colors().Get("shop side panel footer"));
