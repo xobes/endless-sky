@@ -15,7 +15,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "LoadPanel.h"
 
-#include "text/Alignment.h"
 #include "Color.h"
 #include "Command.h"
 #include "ConversationPanel.h"
@@ -110,6 +109,10 @@ namespace {
 			}
 		return date;
 	}
+
+	// Only show tooltips if the mouse has hovered in one place for this amount
+	// of time.
+	const int HOVER_TIME = 60;
 }
 
 
@@ -117,9 +120,7 @@ namespace {
 LoadPanel::LoadPanel(PlayerInfo &player, UI &gamePanels)
 	: player(player), gamePanels(gamePanels), selectedPilot(player.Identifier()),
 	pilotBox(GameData::Interfaces().Get("load menu")->GetBox("pilots")),
-	snapshotBox(GameData::Interfaces().Get("load menu")->GetBox("snapshots")),
-	tooltip(200, Alignment::LEFT, Tooltip::Direction::DOWN_LEFT, Tooltip::Corner::TOP_LEFT,
-		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium"))
+	snapshotBox(GameData::Interfaces().Get("load menu")->GetBox("snapshots"))
 {
 	// If you have a player loaded, and the player is on a planet, make sure
 	// the player is saved so that any snapshot you create will be of the
@@ -212,8 +213,12 @@ void LoadPanel::Draw()
 		}
 	}
 
+	// The hover count "decays" over time if not hovering over a saved game.
+	if(hoverCount)
+		--hoverCount;
+	string hoverText;
+
 	// Draw the list of snapshots for the selected pilot.
-	bool hasHoverZone = false;
 	if(!selectedPilot.empty() && files.contains(selectedPilot))
 	{
 		const Point topLeft = snapshotBox.TopLeft();
@@ -239,13 +244,9 @@ void LoadPanel::Draw()
 			bool isHighlighted = (file == selectedFile || isHovering);
 			if(isHovering)
 			{
-				hasHoverZone = true;
-				tooltip.IncrementCount();
-				if(tooltip.ShouldDraw())
-				{
-					tooltip.SetText(TimestampString(it.second), true);
-					tooltip.SetZone(zone);
-				}
+				hoverCount = min(HOVER_TIME, hoverCount + 2);
+				if(hoverCount == HOVER_TIME)
+					hoverText = TimestampString(it.second);
 			}
 
 			double alpha = min((drawPoint.Y() - (top - fadeOut)) * .1,
@@ -262,10 +263,13 @@ void LoadPanel::Draw()
 		}
 	}
 
-	if(!hasHoverZone)
-		tooltip.DecrementCount();
-	else
-		tooltip.Draw();
+	if(!hoverText.empty())
+	{
+		Point boxSize(font.Width(hoverText) + 20., 30.);
+
+		FillShader::Fill(Rectangle::FromCorner(hoverPoint, boxSize), *GameData::Colors().Get("tooltip background"));
+		font.Draw(hoverText, hoverPoint + Point(10., 10.), *GameData::Colors().Get("medium"));
+	}
 }
 
 
@@ -481,8 +485,8 @@ bool LoadPanel::Hover(int x, int y)
 	// Tooltips should not pop up unless the mouse stays in one place for the
 	// full hover time. Otherwise, every time the user scrubs the mouse over the
 	// list, tooltips will appear after one second.
-	if(!tooltip.ShouldDraw())
-		tooltip.ResetCount();
+	if(hoverCount < HOVER_TIME)
+		hoverCount = 0;
 
 	return true;
 }

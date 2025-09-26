@@ -89,6 +89,8 @@ namespace {
 	// How many pages of controls and settings there are.
 	const int CONTROLS_PAGE_COUNT = 2;
 	const int SETTINGS_PAGE_COUNT = 2;
+	// Hovering a preference for this many frames activates the tooltip.
+	const int HOVER_TIME = 60;
 
 	const map<string, SoundCategory> volumeBars = {
 		{"volume", SoundCategory::MASTER},
@@ -109,9 +111,7 @@ namespace {
 
 
 PreferencesPanel::PreferencesPanel(PlayerInfo &player)
-	: player(player), editing(-1), selected(0), hover(-1),
-	tooltip(270, Alignment::LEFT, Tooltip::Direction::DOWN_LEFT, Tooltip::Corner::TOP_LEFT,
-		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium"))
+	: player(player), editing(-1), selected(0), hover(-1)
 {
 	// Select the first valid plugin.
 	for(const auto &plugin : Plugins::Get())
@@ -122,6 +122,11 @@ PreferencesPanel::PreferencesPanel(PlayerInfo &player)
 		}
 
 	SetIsFullScreen(true);
+
+	// Initialize a centered tooltip.
+	hoverText.SetFont(FontSet::Get(14));
+	hoverText.SetWrapWidth(250);
+	hoverText.SetAlignment(Alignment::LEFT);
 
 	// Set the initial plugin list and description scroll ranges.
 	const Interface *pluginUi = GameData::Interfaces().Get("plugins");
@@ -371,32 +376,20 @@ bool PreferencesPanel::Hover(int x, int y)
 	hoverPoint = Point(x, y);
 
 	hoverItem.clear();
-	tooltip.Clear();
+	tooltip.clear();
 
 	hover = -1;
 	for(unsigned index = 0; index < zones.size(); ++index)
-	{
-		const auto &zone = zones[index];
-		if(zone.Contains(hoverPoint))
-		{
+		if(zones[index].Contains(hoverPoint))
 			hover = index;
-			tooltip.SetZone(zone);
-		}
-	}
 
 	for(const auto &zone : prefZones)
 		if(zone.Contains(hoverPoint))
-		{
 			hoverItem = zone.Value();
-			tooltip.SetZone(zone);
-		}
 
 	for(const auto &zone : pluginZones)
 		if(zone.Contains(hoverPoint))
-		{
 			hoverItem = zone.Value();
-			tooltip.SetZone(zone);
-		}
 
 	return true;
 }
@@ -1226,17 +1219,38 @@ void PreferencesPanel::DrawTooltips()
 {
 	if(hoverItem.empty())
 	{
-		tooltip.DecrementCount();
+		// Step the tooltip timer back.
+		hoverCount -= hoverCount ? 1 : 0;
 		return;
 	}
-	tooltip.IncrementCount();
-	if(!tooltip.ShouldDraw())
+
+	// Step the tooltip timer forward [0-60].
+	hoverCount += hoverCount < HOVER_TIME;
+
+	if(hoverCount < HOVER_TIME)
 		return;
 
-	if(!tooltip.HasText())
-		tooltip.SetText(GameData::Tooltip(hoverItem));
+	// Create the tooltip text.
+	if(tooltip.empty())
+	{
+		tooltip = GameData::Tooltip(hoverItem);
+		// No tooltip for this item.
+		if(tooltip.empty())
+			return;
+		hoverText.Wrap(tooltip);
+	}
 
-	tooltip.Draw();
+	Point size(hoverText.WrapWidth(), hoverText.Height() - hoverText.ParagraphBreak());
+	size += Point(20., 20.);
+	Point topLeft = hoverPoint;
+	// Do not overflow the screen dimensions.
+	if(topLeft.X() + size.X() > Screen::Right())
+		topLeft.X() -= size.X();
+	if(topLeft.Y() + size.Y() > Screen::Bottom())
+		topLeft.Y() -= size.Y();
+	// Draw the background fill and the tooltip text.
+	FillShader::Fill(Rectangle::FromCorner(topLeft, size), *GameData::Colors().Get("tooltip background"));
+	hoverText.Draw(topLeft + Point(10., 10.), *GameData::Colors().Get("medium"));
 }
 
 

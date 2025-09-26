@@ -21,7 +21,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Color.h"
 #include "DistanceMap.h"
 #include "Point.h"
-#include "Tooltip.h"
+#include "text/WrappedText.h"
 
 #include <map>
 #include <string>
@@ -164,8 +164,10 @@ protected:
 	void UpdateCache();
 
 	// For tooltips:
+	int hoverCount = 0;
 	const System *hoverSystem = nullptr;
-	Tooltip tooltip;
+	std::string tooltip;
+	WrappedText hoverText;
 
 	// An X offset in pixels to be applied to the selected system UI if something
 	// else gets in the way of its default position.

@@ -55,8 +55,6 @@ public:
 	double Right() const;
 	double Bottom() const;
 	Point TopLeft() const;
-	Point TopRight() const;
-	Point BottomLeft() const;
 	Point BottomRight() const;
 
 	// Check if a point is inside this rectangle.

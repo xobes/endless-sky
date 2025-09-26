@@ -81,7 +81,6 @@ private:
 	// Centers on the next involved system for the clicked mission from the mission list
 	void CycleInvolvedSystems(const Mission &mission);
 
-
 private:
 	const Interface *missionInterface;
 
@@ -96,11 +95,8 @@ private:
 	bool canDrag = true;
 
 	int dragSide = 0;
-
-	// 0 to 3 for each UI element
-	int hoverSort = -1;
-	mutable Tooltip tooltip;
-
+	int hoverSortCount = 0;
+	int hoverSort = -1; // 0 to 3 for each UI element
 	std::shared_ptr<TextArea> description;
 	bool descriptionVisible = false;
 };

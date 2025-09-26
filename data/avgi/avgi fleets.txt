@@ -26,14 +26,14 @@ fleet "Avgi Core Defense"
 		"Vibratia" 6
 		"Photikon" 2
 	variant 6
-		"Diaspersi (Orchid)"
+		"Diaspersi (Atomic)"
 		"Vibratia" 3
 		"Undulon" 3
-		"Photikon (Ophrys)" 2
+		"Photikon (Atomic)" 2
 	variant 12
 		"Difraktos"
 	variant 12
-		"Difraktos (Orchid)"
+		"Difraktos (Atomic)"
 	variant 12
 		"Refraktos"
 	variant 12
@@ -46,14 +46,14 @@ fleet "Avgi Core Defense"
 		"Prismaios"
 		"Prismaios (Laserstar)"
 	variant 12
-		"Prismaios (Orchid)" 2
+		"Prismaios (Atomic)" 2
 	variant 12
 		"Tremoros" 3
 	variant 1
-		"Atenuatia (Orchid)"
+		"Atenuatia (Atomic)"
 		"Diaspersi"
 		"Vibratia" 22
-		"Photikon (Ophrys)" 8
+		"Photikon (Atomic)" 8
 		"Optikon" 2
 		"Difraktos (KKV)"
 		"Refraktos"
@@ -71,7 +71,7 @@ fleet "Avgi Orbital Defense"
 	variant 24
 		"Vibratia" 6
 	variant 12
-		"Photikon (Ophrys)" 3
+		"Photikon (Atomic)" 3
 	variant 6
 		"Optikon" 3
 
@@ -103,11 +103,6 @@ fleet "Avgi Patrol"
 		"Vibratia" 3
 		"Optikon" 3
 		"Photikon" 2
-	variant 1
-		"Diaspersi"
-		"Vibratia" 3
-		"Optikon" 3
-		"Photikon (KKV)" 2
 
 
 fleet "Avgi Scouts"
@@ -156,16 +151,11 @@ fleet "Avgi Strike Group"
 	variant 12
 		"Prismaios" 2
 		"Prismaios (Laserstar)"
-	variant 6
+	variant 12
 		"Diaspersi"
 		"Vibratia" 3
 		"Optikon" 3
 		"Photikon" 2
-	variant 6
-		"Diaspersi"
-		"Vibratia" 3
-		"Optikon" 3
-		"Photikon (KKV)" 2
 	variant 12
 		"Difraktos"
 	variant 12
@@ -175,11 +165,6 @@ fleet "Avgi Strike Group"
 		"Atenuatia"
 		"Vibratia" 18
 		"Photikon" 6
-	variant 3
-		"Atenuatia"
-		"Vibratia" 18
-		"Photikon" 3
-		"Photikon (KKV)" 3
 
 
 fleet "Avgi Fleetgroup"
@@ -204,8 +189,7 @@ fleet "Avgi Fleetgroup"
 	variant 6
 		"Atenuatia"
 		"Vibratia" 18
-		"Photikon" 3
-		"Photikon (KKV)" 3
+		"Photikon" 6
 		"Difraktos"
 		"Prismaios (Laserstar)"
 		"Tremoros" 3
@@ -225,9 +209,8 @@ fleet "Avgi Fleetgroup"
 		"Tremoros" 3
 	variant 3
 		"Atenuatia"
-		"Vibratia" 22
-		"Photikon" 3
-		"Photikon (KKV)" 3
+		"Vibratia" 18
+		"Photikon" 6
 		"Difraktos"
 		"Difraktos (KKV)"
 		"Refraktos"
@@ -238,8 +221,7 @@ fleet "Avgi Fleetgroup"
 		"Atenuatia"
 		"Diaspersi"
 		"Vibratia" 22
-		"Photikon" 2
-		"Photikon (KKV)" 6
+		"Photikon" 8
 		"Optikon" 2
 		"Difraktos"
 		"Refraktos"

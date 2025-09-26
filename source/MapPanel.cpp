@@ -161,6 +161,8 @@ namespace {
 
 	const Color black(0.f, 1.f);
 
+	// Hovering an escort pip for this many frames activates the tooltip.
+	const int HOVER_TIME = 60;
 	// Length in frames of the recentering animation.
 	const int RECENTER_TIME = 20;
 
@@ -236,8 +238,6 @@ MapPanel::MapPanel(PlayerInfo &player, int commodity, const System *special, boo
 	specialSystem(special),
 	playerJumpDistance(System::DEFAULT_NEIGHBOR_DISTANCE),
 	commodity(commodity),
-	tooltip(170, Alignment::LEFT, Tooltip::Direction::DOWN_RIGHT, Tooltip::Corner::BOTTOM_RIGHT,
-		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium")),
 	fromMission(fromMission)
 {
 	Audio::Pause();
@@ -260,6 +260,11 @@ MapPanel::MapPanel(PlayerInfo &player, int commodity, const System *special, boo
 		if(Preferences::Has(SHOW_STORED_OUTFITS))
 			TallyOutfits(player.PlanetaryStorage(), escortSystems);
 	}
+
+	// Initialize a centered tooltip.
+	hoverText.SetFont(FontSet::Get(14));
+	hoverText.SetWrapWidth(150);
+	hoverText.SetAlignment(Alignment::LEFT);
 
 	// Find out how far the player is able to jump. The range of the system
 	// takes priority over the range of the player's flagship.
@@ -298,21 +303,7 @@ void MapPanel::Step()
 		--recentering;
 	}
 
-	// The mouse should be pointing to the same map position before and after zooming.
-	bool needsRecenter = !zoom.IsAnimationDone();
-	Point mouse, anchor;
-	if(needsRecenter)
-	{
-		mouse = UI::GetMouse();
-		anchor = mouse / Zoom() - center;
-	}
-
 	zoom.Step();
-
-	// Now, Zoom() has changed (unless at one of the limits). But, we still want
-	// anchor to be the same, so:
-	if(needsRecenter)
-		center = mouse / Zoom() - anchor;
 }
 
 
@@ -345,11 +336,8 @@ void MapPanel::Draw()
 
 	// Advance a "blink" timer.
 	++step;
-	// Update the tooltip timer.
-	if(hoverSystem)
-		tooltip.IncrementCount();
-	else
-		tooltip.DecrementCount();
+	// Update the tooltip timer [0-60].
+	hoverCount += hoverSystem ? (hoverCount < HOVER_TIME) : (hoverCount ? -1 : 0);
 
 	DrawWormholes();
 	DrawTravelPlan();
@@ -384,51 +372,64 @@ void MapPanel::FinishDrawing(const string &buttonCondition)
 	mapButtonUi->Draw(info, this);
 
 	// Draw the tooltips.
-	if(hoverSystem && tooltip.ShouldDraw())
+
+	if(hoverSystem && hoverCount >= HOVER_TIME)
 	{
 		// Create the tooltip text.
-		if(!tooltip.HasText())
+		if(tooltip.empty())
 		{
 			MapPanel::SystemTooltipData t = escortSystems.at(hoverSystem);
 
-			string text;
 			if(hoverSystem == &playerSystem)
 			{
 				if(player.Flagship())
 					--t.activeShips;
 				if(t.activeShips || t.parkedShips || !t.outfits.empty())
-					text = "You are here, with:\n";
+					tooltip = "You are here, with:\n";
 				else
-					text = "You are here.";
+					tooltip = "You are here.";
 			}
 			// If you have both active and parked escorts, call the active ones
 			// "active escorts." Otherwise, just call them "escorts."
 			if(t.activeShips && t.parkedShips)
-				text += to_string(t.activeShips) + (t.activeShips == 1 ? " active escort\n" : " active escorts\n");
+				tooltip += to_string(t.activeShips) + (t.activeShips == 1 ? " active escort\n" : " active escorts\n");
 			else if(t.activeShips)
-				text += to_string(t.activeShips) + (t.activeShips == 1 ? " escort" : " escorts");
+				tooltip += to_string(t.activeShips) + (t.activeShips == 1 ? " escort" : " escorts");
 			if(t.parkedShips)
-				text += to_string(t.parkedShips) + (t.parkedShips == 1 ? " parked escort" : " parked escorts");
+				tooltip += to_string(t.parkedShips) + (t.parkedShips == 1 ? " parked escort" : " parked escorts");
 			if(!t.outfits.empty())
 			{
 				if(t.activeShips || t.parkedShips)
-					text += "\n";
+					tooltip += "\n";
 
 				unsigned sum = 0;
 				for(const auto &it : t.outfits)
 					sum += it.second;
 
-				text += to_string(sum) + (sum == 1 ? " stored outfit" : " stored outfits");
+				tooltip += to_string(sum) + (sum == 1 ? " stored outfit" : " stored outfits");
 
 				if(HasMultipleLandablePlanets(*hoverSystem) || t.outfits.size() > 1)
 					for(const auto &it : t.outfits)
-						text += "\n - " + to_string(it.second) + " on " + it.first->DisplayName();
+						tooltip += "\n - " + to_string(it.second) + " on " + it.first->DisplayName();
 			}
 
-			tooltip.SetText(text);
+			hoverText.Wrap(tooltip);
 		}
-		tooltip.SetZone((hoverSystem->Position() + center) * Zoom(), Point(20., 20.));
-		tooltip.Draw();
+		if(!tooltip.empty())
+		{
+			// Add 10px margin to all sides of the text.
+			Point size(hoverText.WrapWidth(), hoverText.Height() - hoverText.ParagraphBreak());
+			size += Point(20., 20.);
+			Point topLeft = (hoverSystem->Position() + center) * Zoom();
+			// Do not overflow the screen dimensions.
+			if(topLeft.X() + size.X() > Screen::Right())
+				topLeft.X() -= size.X();
+			if(topLeft.Y() + size.Y() > Screen::Bottom())
+				topLeft.Y() -= size.Y();
+			// Draw the background fill and the tooltip text.
+			FillShader::Fill(Rectangle::FromCorner(topLeft, size), *GameData::Colors().Get("tooltip background"));
+			hoverText.Draw(topLeft + Point(10., 10.), *GameData::Colors().Get("medium"));
+		}
 	}
 
 	// Draw a warning if the selected system is not routable.
@@ -562,7 +563,7 @@ bool MapPanel::Hover(int x, int y)
 			return true;
 
 		hoverSystem = nullptr;
-		tooltip.Clear();
+		tooltip.clear();
 	}
 
 	// Check if the new position supports a tooltip.
@@ -594,11 +595,17 @@ bool MapPanel::Drag(double dx, double dy)
 
 bool MapPanel::Scroll(double dx, double dy)
 {
+	// The mouse should be pointing to the same map position before and after zooming.
+	Point mouse = UI::GetMouse();
+	Point anchor = mouse / Zoom() - center;
 	if(dy > 0.)
 		IncrementZoom();
 	else if(dy < 0.)
 		DecrementZoom();
 
+	// Now, Zoom() has changed (unless at one of the limits). But, we still want
+	// anchor to be the same, so:
+	center = mouse / Zoom() - anchor;
 	return true;
 }
 
