@@ -312,6 +312,8 @@ target_sources(EndlessSkyLib PRIVATE
 	TextArea.h
 	TextReplacements.cpp
 	TextReplacements.h
+	Tooltip.cpp
+	Tooltip.h
 	Trade.cpp
 	Trade.h
 	TradingPanel.cpp

@@ -1526,7 +1526,7 @@ interface "escort element"
 
 
 interface "planet"
-	image "land"
+	image "land"e
 		center 0 -140
 	sprite "ui/planet dialog"
 		center 0 25
@@ -2084,10 +2084,10 @@ interface "trade"
 		center 200 355
 		dimensions 70 30
 	
-	active if "can sell specials"
+	active if "can sell flotsam"
 	sprite "ui/wide button"
 		center -85 355
-	button F23 "Sell Specials"
+	button f "Sell _Flotsam"
 		center -85 355
 		dimensions 90 30
 	
@@ -2124,7 +2124,7 @@ interface "trade (small screen)"
 	active if "can sell specials"
 	sprite "ui/wide button"
 		center -145 355
-	button F23 "Sell Specials"
+	button f "Sell _Flotsam"
 		center -145 355
 		dimensions 90 30
 	

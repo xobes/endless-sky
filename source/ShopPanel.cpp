@@ -65,29 +65,7 @@ namespace {
 	{
 		return ship.GetPlanet() == here;
 	}
-}
 
-void DrawTooltip(const string &text, const Point &hoverPoint, const Color &textColor, const Color &backColor)
-{
-	constexpr int WIDTH = 250;
-	constexpr int PAD = 10;
-	WrappedText wrap(FontSet::Get(14));
-	wrap.SetWrapWidth(WIDTH - 2 * PAD);
-	wrap.Wrap(text);
-	int longest = wrap.LongestLineWidth();
-	if(longest < wrap.WrapWidth())
-	{
-		wrap.SetWrapWidth(longest);
-		wrap.Wrap(text);
-	}
-
-	Point textSize(wrap.WrapWidth() + 2 * PAD, wrap.Height() + 2 * PAD - wrap.ParagraphBreak());
-	Point anchor = Point(hoverPoint.X(), min<double>(hoverPoint.Y() + textSize.Y(), Screen::Bottom()));
-	FillShader::Fill(anchor - .5 * textSize, textSize, backColor);
-	wrap.Draw(anchor - textSize + Point(PAD, PAD), textColor);
-}
-
-namespace {
 	constexpr auto ScrollbarMaybeUpdate = [](const auto &op, ScrollBar &scrollbar,
 		ScrollVar<double> &scroll, bool animate)
 	{
@@ -105,10 +83,10 @@ ShopPanel::ShopPanel(PlayerInfo &player, bool isOutfitter)
 	planet(player.GetPlanet()), isOutfitter(isOutfitter), playerShip(player.Flagship()),
 	categories(GameData::GetCategory(isOutfitter ? CategoryType::OUTFIT : CategoryType::SHIP)),
 	collapsed(player.Collapsed(isOutfitter ? "outfitter" : "shipyard")),
-	hover(*GameData::Colors().Get("hover")),
-	active(*GameData::Colors().Get("active")),
-	inactive(*GameData::Colors().Get("inactive")),
-	back(*GameData::Colors().Get("panel background"))
+	shipsTooltip(250, Alignment::LEFT, Tooltip::Direction::DOWN_LEFT, Tooltip::Corner::TOP_LEFT,
+		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium")),
+	creditsTooltip(250, Alignment::LEFT, Tooltip::Direction::UP_LEFT, Tooltip::Corner::TOP_RIGHT,
+		GameData::Colors().Get("tooltip background"), GameData::Colors().Get("medium"))
 {
 	if(playerShip)
 		playerShips.insert(playerShip);
@@ -174,10 +152,10 @@ void ShopPanel::Draw()
 		string text = shipName;
 		if(!warningType.empty())
 			text += "\n" + GameData::Tooltip(warningType);
-		const Color &textColor = *GameData::Colors().Get("medium");
-		const Color &backColor = *GameData::Colors().Get(warningType.empty() ? "tooltip background"
-					: (warningType.back() == '!' ? "error back" : "warning back"));
-		DrawTooltip(text, hoverPoint, textColor, backColor);
+		shipsTooltip.SetText(text, true);
+		shipsTooltip.SetBackgroundColor(GameData::Colors().Get(warningType.empty() ? "tooltip background"
+			: (warningType.back() == '!' ? "error back" : "warning back")));
+		shipsTooltip.Draw(true);
 	}
 
 	if(dragShip && isDraggingShip && dragShip->GetSprite())
@@ -253,9 +231,36 @@ void ShopPanel::CheckForMissions(Mission::Location location) const
 
 
 
-int ShopPanel::VisibilityCheckboxesSize() const
+void ShopPanel::FailSell(bool toStorage) const
 {
-	return 0;
+}
+
+
+
+bool ShopPanel::CanSellMultiple() const
+{
+	return true;
+}
+
+
+
+// Helper function for UI buttons to determine if the selected item is
+// already owned. Affects if "Install" is shown for already owned items
+// or if "Buy" is shown for items not yet owned.
+//
+// If we are buying into cargo, then items in cargo don't count as already
+// owned, but they count as "already installed" in cargo.
+bool ShopPanel::IsAlreadyOwned() const
+{
+	return (playerShip && selectedOutfit && player.Cargo().Get(selectedOutfit))
+		|| player.Storage().Get(selectedOutfit);
+}
+
+
+
+bool ShopPanel::ShouldHighlight(const Ship *ship)
+{
+	return (hoverButton == 's');
 }
 
 
@@ -266,9 +271,9 @@ void ShopPanel::DrawKey()
 
 
 
-bool ShopPanel::ShouldHighlight(const Ship *ship)
+int ShopPanel::VisibilityCheckboxesSize() const
 {
-	return (hoverButton == 's' || hoverButton == 'r');
+	return 0;
 }
 
 
@@ -779,7 +784,7 @@ void ShopPanel::DrawShipsSidebar()
 		if(mouse.Y() < Screen::Bottom() - ButtonPanelHeight() && shipZones.back().Contains(mouse))
 		{
 			shipName = ship->Name() + (ship->IsParked() ? "\n" + GameData::Tooltip("parked") : "");
-			hoverPoint = shipZones.back().TopLeft();
+			shipsTooltip.SetZone(shipZones.back());
 		}
 
 		const auto checkIt = flightChecks.find(ship);
