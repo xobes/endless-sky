@@ -431,6 +431,7 @@ bool ShopPanel::Click(int x, int y, MouseButton button, int clicks)
 
 	// Handle clicks on the buttons.
 	char zoneButton = CheckButton(x, y);
+
 	if(zoneButton)
 		return DoKey(zoneButton);
 

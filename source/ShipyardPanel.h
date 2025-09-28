@@ -54,7 +54,10 @@ protected:
 
 
 private:
-	void BuyShip(const std::string &name);
+	TransactionResult CanDoBuyButton() const;
+	void DoBuyButton();
+	void Sell(bool storeOutfits);
+	bool BuyShip(const std::string &name);
 	void SellShipAndOutfits();
 	void SellShipChassis();
 	void SellShip(bool toStorage);
