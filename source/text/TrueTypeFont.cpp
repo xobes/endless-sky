@@ -33,6 +33,8 @@ namespace {
 	GLuint vao = 0;
 	GLuint vbo = 0;
 
+	GLuint texI = 0;
+
 	void DebugPrint(unsigned int *pixels, int height, int columns)
 	{
 		char buf[9];
@@ -112,9 +114,11 @@ void TrueTypeFont::Draw(const DisplayText &text, const Point &point, const Color
 	glUseProgram(shader->Object());
 	glBindVertexArray(vao);
 
-	GLuint texI = shader->Uniform("tex");
 	// Reallocate buffer for texture id texI. TODO: only delete/create when size changes?
-	glDeleteTextures(1, &texI);
+	if(texI)
+		glDeleteTextures(1, &texI);
+
+	texI = shader->Uniform("tex");
 	glGenTextures(1, &texI);
 	Logger::LogError("texI = " + to_string(texI));
 
