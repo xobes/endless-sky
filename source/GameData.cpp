@@ -17,7 +17,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "audio/Audio.h"
 #include "shader/BatchShader.h"
-#include "CategoryList.h"
 #include "Color.h"
 #include "Command.h"
 #include "ConditionsStore.h"
@@ -63,6 +62,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "TaskQueue.h"
 #include "test/Test.h"
 #include "test/TestData.h"
+#include "text/TrueTypeFont.h"
 #include "UniverseObjects.h"
 
 #include <algorithm>
@@ -72,6 +72,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <queue>
 #include <utility>
 #include <vector>
+
 
 using namespace std;
 
@@ -331,6 +332,8 @@ void GameData::LoadShaders()
 
 	FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
 	FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
+	FontSet::AddTTF(Files::Fonts() / "Ubuntu-R.ttf", 14);
+	// FontSet::AddTTF(Files::Fonts() / "Ubuntu-R.ttf", 18);
 
 	background.Init(16384, 4096);
 }

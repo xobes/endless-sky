@@ -36,6 +36,7 @@ public:
 	static const std::filesystem::path &Config();
 
 	static const std::filesystem::path &Data();
+	static const std::filesystem::path &Fonts();
 	static const std::filesystem::path &Images();
 	static const std::filesystem::path &Sounds();
 	static const std::filesystem::path &Saves();

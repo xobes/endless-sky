@@ -45,6 +45,7 @@
 					"platform": "linux"
 				},
 				"sdl2",
+				"sdl2-ttf",
 				"pkgconf"
 			]
 		},

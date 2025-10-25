@@ -432,6 +432,8 @@ target_sources(EndlessSkyLib PRIVATE
 	text/Table.cpp
 	text/Table.h
 	text/Truncate.h
+	text/TrueTypeFont.cpp
+	text/TrueTypeFont.h
 	text/Utf8.cpp
 	text/Utf8.h
 	text/WrappedText.cpp

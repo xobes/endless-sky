@@ -37,6 +37,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "shader/StarField.h"
 #include "StartConditionsPanel.h"
 #include "System.h"
+#include "text/TrueTypeFont.h"
 #include "UI.h"
 
 #include "opengl.h"
@@ -45,6 +46,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <cassert>
 #include <cmath>
 #include <stdexcept>
+
+#include "shader/FillShader.h"
+#include "Screen.h"
+#include "shader/RingShader.h"
+#include "text/DisplayText.h"
 
 using namespace std;
 
@@ -138,42 +144,42 @@ void MenuPanel::Step()
 void MenuPanel::Draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	GameData::Background().Draw(Point());
+	// GameData::Background().Draw(Point());
 
-	Information info;
-	if(player.IsLoaded() && !player.IsDead())
-	{
-		info.SetCondition("pilot loaded");
-		info.SetString("pilot", player.FirstName() + " " + player.LastName());
-		if(player.Flagship())
-		{
-			const Ship &flagship = *player.Flagship();
-			info.SetSprite("ship sprite", flagship.GetSprite());
-			info.SetString("ship", flagship.Name());
-		}
-		if(player.GetSystem())
-			info.SetString("system", player.GetSystem()->DisplayName());
-		if(player.GetPlanet())
-			info.SetString("planet", player.GetPlanet()->DisplayName());
-		info.SetString("credits", Format::Credits(player.Accounts().Credits()));
-		info.SetString("date", player.GetDate().ToString());
-		info.SetString("playtime", Format::PlayTime(player.GetPlayTime()));
-	}
-	else if(player.IsLoaded())
-	{
-		info.SetCondition("no pilot loaded");
-		info.SetString("pilot", player.FirstName() + " " + player.LastName());
-		info.SetString("ship", "You have died.");
-	}
-	else
-	{
-		info.SetCondition("no pilot loaded");
-		info.SetString("pilot", "No Pilot Loaded");
-	}
-
-	GameData::Interfaces().Get("menu background")->Draw(info, this);
-	mainMenuUi->Draw(info, this);
-	GameData::Interfaces().Get("menu player info")->Draw(info, this);
+	// Information info;
+	// if(player.IsLoaded() && !player.IsDead())
+	// {
+	// 	info.SetCondition("pilot loaded");
+	// 	info.SetString("pilot", player.FirstName() + " " + player.LastName());
+	// 	if(player.Flagship())
+	// 	{
+	// 		const Ship &flagship = *player.Flagship();
+	// 		info.SetSprite("ship sprite", flagship.GetSprite());
+	// 		info.SetString("ship", flagship.Name());
+	// 	}
+	// 	if(player.GetSystem())
+	// 		info.SetString("system", player.GetSystem()->DisplayName());
+	// 	if(player.GetPlanet())
+	// 		info.SetString("planet", player.GetPlanet()->DisplayName());
+	// 	info.SetString("credits", Format::Credits(player.Accounts().Credits()));
+	// 	info.SetString("date", player.GetDate().ToString());
+	// 	info.SetString("playtime", Format::PlayTime(player.GetPlayTime()));
+	// }
+	// else if(player.IsLoaded())
+	// {
+	// 	info.SetCondition("no pilot loaded");
+	// 	info.SetString("pilot", player.FirstName() + " " + player.LastName());
+	// 	info.SetString("ship", "You have died.");
+	// }
+	// else
+	// {
+	// 	info.SetCondition("no pilot loaded");
+	// 	info.SetString("pilot", "No Pilot Loaded");
+	// }
+	//
+	// GameData::Interfaces().Get("menu background")->Draw(info, this);
+	// mainMenuUi->Draw(info, this);
+	// GameData::Interfaces().Get("menu player info")->Draw(info, this);
 
 	if(!credits.empty())
 		DrawCredits();
@@ -240,22 +246,80 @@ bool MenuPanel::Click(int x, int y, MouseButton button, int clicks)
 void MenuPanel::DrawCredits() const
 {
 	const Font &font = FontSet::Get(14);
-	const auto creditsRect = mainMenuUi->GetBox("credits");
-	const int top = static_cast<int>(creditsRect.Top());
-	const int bottom = static_cast<int>(creditsRect.Bottom());
-	int y = bottom + 5 - scroll / SCROLL_MOD;
-	for(const string &line : credits)
+	// const auto creditsRect = mainMenuUi->GetBox("credits");
+	// const int top = static_cast<int>(creditsRect.Top());
+	// const int bottom = static_cast<int>(creditsRect.Bottom());
+	// int y = bottom + 5 - scroll / SCROLL_MOD;
+	// for(const string &line : credits)
+	// {
+	// 	float fade = 1.f;
+	// 	if(y < top + 20)
+	// 		fade = max(0.f, (y - top) / 20.f);
+	// 	else if(y > bottom - 20)
+	// 		fade = max(0.f, (bottom - y) / 20.f);
+	// 	if(fade)
+	// 	{
+	// 		Color color(((line.empty() || line[0] == ' ') ? .2f : .4f) * fade, 0.f);
+	// 		font.Draw(line, Point(creditsRect.Left(), y), color);
+	// 	}
+	// 	y += 20;
+	// }
+
+	// Color c(1.f, 1.f, 1.f, 1.f);
+	Color color = *GameData::Colors().Get("medium");
+	Color colorb = *GameData::Colors().Get("bright");
+	// // RingShader::Draw({0,0}, 34, 33, {1,0,0,1});
+	// RingShader::Draw({0,0}, 18, 17, {1,0,1,1});
+	// // FillShader::Fill(Rectangle::FromCorner({0,0}, {33, -17}), {.2,.2,0,.05});
+	// // FillShader::Fill(Rectangle::FromCorner({252,-26}, {33,-17}), {.2,.2,0,.05});
+	// const TrueTypeFont &tfont = FontSet::GetTTF(14);
+	// // tfont.Draw({"pilot:", {Alignment::LEFT}}, {308,-36}, color);
+	//
+	// tfont.Draw({"pilot:", {Alignment::LEFT}}, {275,-53}, color);
+	// tfont.Draw({"logbook", {Alignment::LEFT}}, {351,-53}, colorb);
+	// // tfont.Draw({"io", {Alignment::LEFT}}, {275,-75}, color);
+	// // tfont.Draw({"ioioioioioioioioioioioioilogbook", {Alignment::LEFT}}, {351,-75}, colorb);
+	// //
+	// // // tfont.Draw({"pilot:", {Alignment::LEFT}}, {275,-36}, color);
+	// // tfont.Draw({"Hey0", {Alignment::LEFT}}, {0,0}, color);
+	// // tfont.Draw({"Hey1", {Alignment::LEFT}}, {33, 0}, color);
+	// // tfont.Draw({"Hey2", {Alignment::LEFT}}, {0,17}, color);
+	// // RingShader::Draw({0,17}, 18, 17, {0,1,1,1});
+	// // RingShader::Draw({33,0}, 18, 17, {0,1,1,1});
+	// // RingShader::Draw({33,17}, 18, 17, {0,1,1,1});
+
+	FontSet::AddTTF(Files::Fonts() / "Ubuntu-R.ttf", 14);
+	const TrueTypeFont &tfont2 = FontSet::GetTTF(14);
+
+	double height = 40.;
+	double width = 50.;
+	double dx = 0.;
+	double dy = 0.;
+	int m = 8; // x, width
+	int n = 8; // y, height
+	bool printHeading = true;
+	Point p(Screen::Left() + 40, Screen::Top() + 40);
+	for(int i = -m; i < m; i++)
 	{
-		float fade = 1.f;
-		if(y < top + 20)
-			fade = max(0.f, (y - top) / 20.f);
-		else if(y > bottom - 20)
-			fade = max(0.f, (bottom - y) / 20.f);
-		if(fade)
+		dx = i * 0.25;
+		font.Draw(std::format("{:.2f}", dx), p + Point(0, -30), colorb);
+		for(int j = -n; j < m; j++)
 		{
-			Color color(((line.empty() || line[0] == ' ') ? .2f : .4f) * fade, 0.f);
-			font.Draw(line, Point(creditsRect.Left(), y), color);
+			dy = j * 0.25;
+			if(printHeading)
+				font.Draw(std::format("{:.2f}", dy), p + Point(-30, 0), colorb);
+			font.Draw("pilot:", p + Point(-2, 20), color);
+			tfont2.Draw({"pilot:", {Alignment::LEFT}}, p, color, dx, dy);
+			p.Y() += height;
 		}
-		y += 20;
+		printHeading = false;
+		p.Y() = Screen::Top() + 40;
+		p.X() += width;
 	}
+
+
+
+
+
+
 }

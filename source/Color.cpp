@@ -15,6 +15,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Color.h"
 
+#include "SDL2/SDL.h"
+
 using namespace std;
 
 
@@ -91,6 +93,13 @@ const string &Color::Name() const
 const float *Color::Get() const
 {
 	return color;
+}
+
+
+
+const SDL_Color Color::GetSDLColor() const
+{
+	return SDL_Color(color[0] * 255, color[1] * 255, color[2] * 255, color[3] * 255);
 }
 
 

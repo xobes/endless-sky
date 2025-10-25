@@ -17,6 +17,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include <string>
 
+class SDL_Color;
+
 
 
 // Class representing an RGBA color (for use by OpenGL). The specified colors
@@ -43,6 +45,8 @@ public:
 	const std::string &Name() const;
 	// Get the color as a float vector, suitable for use by OpenGL.
 	const float *Get() const;
+	// Get the color as an SDL_Color, suitable for use by SDL.
+	const SDL_Color GetSDLColor() const;
 
 	// Get this color, but entirely opaque. That is, this is the color you would
 	// get if drawing this color on top of opaque black.

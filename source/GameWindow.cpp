@@ -20,6 +20,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "opengl.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <cstring>
 #include <sstream>
@@ -252,6 +253,18 @@ bool GameWindow::Init(bool headless)
 	// Make sure the screen size and view-port are set correctly.
 	AdjustViewport();
 
+	// Initialize SDL_ttf
+	if(TTF_Init() != 0)
+	{
+		string message = TTF_GetError();
+		if(!message.empty())
+		{
+			Logger::LogError("(SDL_ttf message: \"" + message + "\")");
+			//SDL_ClearError();
+		}
+		return false;
+	}
+
 #ifdef _WIN32
 	UpdateTitleBarTheme();
 	UpdateWindowRounding();
@@ -274,6 +287,7 @@ void GameWindow::Quit()
 	if(mainWindow)
 		SDL_DestroyWindow(mainWindow);
 
+	TTF_Quit();
 	SDL_Quit();
 }
 

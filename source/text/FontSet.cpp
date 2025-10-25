@@ -16,6 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "FontSet.h"
 
 #include "Font.h"
+#include "TrueTypeFont.h"
 
 #include <map>
 
@@ -23,6 +24,7 @@ using namespace std;
 
 namespace {
 	map<int, Font> fonts;
+	map<double, TrueTypeFont> ttfonts;
 }
 
 
@@ -38,4 +40,19 @@ void FontSet::Add(const filesystem::path &path, int size)
 const Font &FontSet::Get(int size)
 {
 	return fonts[size];
+}
+
+
+
+void FontSet::AddTTF(const filesystem::path &path, double size)
+{
+	if(!ttfonts.contains(size))
+		ttfonts[size].Load(path, size);
+}
+
+
+
+const TrueTypeFont &FontSet::GetTTF(double size)
+{
+	return ttfonts[size];
 }
