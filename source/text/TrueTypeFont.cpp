@@ -112,10 +112,11 @@ void TrueTypeFont::Draw(const DisplayText &text, const Point &point, const Color
 	glUseProgram(shader->Object());
 	glBindVertexArray(vao);
 
-	// Reallocate buffer for texture id texI. TODO: only delete/create when size changes
-	// glDeleteTextures(1, &texI); // TODO: actually, this was deleting the button fonts, whoops
 	GLuint texI = shader->Uniform("tex");
+	// Reallocate buffer for texture id texI. TODO: only delete/create when size changes?
+	glDeleteTextures(1, &texI);
 	glGenTextures(1, &texI);
+	Logger::LogError("texI = " + to_string(texI));
 
 	// Upload the new texture "image".
 	GLint texture = 0;
