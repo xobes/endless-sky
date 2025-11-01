@@ -332,8 +332,8 @@ void GameData::LoadShaders()
 
 	FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
 	FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
-	FontSet::AddTTF(Files::Fonts() / "Ubuntu-R.ttf", 14);
-	// FontSet::AddTTF(Files::Fonts() / "Ubuntu-R.ttf", 18);
+	FontSet::AddTTF(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
+	FontSet::AddTTF(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
 
 	background.Init(16384, 4096);
 }

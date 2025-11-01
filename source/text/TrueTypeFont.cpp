@@ -19,8 +19,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "DisplayText.h"
 #include "../GameData.h"
 #include "../Logger.h"
-// #include "../image/ImageBuffer.h"
-// #include "../image/ImageFileData.h"
 #include "../Point.h"
 #include "../Screen.h"
 
@@ -34,66 +32,7 @@ namespace {
 	GLuint vbo = 0;
 
 	GLuint texI = 0;
-
-	void DebugPrint(unsigned int *pixels, int height, int columns)
-	{
-		char buf[9];
-		string row;
-		for(int y = 0; y < height; y++)
-		{
-			row = "";
-			for(int x = 0; x < columns; x++)
-			{
-				int i = (y * columns) + x;
-				int value = pixels[i];
-				value >>= 24;
-				value &= 0xFF;
-				std::sprintf(buf, "%02X", value);
-				if(value > 50)
-					row += buf;
-				else if(value)
-					row += "..";
-				else
-					row += "  ";
-			}
-			Logger::LogError(row);
-		}
-	}
-
-	void DebugPrint2(void *pixin, int height, int columns)
-	{
-		auto *pixels = static_cast<unsigned int *>(malloc(height * columns * sizeof(unsigned int)));
-		if(pixels == nullptr)
-		{
-			Logger::LogError("malloc failed");
-			return;
-		}
-
-		for(int y = 0; y < height * columns; y++)
-		{
-			unsigned int b = static_cast<unsigned int *>(pixin)[y];
-			pixels[y] = 0xFF & b >> 24;
-		}
-
-		DebugPrint(pixels, height, columns);
-		free(pixels);
-	}
 }
-
-
-void TrueTypeFont::Load(const filesystem::path &path, double size)
-{
-	Init();
-	fontSize = size;
-	font = TTF_OpenFont(path.c_str(), size);
-}
-//
-//
-//
-// TrueTypeFont::TrueTypeFont(int size)
-// 	:font(TTF_OpenFont(fontPath.c_str(), size)
-// {
-// }
 
 
 
@@ -104,23 +43,66 @@ TrueTypeFont::~TrueTypeFont()
 
 
 
-void TrueTypeFont::Draw(const DisplayText &text, const Point &point, const Color &color,
-	double dx, double dy
-	) const
+void TrueTypeFont::Load(const filesystem::path &path, double size)
 {
-// // void Font::DrawAliased(const string &str, double x, double y, const Color &color) const
+	Init();
+	fontSize = size;
+	font = TTF_OpenFont(path.c_str(), size);
+	TTF_SetFontHinting(font, TTF_HINTING_MONO);
+	if(size == 14)
+		height = 32;
+	else
+		height = size * 2;
+}
+
+
+
+void TrueTypeFont::Draw(const DisplayText &text, const Point &point, const Color &color) const
+{
+	DrawAliased(text, round(point.X()), round(point.Y()), color);
+}
+
+
+
+void TrueTypeFont::DrawAliased(const DisplayText &text, double x, double y, const Color &color) const
+{
+	int width = -1;
+	const string truncText = TruncateText(text, width);
+	const auto &layout = text.GetLayout();
+	if(width >= 0)
+	{
+		if(layout.align == Alignment::CENTER)
+			x += (layout.width - width) / 2;
+		else if(layout.align == Alignment::RIGHT)
+			x += layout.width - width;
+	}
+	DrawAliased(truncText, x, y, color);
+}
+
+
+
+void TrueTypeFont::Draw(const string &str, const Point &point, const Color &color) const
+{
+	DrawAliased(str, round(point.X()), round(point.Y()), color);
+}
+
+
+
+void TrueTypeFont::DrawAliased(const string &str, double x, double y, const Color &color) const
+{
+	if(str.empty())
+		return;
 
 	// Bind.
 	glUseProgram(shader->Object());
 	glBindVertexArray(vao);
 
-	// Reallocate buffer for texture id texI. TODO: only delete/create when size changes?
+	// Reallocate buffer for texture id texI.
 	if(texI)
 		glDeleteTextures(1, &texI);
 
 	texI = shader->Uniform("tex");
 	glGenTextures(1, &texI);
-	Logger::LogError("texI = " + to_string(texI));
 
 	// Upload the new texture "image".
 	GLint texture = 0;
@@ -132,12 +114,12 @@ void TrueTypeFont::Draw(const DisplayText &text, const Point &point, const Color
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	// ----------------------------------------------------------------------------------------
-	SDL_Color sdlColor(255, 255, 255, 255);
+	SDL_Color sdlColor(255, 255, 255, 0);
 
 #define USE_BLENDED
 #ifdef USE_BLENDED
 	// Note: returns ARGB, sorted out in the shader;
-	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, text.GetText().c_str(), sdlColor);  // ARGB, 32-bit/pixel
+	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, str.c_str(), sdlColor);  // ARGB, 32-bit/pixel
 #else
 	// Note: returns a single channel.
 	// SDL_Surface *surface = TTF_RenderUTF8_Shaded(font, text.GetText().c_str(), sdlColor, bgColor);  // A, 8-bit/pixel
@@ -183,32 +165,15 @@ void TrueTypeFont::Draw(const DisplayText &text, const Point &point, const Color
 	GLfloat scale[2] = {2.f / Screen::Width(), -2.f / Screen::Height()};
 	glUniform2fv(shader->Uniform("scale"), 1, scale);
 
-	float h = surface->h;
+	GLfloat sizeV[2] = {static_cast<float>(columns),
+						static_cast<float>(surface->h)};
 	SDL_FreeSurface(surface);
-	// h = fontSize + 5; // h * h / static_cast<float>(fontSize);
-	GLfloat sizeV[2] = {static_cast<float>(columns + dx), //surface->w),
-						static_cast<float>(h + dy)};
 	glUniform2fv(shader->Uniform("size"), 1, sizeV);
 
-	float x = point.X();
-	float y = point.Y();
-	float position[2]{x, y};
+	float position[2]{static_cast<float>(x + 2.), static_cast<float>(y - 1)};
 	glUniform2fv(shader->Uniform("position"), 1, position);
+	// glUniform4fv(shader->Uniform("color"), 1, Color::Multiply(1.3, color).Get());
 	glUniform4fv(shader->Uniform("color"), 1, color.Get());
-	// Logger::LogError(string("surface->w = ") + to_string(surface->w));
-	// Logger::LogError(string("surface->h = ") + to_string(surface->h));
-	// Logger::LogError(string("Screen::Width() = ") + to_string(Screen::Width()));
-	// Logger::LogError(string("Screen::Height() = ") + to_string(Screen::Height()));
-	// Logger::LogError(string("scale = ") + to_string(scale[0]) + ", " + to_string(scale[1]));
-	// Logger::LogError(string("position = ") + to_string(position[0]) + ", " + to_string(position[1]));
-	// Logger::LogError(string("color = ") + to_string(color.Get()[0]) + ", " + to_string(color.Get()[1]) + ", " +
-	// 	to_string(color.Get()[2]) + ", " + to_string(color.Get()[3]));
-
-	// // Activate texture id 0.
-	// glActiveTexture(GL_TEXTURE0);
-
-	// // Let the frag shader know we're using texture 0.
-	// glUniform1i(texI, 0);
 
 	// Draw the rectangle of triangles.
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -243,12 +208,6 @@ void TrueTypeFont::Init()
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-		// GLfloat vertexData[] = {
-		// 	-.5f, -.5f,
-		// 	 .5f, -.5f,
-		// 	-.5f,  .5f,
-		// 	 .5f,  .5f
-		// };
 		GLfloat vertexData[] = {
 			0.f, 0.f,
 			1.f, 0.f,
@@ -270,170 +229,30 @@ void TrueTypeFont::Init()
 }
 
 
-//
-//
-// bool TrueTypeFont::loadFromRenderedText(std::string textureText, Color textColor)
-// {
-// 	// TODO: TRY:
-// 	// SDL_Surface * TTF_RenderUNICODE_Shaded(TTF_Font *font,
-// 	// const Uint16 *text, SDL_Color fg, SDL_Color bg
-// 	// );
-// 	// TTF_RenderUTF8_Shaded
-//
-// 	//Get rid of preexisting texture
-// 	// free();
-// 	//
-// 	// //Render text surface
-// 	// SDL_Surface *textSurface = TTF_RenderText_Solid(gFont, textureText.c_str(), textColor);
-// 	// if(textSurface == NULL)
-// 	// {
-// 	// 	printf("Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError());
-// 	// } else
-// 	// {
-// 	// 	//Create texture from surface pixels
-// 	// 	mTexture = SDL_CreateTextureFromSurface(gRenderer, textSurface);
-// 	// 	if(mTexture == NULL)
-// 	// 	{
-// 	// 		printf("Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError());
-// 	// 	} else
-// 	// 	{
-// 	// 		//Get image dimensions
-// 	// 		mWidth = textSurface->w;
-// 	// 		mHeight = textSurface->h;
-// 	// 	}
-// 	//
-// 	// 	//Get rid of old surface
-// 	// 	SDL_FreeSurface(textSurface);
-// 	// }
-// 	//
-// 	// //Return success
-// 	// return mTexture != NULL;
-// }
-//
-//
-//
-// // void Font::Draw(const DisplayText &text, const Point &point, const Color &color) const
-// // {
-// // 	DrawAliased(text, round(point.X()), round(point.Y()), color);
-// // }
-//
-//
-//
-// // void Font::DrawAliased(const DisplayText &text, double x, double y, const Color &color) const
-// // {
-// // 	int width = -1;
-// // 	const string truncText = TruncateText(text, width);
-// // 	const auto &layout = text.GetLayout();
-// // 	if(width >= 0)
-// // 	{
-// // 		if(layout.align == Alignment::CENTER)
-// // 			x += (layout.width - width) / 2;
-// // 		else if(layout.align == Alignment::RIGHT)
-// // 			x += layout.width - width;
-// // 	}
-// // 	DrawAliased(truncText, x, y, color);
-// // }
-// //
-// //
-// // void Font::Draw(const string &str, const Point &point, const Color &color) const
-// // {
-// // 	DrawAliased(str, round(point.X()), round(point.Y()), color);
-// // }
-// //
-// //
-// // void Font::DrawAliased(const string &str, double x, double y, const Color &color) const
-// // {
-// // 	glUseProgram(shader->Object());
-// // 	glBindTexture(GL_TEXTURE_2D, texture);
-// // 	glBindVertexArray(vao);
-// //
-// // 	glUniform4fv(colorI, 1, color.Get());
-// //
-// // 	// Update the scale, only if the screen size has changed.
-// // 	if(Screen::Width() != screenWidth || Screen::Height() != screenHeight)
-// // 	{
-// // 		screenWidth = Screen::Width();
-// // 		screenHeight = Screen::Height();
-// // 		scale[0] = 2.f / screenWidth;
-// // 		scale[1] = -2.f / screenHeight;
-// // 	}
-// // 	glUniform2fv(scaleI, 1, scale);
-// // 	glUniform2f(glyphSizeI, glyphWidth, glyphHeight);
-// //
-// // 	GLfloat textPos[2] = {
-// // 		static_cast<float>(x - 1.),
-// // 		static_cast<float>(y)
-// // 	};
-// // 	int previous = 0;
-// // 	bool isAfterSpace = true;
-// // 	bool underlineChar = false;
-// // 	const int underscoreGlyph = max(0, min(GLYPHS - 1, '_' - 32));
-// //
-// // 	for(char c: str)
-// // 	{
-// // 		if(c == '_')
-// // 		{
-// // 			underlineChar = showUnderlines;
-// // 			continue;
-// // 		}
-// //
-// // 		int glyph = Glyph(c, isAfterSpace);
-// // 		if(c != '"' && c != '\'')
-// // 			isAfterSpace = !glyph;
-// // 		if(!glyph)
-// // 		{
-// // 			textPos[0] += space;
-// // 			continue;
-// // 		}
-// //
-// // 		glUniform1i(glyphI, glyph);
-// // 		glUniform1f(aspectI, 1.f);
-// //
-// // 		textPos[0] += advance[previous * GLYPHS + glyph] + KERN;
-// // 		glUniform2fv(positionI, 1, textPos);
-// //
-// // 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// //
-// // 		if(underlineChar)
-// // 		{
-// // 			glUniform1i(glyphI, underscoreGlyph);
-// // 			glUniform1f(aspectI, static_cast<float>(advance[glyph * GLYPHS] + KERN)
-// // 								/ (advance[underscoreGlyph * GLYPHS] + KERN));
-// //
-// // 			glUniform2fv(positionI, 1, textPos);
-// //
-// // 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-// // 			underlineChar = false;
-// // 		}
-// //
-// // 		previous = glyph;
-// // 	}
-// //
-// // 	glBindVertexArray(0);
-// // 	glUseProgram(0);
-// // }
-// //
-// //
-// // int Font::Width(const string &str, char after) const
-// // {
-// // 	return WidthRawString(str.c_str(), after);
-// // }
-// //
-// //
-// // int Font::FormattedWidth(const DisplayText &text, char after) const
-// // {
-// // 	int width = -1;
-// // 	const string truncText = TruncateText(text, width);
-// // 	return width < 0 ? WidthRawString(truncText.c_str(), after) : width;
-// // }
-// //
-// //
-// // int Font::Height() const noexcept
-// // {
-// // 	return height;
-// // }
-// //
-// //
+
+int TrueTypeFont::Width(const string &str) const
+{
+	return WidthRawString(str.c_str());
+}
+
+
+
+int TrueTypeFont::FormattedWidth(const DisplayText &text) const
+{
+	int width = -1;
+	const string truncText = TruncateText(text, width);
+	return width < 0 ? WidthRawString(truncText.c_str()) : width;
+}
+
+
+
+int TrueTypeFont::Height() const noexcept
+{
+	return height;
+}
+
+
+
 // // int Font::Space() const noexcept
 // // {
 // // 	return space;
@@ -590,118 +409,108 @@ void TrueTypeFont::Init()
 // // 	screenWidth = 0;
 // // 	screenHeight = 0;
 // // }
-// //
-// //
-// // int Font::WidthRawString(const char *str, char after) const noexcept
-// // {
-// // 	int width = 0;
-// // 	int previous = 0;
-// // 	bool isAfterSpace = true;
-// //
-// // 	for(; *str; ++str)
-// // 	{
-// // 		if(*str == '_')
-// // 			continue;
-// //
-// // 		int glyph = Glyph(*str, isAfterSpace);
-// // 		if(*str != '"' && *str != '\'')
-// // 			isAfterSpace = !glyph;
-// // 		if(!glyph)
-// // 			width += space;
-// // 		else
-// // 		{
-// // 			width += advance[previous * GLYPHS + glyph] + KERN;
-// // 			previous = glyph;
-// // 		}
-// // 	}
-// // 	width += advance[previous * GLYPHS + max(0, min(GLYPHS - 1, after - 32))];
-// //
-// // 	return width;
-// // }
-// //
-// //
-// // // Param width will be set to the width of the return value, unless the layout width is negative.
-// // string Font::TruncateText(const DisplayText &text, int &width) const
-// // {
-// // 	width = -1;
-// // 	const auto &layout = text.GetLayout();
-// // 	const string &str = text.GetText();
-// // 	if(layout.width < 0 || (layout.align == Alignment::LEFT && layout.truncate == Truncate::NONE))
-// // 		return str;
-// // 	width = layout.width;
-// // 	switch(layout.truncate)
-// // 	{
-// // 		case Truncate::NONE:
-// // 			width = WidthRawString(str.c_str());
-// // 			return str;
-// // 		case Truncate::FRONT:
-// // 			return TruncateFront(str, width);
-// // 		case Truncate::MIDDLE:
-// // 			return TruncateMiddle(str, width);
-// // 		case Truncate::BACK:
-// // 		default:
-// // 			return TruncateBack(str, width);
-// // 	}
-// // }
-// //
-// //
-// // string Font::TruncateBack(const string &str, int &width) const
-// // {
-// // 	return TruncateEndsOrMiddle(str, width,
-// // 		[](const string &str, int charCount) {
-// // 			return str.substr(0, charCount) + "...";
-// // 		});
-// // }
-// //
-// //
-// // string Font::TruncateFront(const string &str, int &width) const
-// // {
-// // 	return TruncateEndsOrMiddle(str, width,
-// // 		[](const string &str, int charCount) {
-// // 			return "..." + str.substr(str.size() - charCount);
-// // 		});
-// // }
-// //
-// //
-// // string Font::TruncateMiddle(const string &str, int &width) const
-// // {
-// // 	return TruncateEndsOrMiddle(str, width,
-// // 		[](const string &str, int charCount) {
-// // 			return str.substr(0, (charCount + 1) / 2) + "..." + str.substr(str.size() - charCount / 2);
-// // 		});
-// // }
-// //
-// //
-// // string Font::TruncateEndsOrMiddle(const string &str, int &width,
-// // 								function<string(const string &, int)> getResultString) const
-// // {
-// // 	int firstWidth = WidthRawString(str.c_str());
-// // 	if(firstWidth <= width)
-// // 	{
-// // 		width = firstWidth;
-// // 		return str;
-// // 	}
-// //
-// // 	int workingChars = 0;
-// // 	int workingWidth = 0;
-// //
-// // 	int low = 0, high = str.size() - 1;
-// // 	while(low <= high)
-// // 	{
-// // 		// Think "how many chars to take from both ends, omitting in the middle".
-// // 		int nextChars = (low + high) / 2;
-// // 		int nextWidth = WidthRawString(getResultString(str, nextChars).c_str());
-// // 		if(nextWidth <= width)
-// // 		{
-// // 			if(nextChars > workingChars)
-// // 			{
-// // 				workingChars = nextChars;
-// // 				workingWidth = nextWidth;
-// // 			}
-// // 			low = nextChars + (nextChars == low);
-// // 		} else
-// // 			high = nextChars - 1;
-// // 	}
-// // 	width = workingWidth;
-// // 	return getResultString(str, workingChars);
-// // }
+
+
+
+int TrueTypeFont::WidthRawString(const char *str) const noexcept
+{
+	// TTF_MeasureUTF8
+	// TTF_SizeUTF8(TTF_Font *font, const char *text, int *w, int *h);
+	int width = 0;
+	int h = 0;
+	TTF_SizeUTF8(font, str, &width, &h);
+
+	return width;
+}
+
+
+
+// Param width will be set to the width of the return value, unless the layout width is negative.
+string TrueTypeFont::TruncateText(const DisplayText &text, int &width) const
+{
+	width = -1;
+	const auto &layout = text.GetLayout();
+	const string &str = text.GetText();
+	if(layout.width < 0 || (layout.align == Alignment::LEFT && layout.truncate == Truncate::NONE))
+		return str;
+	width = layout.width;
+	switch(layout.truncate)
+	{
+		case Truncate::NONE:
+			width = WidthRawString(str.c_str());
+			return str;
+		case Truncate::FRONT:
+			return TruncateFront(str, width);
+		case Truncate::MIDDLE:
+			return TruncateMiddle(str, width);
+		case Truncate::BACK:
+		default:
+			return TruncateBack(str, width);
+	}
+}
+
+
+
+string TrueTypeFont::TruncateBack(const string &str, int &width) const
+{
+	return TruncateEndsOrMiddle(str, width,
+		[](const string &str, int charCount) {
+			return str.substr(0, charCount) + "...";
+		});
+}
+
+
+
+string TrueTypeFont::TruncateFront(const string &str, int &width) const
+{
+	return TruncateEndsOrMiddle(str, width,
+		[](const string &str, int charCount) {
+			return "..." + str.substr(str.size() - charCount);
+		});
+}
+
+
+
+string TrueTypeFont::TruncateMiddle(const string &str, int &width) const
+{
+	return TruncateEndsOrMiddle(str, width,
+		[](const string &str, int charCount) {
+			return str.substr(0, (charCount + 1) / 2) + "..." + str.substr(str.size() - charCount / 2);
+		});
+}
+
+
+
+string TrueTypeFont::TruncateEndsOrMiddle(const string &str, int &width,
+								function<string(const string &, int)> getResultString) const
+{
+	int firstWidth = WidthRawString(str.c_str());
+	if(firstWidth <= width)
+	{
+		width = firstWidth;
+		return str;
+	}
+
+	int workingChars = 0;
+	int workingWidth = 0;
+
+	int low = 0, high = str.size() - 1;
+	while(low <= high)
+	{
+		// Think "how many chars to take from both ends, omitting in the middle".
+		int nextChars = (low + high) / 2;
+		int nextWidth = WidthRawString(getResultString(str, nextChars).c_str());
+		if(nextWidth <= width)
+		{
+			if(nextChars > workingChars)
+			{
+				workingChars = nextChars;
+				workingWidth = nextWidth;
+			}
+			low = nextChars + (nextChars == low);
+		} else
+			high = nextChars - 1;
+	}
+	width = workingWidth;
+	return getResultString(str, workingChars);
+}

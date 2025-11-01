@@ -20,6 +20,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <SDL_ttf.h>
 
 #include <filesystem>
+#include <functional>
 
 class Color;
 class DisplayText;
@@ -38,25 +39,33 @@ public:
 	// bool loadFromRenderedText( std::string textureText, Color textColor );
 
 	TrueTypeFont() noexcept = default;
-	// explicit TrueTypeFont(int size);
-
 	~TrueTypeFont();
 
 	void Load(const std::filesystem::path &fontPath, double size);
 
-	void Example() const;
-	// void Draw(const DisplayText &text, const Point &point, const Color &color) const;
-	void Draw(const DisplayText &text, const Point &point, const Color &color, double dx = 0., double dy=0.) const;
-
+	void Draw(const DisplayText &text, const Point &point, const Color &color) const;
+	void DrawAliased(const DisplayText &text, double x, double y, const Color &color) const;
+	void Draw(const std::string &str, const Point &point, const Color &color) const;
+	void DrawAliased(const std::string &str, double x, double y, const Color &color) const;
 
 private:
 	void Init();
-
+	int Width(const std::string &str) const;
+	int FormattedWidth(const DisplayText &text) const;
+	int Height() const noexcept;
+	int WidthRawString(const char *str) const noexcept;
+	std::string TruncateText(const DisplayText &text, int &width) const;
+	std::string TruncateBack(const std::string &str, int &width) const;
+	std::string TruncateFront(const std::string &str, int &width) const;
+	std::string TruncateMiddle(const std::string &str, int &width) const;
+	std::string TruncateEndsOrMiddle(const std::string &str, int &width,
+	                                 std::function<std::string(const std::string &, int)> getResultString) const;
 
 private:
 	const Shader *shader;
-	TTF_Font *font;
 	int fontSize;
+	int height;
 
 	mutable GLfloat scale[2]{0.f, 0.f};
+	TTF_Font *font;
 };
