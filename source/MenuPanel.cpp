@@ -37,7 +37,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "shader/StarField.h"
 #include "StartConditionsPanel.h"
 #include "System.h"
-#include "text/TrueTypeFont.h"
 #include "UI.h"
 
 #include "opengl.h"
@@ -45,13 +44,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <stdexcept>
 #include <format>
-
-#include "shader/FillShader.h"
-#include "Screen.h"
-#include "shader/RingShader.h"
-#include "text/DisplayText.h"
 
 using namespace std;
 
@@ -247,7 +240,6 @@ bool MenuPanel::Click(int x, int y, MouseButton button, int clicks)
 void MenuPanel::DrawCredits() const
 {
 	const Font &font = FontSet::Get(14);
-	const TrueTypeFont &tfont = FontSet::GetTTF(14);
 
 	const auto creditsRect = mainMenuUi->GetBox("credits");
 	const int top = static_cast<int>(creditsRect.Top());
@@ -264,157 +256,7 @@ void MenuPanel::DrawCredits() const
 		{
 			Color color(((line.empty() || line[0] == ' ') ? .2f : .4f) * fade, 0.f);
 			font.Draw(line, Point(creditsRect.Left(), y), color);
-			Color black(0);
-			tfont.Draw(line, Point(creditsRect.Left(), y), black);
 		}
 		y += 20;
-	}
-	DrawDebug();
-}
-
-
-
-void MenuPanel::DrawDebug() const
-{
-	const Font &font = FontSet::Get(14);
-	const TrueTypeFont &tfont = FontSet::GetTTF(14);
-
-	// TODO: now try with colors
-	// - all the defined colors
-	// - rgb variations
-	// - was it alpha all along?
-	Color colors[] = {
-		{0.5, 0.5, 0.5, 0},
-		{1., 1., 1., 0.},
-		{.75, .75, .75, 0.},
-		{.5, .5, .5, 0.},
-		{.25, .25, .25, 0.},
-		{.18, .18, .18, 0.},
-		{.1, .1, .1, 0.},
-		{.05, .05, .05, 0.},
-		{.5, .5, .1, 0.},
-		{.5, .3, .1, 0.},
-		{.4, 0., 0., 0.},
-		{.125, .125, .125, 1.},
-		{.3, .3, .3, .0},
-		{.2, .2, .2, 1.},
-		{.055, .055, .055, 1.},
-		{.5, .375, 0., 1.},
-		{.8, .6, 0., 1.},
-		{0., .375, .5, 1.},
-		{0., .6, .8, 1.},
-		{.09, .09, .09, 1.},
-		{1., .5, 0., 1.},
-		{.0937, .0937, .0937, 1.},
-		{.43, .55, .85, .8},
-		{.70, .62, .43, .75},
-		{.3, 0, 0, .3},
-		{.70, .43, .43, .75},
-		{.70, .61, .43, .75},
-		{.6, .6, .6, .75},
-		{.70, .62, .43, .75},
-		{.43, .55, .70, 0.},
-		{.70, .62, .43, 0.},
-		{.70, .43, .43, 0.},
-		{.6, .6, .6, 0.},
-		{.630, .62, .43, 0.},
-		{.215, .275, .35, 0.},
-		{.35, .31, .215, 0.},
-		{.35, .215, .215, 0.},
-		{.35, .31, .215, 0.},
-		{.5, .8, .2, 0.},
-		{.45, 0., 0., .65},
-		{.2, 1., 0., 0.},
-		{.9, .6, 0., 1.},
-		{.5, .3, 0., .5},
-		{.5, .3, 0., 1.},
-		{.3, .1, 0., .5},
-		{.2, .7, 1., 1.},
-		{0., .4, .5, .5},
-		{0., .4, .6, 1.},
-		{0., .15, .2, .5},
-		{.1, .2, .9, 1.},
-		{0., .3, .7, .5},
-		{.2, .1, 0., 0.},
-		{.4, .4, .4, 0.},
-		{.8, .8, .8, 1.},
-		{.4, .4, .6, 1.},
-		{.9, .8, 0., 1.},
-		{.9, .2, 0., 1.},
-		{.2, .8, 0., 1.},
-		{1., .6, .4, 1.},
-		{0., .5, 0., .25},
-		{.45, .5, 0., .25},
-		{.5, 0., 0., .25},
-		{.5, .15, 0., .25},
-		{.5, .3, 0., .25},
-		{.3, .3, 0., .25},
-		{.43, .55, .70, .75},
-		{.45, .5, 0., .25},
-		{.5, 0., 0., .25},
-		{.25, .25, .25, .25},
-		{.7, .7, .7, .25},
-		{.35, .35, .35, .25},
-		{1., 1., .25, .7},
-		{1., .9, 0., .9},
-		{1., .1, .1, 1.},
-		{0., 1., 0., .1},
-		{1., 0., 0., .5},
-		{.2, 1., 0., 0.},
-		{.4, .6, 1., 0.},
-		{.8, .8, .3, 0.},
-		{.85, .3, .2, 0.},
-		{.7, 0., 1., 0.},
-		{0., .3, 0., 0.},
-		{.2, 1., 0., 0.},
-		{.4, .6, 1., 0.},
-		{.8, .8, .3, 0.},
-		{.85, .3, .2, 0.},
-		{.2, 1., 0., 0.},
-		{.4, .6, 1., 0.},
-		{.8, .8, .3, 0.},
-		{.85, .3, .2, 0.},
-		{.4, .6, 1., 0.},
-		{.8, .8, .3, 0.},
-		{.85, .3, .2, 0.},
-		{.25, .1, .1, 1.},
-		{.21, .18, .08, 1.},
-		{.315, .27, .12, 1.},
-		{.16, .16 , .13, 1.},
-		{1., .5, 0., 1.},
-		{0., 1., .5, 1.},
-		{1., .5, 0., 1.},
-		{0., 1., .5, 1.},
-		{0., .5, 1., 1.},
-		{.6, .6, .6, .6},
-		{.2, .5, 0., 0.},
-		{.5, .4, 0., 0.},
-		{.55, .1, 0., 0.},
-		{.5, .2, .9, 1.},
-		{.1, .6, 0., .4},
-		{.4, .4, .4, .6},
-		{1., 0., 0., 1.},
-		{0., 0., 0., 1.},
-		{0, .7, .1, .3},
-		{.19, .27, .69, 0},
-		{.75, .1, .1, 0.},
-	};
-
-	double height = 40.;
-	double width = 50.;
-	int m = 10; // x, width
-	int n = 10; // y, height
-	Point p(Screen::Left() + 40, Screen::Top() + 40);
-	for(int i = 0; i < m; i++)
-	{
-		for(int j = 0; j < n; j++)
-		{
-			Color b = colors[i * m + j];
-			font.Draw("pilot:", p + Point(0, 20), b);
-			tfont.Draw({"pilot:", {Alignment::LEFT}}, p + Point(0, 0), b);
-			p.Y() += height;
-		}
-		p.Y() = Screen::Top() + 40;
-		p.X() += width;
 	}
 }

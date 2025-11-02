@@ -62,7 +62,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "TaskQueue.h"
 #include "test/Test.h"
 #include "test/TestData.h"
-#include "text/TrueTypeFont.h"
 #include "UniverseObjects.h"
 
 #include <algorithm>
@@ -330,10 +329,10 @@ void GameData::LoadShaders()
 	BatchShader::Init();
 	RenderBuffer::Init();
 
-	FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
-	FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
-	FontSet::AddTTF(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
-	FontSet::AddTTF(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
+	// FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
+	// FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
+	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
 
 	background.Init(16384, 4096);
 }

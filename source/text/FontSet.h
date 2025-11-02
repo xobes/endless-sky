@@ -18,7 +18,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <filesystem>
 
 class Font;
-class TrueTypeFont;
 
 
 
@@ -28,6 +27,4 @@ class FontSet {
 public:
 	static void Add(const std::filesystem::path &path, int size);
 	static const Font &Get(int size);
-	static void AddTTF(const std::filesystem::path &path, double size);
-	static const TrueTypeFont &GetTTF(double size);
 };
