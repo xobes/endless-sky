@@ -25,6 +25,7 @@ class Font;
 // based on a glyph image; right now only point sizes 14 and 18 exist.
 class FontSet {
 public:
-	static void Add(const std::filesystem::path &path, int size);
+	static void Add(const std::filesystem::path &path, int size, std::string name="");
 	static const Font &Get(int size);
+	static const Font &Get(std::string name);
 };

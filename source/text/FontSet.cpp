@@ -22,20 +22,30 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 namespace {
-	map<int, Font> fonts;
+	map<string, Font> fonts;
 }
 
 
 
-void FontSet::Add(const filesystem::path &path, int size)
+void FontSet::Add(const filesystem::path &path, int size, string name)
 {
-	if(!fonts.contains(size))
-		fonts[size].Load(path, size);
+	if(name.empty())
+		name = to_string(size);
+	if(!fonts.contains(name))
+		fonts[name].Load(path, size);
 }
 
 
 
+// Retained for backwards compatibility.
 const Font &FontSet::Get(int size)
 {
-	return fonts[size];
+	return Get(to_string(size));
+}
+
+
+
+const Font &FontSet::Get(string name)
+{
+	return fonts[name];
 }
