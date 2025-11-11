@@ -41,8 +41,8 @@ public:
 	void Load(double r, double g, double b, double a);
 	// Check if Load() has been called for this color.
 	bool IsLoaded() const;
-	void SetName(const std::string &name);
-	const std::string &Name() const;
+	void SetTrueName(const std::string &name);
+	const std::string &TrueName() const;
 	// Get the color as a float vector, suitable for use by OpenGL.
 	const float *Get() const;
 	// Get the color as an SDL_Color, suitable for use by SDL.
@@ -69,6 +69,6 @@ private:
 	// Store the color as a float vector for easy interfacing with OpenGL.
 	float color[4];
 
-	std::string name;
+	std::string trueName;
 	bool isLoaded = false;
 };
