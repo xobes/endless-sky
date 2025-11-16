@@ -1,4 +1,4 @@
-/* TrueTypeFont.cpp
+/* Font.cpp
 Copyright (c) 2025 by xobes
 
 Endless Sky is free software: you can redistribute it and/or modify it under the
@@ -267,7 +267,7 @@ int Font::Space() const noexcept
 
 void Font::ShowUnderlines(bool show) noexcept
 {
-	//TODO: showUnderlines = show || Preferences::Has("Always underline shortcuts");
+	// TODO: showUnderlines = show || Preferences::Has("Always underline shortcuts");
 }
 
 

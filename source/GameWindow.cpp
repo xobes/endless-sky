@@ -260,7 +260,6 @@ bool GameWindow::Init(bool headless)
 		if(!message.empty())
 		{
 			Logger::LogError("(SDL_ttf message: \"" + message + "\")");
-			//SDL_ClearError();
 		}
 		return false;
 	}
