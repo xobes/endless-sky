@@ -1,0 +1,10 @@
+version: "1"
+rules: # Array of rules
+  - base: vanilla
+    upstream: endless-sky:master
+  - base: master
+    upstream: endless-sky:master
+    mergeMethod: rebase # Optional, one of [none, merge, squash, rebase, hardreset], Default: none.
+    mergeUnstable: false # Optional, merge pull request even when the mergeable_state is not clean. Default: false
+label: ":arrow_heading_down: pull" # Optional
+conflictLabel: "merge-conflict" # Optional
