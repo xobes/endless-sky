@@ -89,7 +89,7 @@ TradingPanel::~TradingPanel()
 
 void TradingPanel::Step()
 {
-	DoHelp("trading");
+	DoHelp("trading", false, &player);
 }
 
 
@@ -224,7 +224,7 @@ void TradingPanel::Draw()
 bool TradingPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, bool isNewPress)
 {
 	if(command.Has(Command::HELP))
-		DoHelp("trading", true);
+		DoHelp("trading", true, &player);
 	else if(key == SDLK_UP)
 		player.SetMapColoring(max(0, player.MapColoring() - 1));
 	else if(key == SDLK_DOWN)
