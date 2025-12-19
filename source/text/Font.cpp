@@ -133,7 +133,8 @@ void Font::DrawAliased(const string &str, double x, double y, const Color &color
 
 	if(surface == nullptr)
 	{
-		Logger::LogError(string("Attempt to create surface resulted in TTF_GetError:") + TTF_GetError());
+		Logger::Log(string("Attempt to create surface resulted in TTF_GetError:") + TTF_GetError(),
+			Logger::Level::ERROR);
 		return;
 	}
 
@@ -147,7 +148,7 @@ void Font::DrawAliased(const string &str, double x, double y, const Color &color
 	auto *pixels = static_cast<unsigned int *>(malloc(count * sizeof(unsigned int)));
 	if(pixels == nullptr)
 	{
-		Logger::LogError("malloc failed");
+		Logger::Log("malloc failed", Logger::Level::ERROR);
 		return;
 	}
 
