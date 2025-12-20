@@ -32,8 +32,6 @@ namespace {
 	/// Shared VAO and VBO quad (0,0) -> (1,1)
 	GLuint vao = 0;
 	GLuint vbo = 0;
-
-	GLuint texI = 0;
 }
 
 
@@ -97,99 +95,7 @@ void Font::DrawAliased(const string &str, double x, double y, const Color &color
 	if(str.empty())
 		return;
 
-	// Bind.
-	glUseProgram(shader->Object());
-	glBindVertexArray(vao);
-
-	// Reallocate buffer for texture id texI.
-	if(texI)
-		glDeleteTextures(1, &texI);
-
-	texI = shader->Uniform("tex");
-	glGenTextures(1, &texI);
-
-	// Upload the new texture "image".
-	GLint texture = 0;
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	// ----------------------------------------------------------------------------------------
-	SDL_Color sdlColor(255, 255, 255, 0);
-
-#define USE_BLENDED
-#ifdef USE_BLENDED
-	// Note: returns ARGB, sorted out in the shader;
-	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, str.c_str(), sdlColor);  // ARGB, 32-bit/pixel
-#else
-	// Note: returns a single channel.
-	// SDL_Surface *surface = TTF_RenderUTF8_Shaded(font, text.GetText().c_str(), sdlColor, bgColor);  // A, 8-bit/pixel
-	SDL_Color bgColor(0, 0, 0, 0);
-	SDL_Surface *surface = TTF_RenderUTF8_Shaded(font, text.GetText().c_str(), sdlColor, bgColor);  // A, 8-bit/pixel
-#endif
-
-	if(surface == nullptr)
-	{
-		Logger::Log(string("Attempt to create surface resulted in TTF_GetError:") + TTF_GetError(),
-			Logger::Level::ERROR);
-		return;
-	}
-
-	int columns = surface->pitch / surface->format->BytesPerPixel;
-	// convert 8 bpp up to 32bpp like the current shaders expect
-#ifdef USE_BLENDED
-	// DebugPrint2(surface->pixels, surface->h, columns);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, columns, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-#else
-	int count = surface->h * columns;
-	auto *pixels = static_cast<unsigned int *>(malloc(count * sizeof(unsigned int)));
-	if(pixels == nullptr)
-	{
-		Logger::Log("malloc failed", Logger::Level::ERROR);
-		return;
-	}
-
-	for(int y = 0; y < count; y += 4)
-	{
-		unsigned int b = static_cast<unsigned int *>(surface->pixels)[y/4];
-		pixels[y + 3] = 0x00000000 | (0xFF000000 & (b << (0 * 8)));
-		pixels[y + 2] = 0x00000000 | (0xFF000000 & (b << (1 * 8)));
-		pixels[y + 1] = 0x00000000 | (0xFF000000 & (b << (2 * 8)));
-		pixels[y + 0] = 0x00000000 | (0xFF000000 & (b << (3 * 8)));
-	}
-
-	// DebugPrint(pixels, surface->h, columns);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, columns, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	// ----------------------------------------------------------------------------------------
-	free(pixels);
-#endif
-
-	GLfloat scale[2] = {2.f / Screen::Width(), -2.f / Screen::Height()};
-	glUniform2fv(shader->Uniform("scale"), 1, scale);
-
-	GLfloat sizeV[2] = {static_cast<float>(columns),
-						static_cast<float>(surface->h)};
-	SDL_FreeSurface(surface);
-	glUniform2fv(shader->Uniform("size"), 1, sizeV);
-
-	float position[2]{static_cast<float>(x), static_cast<float>(y - 1)};
-	// float position[2]{static_cast<float>(x + 2.), static_cast<float>(y - 1)};
-	glUniform2fv(shader->Uniform("position"), 1, position);
-	// glUniform4fv(shader->Uniform("color"), 1, Color::Multiply(1.3, color).Get());
-	glUniform4fv(shader->Uniform("color"), 1, color.Get());
-
-	// Draw the rectangle of triangles.
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	// Clean up.
-	glBindVertexArray(0);
-	// glBindTexture(GL_TEXTURE_2D, 0);
-
-	// Unuse the shader program
-	glUseProgram(0);
+	DrawAliased(GetTextureForText(str), x, y, color);
 }
 
 
@@ -262,6 +168,102 @@ int Font::Height() const noexcept
 int Font::Space() const noexcept
 {
 	return space;
+}
+
+
+
+const Font::TextureHandle& Font::GetTextureForText(const string &str) const
+{
+	// Use the cached texture if possible:
+	auto it = textureCache.find(str);
+	if(it != textureCache.end())
+		return it->second;
+
+	// Otherwise, didn't finsd the texture, we must create a texture for this text string (and cache it).
+	GLuint texI;
+	glGenTextures(1, &texI);
+	glBindTexture(GL_TEXTURE_2D, texI);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	SDL_Color sdlColor(255, 255, 255, 0);
+
+#define USE_BLENDED
+#ifdef USE_BLENDED
+	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, str.c_str(), sdlColor);
+#else
+	SDL_Color bgColor(0, 0, 0, 0);
+	SDL_Surface *surface = TTF_RenderUTF8_Shaded(font, str.c_str(), sdlColor, bgColor);
+#endif
+
+	if(surface == nullptr)
+	{
+		Logger::Log(string("Attempt to create surface resulted in TTF_GetError:") + TTF_GetError(),
+			Logger::Level::ERROR);
+		glDeleteTextures(1, &texI);
+		return TextureHandle::Invalid();
+	}
+
+	int columns = surface->pitch / surface->format->BytesPerPixel;
+	int rows = surface->h;
+#ifdef USE_BLENDED
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, columns, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+#else
+	int count = rows * columns;
+	auto *pixels = static_cast<unsigned int *>(malloc(count * sizeof(unsigned int)));
+	if(pixels == nullptr)
+	{
+		Logger::Log("malloc failed", Logger::Level::ERROR);
+		SDL_FreeSurface(surface);
+		glDeleteTextures(1, &texI);
+		return TextureHandle::Invalid();
+	}
+
+	for(int y = 0; y < count; y += 4)
+	{
+		unsigned int b = static_cast<unsigned int *>(surface->pixels)[y/4];
+		pixels[y + 3] = 0x00000000 | (0xFF000000 & (b << (0 * 8)));
+		pixels[y + 2] = 0x00000000 | (0xFF000000 & (b << (1 * 8)));
+		pixels[y + 1] = 0x00000000 | (0xFF000000 & (b << (2 * 8)));
+		pixels[y + 0] = 0x00000000 | (0xFF000000 & (b << (3 * 8)));
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, columns, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	free(pixels);
+#endif
+
+	SDL_FreeSurface(surface);
+	return textureCache[str] = TextureHandle(texI, columns, rows);
+}
+
+
+
+void Font::DrawAliased(const TextureHandle &texture, double x, double y, const Color &color) const
+{
+	// Bind.
+	glUseProgram(shader->Object());
+	glBindVertexArray(vao);
+	glBindTexture(GL_TEXTURE_2D, texture.GetTexture());
+
+	GLfloat scale[2] = {2.f / Screen::Width(), -2.f / Screen::Height()};
+	glUniform2fv(shader->Uniform("scale"), 1, scale);
+
+	GLfloat sizeV[2] = {static_cast<float>(texture.GetWidth()), static_cast<float>(texture.GetHeight())};
+	glUniform2fv(shader->Uniform("size"), 1, sizeV);
+
+	float position[2]{static_cast<float>(x), static_cast<float>(y - 1)};
+	glUniform2fv(shader->Uniform("position"), 1, position);
+	glUniform4fv(shader->Uniform("color"), 1, color.Get());
+
+	// Draw the rectangle of triangles.
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	// Clean up.
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 
