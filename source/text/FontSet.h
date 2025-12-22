@@ -27,5 +27,7 @@ class FontSet {
 public:
 	static void Add(const std::filesystem::path &path, int size, std::string name="");
 	static const Font &Get(int size);
-	static const Font &Get(std::string name);
+	static const Font &Get(const std::string &name);
+	static void MarkFrameStart();
+	static void MarkFrameEnd();
 };

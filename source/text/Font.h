@@ -19,7 +19,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "../opengl.h"
 
-#include <SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <filesystem>
 #include <functional>
@@ -107,6 +107,8 @@ public:
 	[[nodiscard]] const TextureHandle &GetTextureForText(const std::string &str) const;
 	void DrawAliased(const TextureHandle &texture, double x, double y, const Color &color) const;
 
+	void MarkTexturesUnused() const noexcept;
+	void ClearUnusedTextures() const;
 
 private:
 	void Init();
@@ -116,7 +118,7 @@ private:
 	std::string TruncateFront(const std::string &str, int &width) const;
 	std::string TruncateMiddle(const std::string &str, int &width) const;
 	std::string TruncateEndsOrMiddle(const std::string &str, int &width,
-	std::function<std::string(const std::string &, int)> getResultString) const;
+		std::function<std::string(const std::string &, int)> getResultString) const;
 
 private:
 	const Shader *shader;
@@ -125,6 +127,7 @@ private:
 	int space;
 
 	mutable GLfloat scale[2]{0.f, 0.f};
-	TTF_Font *font;
+	TTF_Font *font = nullptr;
 	mutable std::map<std::string, TextureHandle> textureCache;
+	mutable std::map<std::string, bool> textureUsedThisFrame;
 };

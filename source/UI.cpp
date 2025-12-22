@@ -17,6 +17,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "audio/Audio.h"
 #include "Command.h"
+#include "text/FontSet.h"
 #include "Panel.h"
 #include "Screen.h"
 
@@ -106,6 +107,8 @@ void UI::StepAll()
 // Draw all the panels.
 void UI::DrawAll()
 {
+	FontSet::MarkFrameStart();
+
 	// First, clear all the clickable zones. New ones will be added in the
 	// course of drawing the screen.
 	for(const shared_ptr<Panel> &it : stack)
@@ -119,6 +122,8 @@ void UI::DrawAll()
 
 	for( ; it != stack.end(); ++it)
 		(*it)->DoDraw();
+
+	FontSet::MarkFrameEnd();
 }
 
 

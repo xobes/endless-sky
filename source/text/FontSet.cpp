@@ -22,13 +22,14 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 namespace {
-	map<string, Font> fonts;
+	std::map<std::string, Font> fonts;
 }
 
 
 
-void FontSet::Add(const filesystem::path &path, int size, string name)
+void FontSet::Add(const std::filesystem::path &path, int size, string name)
 {
+	// For backwards compatibility, size alone will map to a font without a name.
 	if(name.empty())
 		name = to_string(size);
 	if(!fonts.contains(name))
@@ -45,7 +46,23 @@ const Font &FontSet::Get(int size)
 
 
 
-const Font &FontSet::Get(string name)
+const Font &FontSet::Get(const string &name)
 {
 	return fonts[name];
+}
+
+
+
+void FontSet::MarkFrameStart()
+{
+	for(auto &entry : fonts)
+		entry.second.MarkTexturesUnused();
+}
+
+
+
+void FontSet::MarkFrameEnd()
+{
+	for(auto &entry : fonts)
+		entry.second.ClearUnusedTextures();
 }
