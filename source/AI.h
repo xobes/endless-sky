@@ -27,6 +27,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <optional>
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 class Angle;
 class AsteroidField;
@@ -90,7 +91,7 @@ public:
 	static const StellarObject *FindLandingLocation(const Ship &ship, const bool refuel = true);
 
 
-public:
+private:
 	class RouteCacheKey {
 	public:
 		// Note: keep this updated as the variables driving the routing change:
@@ -98,7 +99,7 @@ public:
 		// - gov: danger = f(gov), isRestrictedFrom = f(gov)
 		// - wormhole requirements that are met, see Planet::IsAccessible(const Ship *ship)
 		explicit RouteCacheKey(const System *from, const System *to, const Government *gov,
-			double jumpDistance, JumpType jumpType, const vector<string> &wormholeKeys);
+			double jumpDistance, JumpType jumpType, const std::vector<std::string> &wormholeKeys);
 
 		// To support use as a map key:
 		bool operator==(const RouteCacheKey &other) const;
@@ -116,7 +117,7 @@ public:
 		const Government *gov;
 		double jumpDistance;
 		JumpType jumpType;
-		vector<string> wormholeKeys;
+		std::vector<std::string> wormholeKeys;
 	};
 
 
@@ -216,12 +217,10 @@ private:
 	/// but that shouldn't really matter.
 	void RegisterDerivedConditions(ConditionsStore &conditions);
 
-
-private:
 	void IssueOrder(const OrderSingle &newOrder, const std::string &description);
 	// Convert order types based on fulfillment status.
 	void UpdateOrders(const Ship &ship);
-	RoutePlan GetRoutePlan(Ship &ship, const System *targetSystem);
+	RoutePlan GetRoutePlan(const Ship &ship, const System *targetSystem);
 
 
 private:
@@ -289,6 +288,5 @@ private:
 	std::map<const Government *, std::vector<Ship *>> allyLists;
 
 	// Route planning cache:
-	unordered_map<RouteCacheKey, RoutePlan, RouteCacheKey::HashFunction> routeCache;
-	set<string> universeWormholeRequirements;
+	std::unordered_map<RouteCacheKey, RoutePlan, RouteCacheKey::HashFunction> routeCache;
 };
