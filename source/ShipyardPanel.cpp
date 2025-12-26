@@ -15,7 +15,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShipyardPanel.h"
 
-#include "text/alignment.hpp"
+#include "text/Alignment.h"
 #include "comparators/BySeriesAndIndex.h"
 #include "ClickZone.h"
 #include "Color.h"
@@ -36,8 +36,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "ShipNameDialog.h"
 #include "image/Sprite.h"
 #include "image/SpriteSet.h"
-#include "SpriteShader.h"
-#include "text/truncate.hpp"
+#include "shader/SpriteShader.h"
+#include "text/Truncate.h"
 #include "UI.h"
 
 #include <algorithm>
@@ -53,17 +53,14 @@ namespace {
 
 
 
-ShipyardPanel::ShipyardPanel(PlayerInfo &player)
-	: ShopPanel(player, false), modifier(0)
+ShipyardPanel::ShipyardPanel(PlayerInfo &player, Sale<Ship> stock)
+	: ShopPanel(player, false), modifier(0), shipyard(stock)
 {
 	for(const auto &it : GameData::Ships())
 		catalog[it.second.Attributes().Category()].push_back(it.first);
 
 	for(pair<const string, vector<string>> &it : catalog)
 		sort(it.second.begin(), it.second.end(), BySeriesAndIndex<Ship>());
-
-	if(player.GetPlanet())
-		shipyard = player.GetPlanet()->Shipyard();
 }
 
 
@@ -140,7 +137,7 @@ double ShipyardPanel::DrawDetails(const Point &center)
 		if(shipSprite)
 		{
 			const float spriteScale = min(1.f, (INFOBAR_WIDTH - 60.f) / max(shipSprite->Width(), shipSprite->Height()));
-			const int swizzle = selectedShip->CustomSwizzle() >= 0
+			const Swizzle *swizzle = selectedShip->CustomSwizzle()
 				? selectedShip->CustomSwizzle() : GameData::PlayerGovernment()->GetSwizzle();
 			SpriteShader::Draw(shipSprite, spriteCenter, spriteScale, swizzle);
 		}
@@ -254,7 +251,9 @@ void ShipyardPanel::Buy(bool onlyOwned)
 	else
 		message += selectedShip->PluralModelName() + "! (Or leave it blank to use randomly chosen names.)";
 
-	GetUI()->Push(new ShipNameDialog(this, &ShipyardPanel::BuyShip, message));
+	GetUI()->Push(new ShipNameDialog(this,
+			Dialog::FunctionButton(this, "Buy", 'b', &ShipyardPanel::BuyShip),
+			message));
 }
 
 
@@ -280,11 +279,11 @@ void ShipyardPanel::Sell(bool toStorage)
 	else
 		message = "Sell the hulls of the ";
 	if(count == 1)
-		message += playerShip->Name();
+		message += playerShip->GivenName();
 	else if(count <= MAX_LIST)
 	{
 		auto it = playerShips.begin();
-		message += (*it++)->Name();
+		message += (*it++)->GivenName();
 		--count;
 
 		if(count == 1)
@@ -292,17 +291,17 @@ void ShipyardPanel::Sell(bool toStorage)
 		else
 		{
 			while(count-- > 1)
-				message += ",\n" + (*it++)->Name();
+				message += ",\n" + (*it++)->GivenName();
 			message += ",\nand ";
 		}
-		message += (*it)->Name();
+		message += (*it)->GivenName();
 	}
 	else
 	{
 		auto it = playerShips.begin();
-		message += (*it++)->Name() + ",\n";
+		message += (*it++)->GivenName() + ",\n";
 		for(int i = 1; i < MAX_LIST - 1; ++i)
-			message += (*it++)->Name() + ",\n";
+			message += (*it++)->GivenName() + ",\n";
 
 		message += "and " + to_string(count - (MAX_LIST - 1)) + " other ships";
 	}
@@ -333,7 +332,7 @@ bool ShipyardPanel::CanSellMultiple() const
 
 
 
-void ShipyardPanel::BuyShip(const string &name)
+bool ShipyardPanel::BuyShip(const string &name)
 {
 	int64_t licenseCost = LicenseCost(&selectedShip->Attributes());
 	if(licenseCost)
@@ -361,6 +360,9 @@ void ShipyardPanel::BuyShip(const string &name)
 	playerShips.clear();
 	playerShips.insert(playerShip);
 	CheckSelection();
+
+	// Close the dialog.
+	return true;
 }
 
 
