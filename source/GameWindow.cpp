@@ -135,6 +135,9 @@ bool GameWindow::Init(bool headless)
 		windowHeight = min(windowHeight, Screen::RawHeight());
 	}
 
+	if(!Preferences::Has("Block screen saver"))
+		SDL_EnableScreenSaver();
+
 	// Settings that must be declared before the window creation.
 	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
@@ -337,10 +340,9 @@ void GameWindow::AdjustViewport(bool noResizeEvent)
 	int roundHeight = (windowHeight + 1) & ~1;
 	Screen::SetRaw(roundWidth, roundHeight, noResizeEvent);
 
-	// Find out the drawable dimensions. If this is a high- DPI display, this
+	// Find out the drawable dimensions. If this is a high-DPI display, this
 	// may be larger than the window.
 	SDL_GL_GetDrawableSize(mainWindow, &drawWidth, &drawHeight);
-	Screen::SetHighDPI(drawWidth > windowWidth || drawHeight > windowHeight);
 
 	// Set the viewport to go off the edge of the window, if necessary, to get
 	// everything pixel-aligned.
@@ -445,6 +447,16 @@ void GameWindow::ToggleFullscreen()
 	}
 	else
 		SDL_SetWindowFullscreen(mainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+}
+
+
+
+void GameWindow::ToggleBlockScreenSaver()
+{
+	if(SDL_IsScreenSaverEnabled())
+		SDL_DisableScreenSaver();
+	else
+		SDL_EnableScreenSaver();
 }
 
 
