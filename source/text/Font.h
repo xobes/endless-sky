@@ -19,13 +19,15 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "../opengl.h"
 
+#include <SDL2/SDL_ttf.h>
+
 #include <filesystem>
 #include <functional>
+#include <map>
 #include <string>
 
 class Color;
 class DisplayText;
-class ImageBuffer;
 class Point;
 
 
@@ -35,64 +37,110 @@ class Point;
 // The kerning between characters is automatically adjusted to look good. At the
 // moment only plain ASCII characters are supported, not Unicode.
 class Font {
+	class TextureHandle {
+	public:
+		static constexpr GLuint INVALID_TEXTURE = static_cast<GLuint>(-1);
+		static const TextureHandle &Invalid()
+		{
+			static const TextureHandle invalid(INVALID_TEXTURE);
+			return invalid;
+		}
+
+		TextureHandle() : texID(INVALID_TEXTURE), width(0), height(0) {}
+		explicit TextureHandle(const GLuint _texID, int _width = 0, int _height = 0)
+			: texID(_texID), width(_width), height(_height) {}
+		~TextureHandle() {
+			if(texID != INVALID_TEXTURE)
+				glDeleteTextures(1, &texID);
+		}
+
+		TextureHandle(const TextureHandle &other) = delete;
+		TextureHandle(TextureHandle &&other) noexcept
+		{
+			this->texID = other.texID;
+			this->width = other.width;
+			this->height = other.height;
+			other.texID = INVALID_TEXTURE;
+		}
+		TextureHandle &operator=(const TextureHandle &other) = delete;
+		TextureHandle &operator=(TextureHandle &&other) noexcept
+		{
+			this->texID = other.texID;
+			this->width = other.width;
+			this->height = other.height;
+			other.texID = INVALID_TEXTURE;
+			return *this;
+		}
+
+		[[nodiscard]] GLuint GetTexture() const { return texID; }
+		int GetWidth() const { return width; }
+		int GetHeight() const { return height; }
+
+	private:
+		GLuint texID;
+		int width;
+		int height;
+	};
+
+
 public:
-	Font() noexcept = default;
-	explicit Font(const std::filesystem::path &imagePath);
-
-	void Load(const std::filesystem::path &imagePath);
-
-	// Draw a text string, subject to the given layout and truncation strategy.
-	void Draw(DisplayText &text, const Point &point, const Color &color) const;
-	void Draw(const DisplayText &text, const Point &point, const Color &color) const;
-	void DrawAliased(const std::string &str, double x, double y, const Color &color) const;
-	// Draw the given text string, e.g. post-formatting (or without regard to formatting).
-	void Draw(const std::string &str, const Point &point, const Color &color) const;
-	void DrawAliased(DisplayText &text, double x, double y, const Color &color) const;
-
-	// Determine the string's width, without considering formatting.
-	int Width(const std::string &str, char after = ' ') const;
-	// Get the width of the text while accounting for the desired layout and truncation strategy.
-	int FormattedWidth(const DisplayText &text, char after = ' ') const;
-
-	int Height() const noexcept;
-
-	int Space() const noexcept;
-
 	static void ShowUnderlines(bool show) noexcept;
 
 
-private:
-	static int Glyph(char c, bool isAfterSpace) noexcept;
-	void LoadTexture(ImageBuffer &image);
-	void CalculateAdvances(ImageBuffer &image);
-	void SetUpShader(float glyphW, float glyphH);
+public:
+	Font() noexcept = default;
+	~Font();
 
-	int WidthRawString(const char *str, char after = ' ') const noexcept;
-	int WidthRawString(DisplayText &text, char after = ' ') const noexcept;
+	void Load(const std::filesystem::path &fontPath, double size);
+
+	// Draw a text string, subject to the given layout and truncation strategy.
+	void Draw(const DisplayText &text, const Point &point, const Color &color) const;
+private: // TODO: move this
+	void DrawAliased(DisplayText &text, double x, double y, const Color &color) const;
+public:
+	// Draw the given text string, e.g. post-formatting (or without regard to formatting).
+	void Draw(const std::string &str, const Point &point, const Color &color) const;
+	void DrawAliased(const std::string &str, double x, double y, const Color &color) const;
+
+	// Determine the string's width, without considering formatting.
+	int Width(const std::string &str) const;
+	// Get the width of the text while accounting for the desired layout and truncation strategy.
+	int FormattedWidth(const DisplayText &text) const;
+
+	int Height() const noexcept;
+	int Space() const noexcept;
+
+private:
+	[[nodiscard]] const TextureHandle &GetTextureForText(const std::string &str) const;
+
+	void MarkTexturesUnused() const noexcept;
+	void ClearUnusedTextures() const;
+
+	void Init();
+	int WidthRawString(const char *str) const noexcept;
+	int WidthRawString(DisplayText &text) const noexcept;
 
 	std::string TruncateText(const DisplayText &text, int &width) const;
 	std::string TruncateBack(const std::string &str, int &width) const;
 	std::string TruncateFront(const std::string &str, int &width) const;
 	std::string TruncateMiddle(const std::string &str, int &width) const;
-
 	std::string TruncateEndsOrMiddle(const std::string &str, int &width,
 		std::function<std::string(const std::string &, int)> getResultString) const;
 
+	void DrawAliased(const TextureHandle &texture, double x, double y, const Color &color) const;
+	void RenderString(const std::string &str, double x, double y, const Color &color) const;
 	void DrawInlineSprites(DisplayText text, const Color &color) const;
 
 private:
 	const Shader *shader;
-	GLuint texture = 0;
+	int fontSize;
+	int height;
+	int space;
 
-	int height = 0;
-	int space = 0;
-	mutable int screenWidth = 0;
-	mutable int screenHeight = 0;
 	mutable GLfloat scale[2]{0.f, 0.f};
-	GLfloat glyphWidth = 0.f;
-	GLfloat glyphHeight = 0.f;
+	TTF_Font *font = nullptr;
+	mutable std::map<std::string, TextureHandle> textureCache;
+	mutable std::map<std::string, bool> textureUsedThisFrame;
 
-	static const int GLYPHS = 98;
-	int advance[GLYPHS * GLYPHS] = {};
-	int widthEllipses = 0;
+	friend class FontSet;
 };

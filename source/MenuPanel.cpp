@@ -44,7 +44,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <stdexcept>
+#include <format>
 
 using namespace std;
 
@@ -255,6 +255,7 @@ bool MenuPanel::Click(int x, int y, MouseButton button, int clicks)
 void MenuPanel::DrawCredits() const
 {
 	const Font &font = FontSet::Get(14);
+
 	const auto creditsRect = mainMenuUi->GetBox("credits");
 	const int top = static_cast<int>(creditsRect.Top());
 	const int bottom = static_cast<int>(creditsRect.Bottom());

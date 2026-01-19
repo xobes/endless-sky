@@ -70,7 +70,7 @@ In addition to the below dependencies, you will also need CMake 3.19 or newer, h
 <summary>DEB-based distros</summary>
 
 ```
-g++ cmake ninja-build curl libsdl2-dev libpng-dev libjpeg-dev libavif-dev libgl1-mesa-dev libglew-dev libminizip-dev libopenal-dev libmad0-dev libflac++-dev uuid-dev
+g++ cmake ninja-build curl libsdl2-dev libpng-dev libjpeg-dev libavif-dev libgl1-mesa-dev libglew-dev libminizip-dev libopenal-dev libmad0-dev libflac++-dev uuid-dev libsdl2-ttf-dev
 ```
 If your CMake version is less than 3.31, you will also need
 ```

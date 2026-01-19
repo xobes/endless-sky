@@ -73,6 +73,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
+
 using namespace std;
 
 namespace {
@@ -382,8 +383,11 @@ void GameData::LoadShaders()
 	BatchShader::Init();
 	RenderBuffer::Init();
 
-	FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
-	FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
+	// FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
+	// FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
+	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "OpenSymbol.ttf", 14, "symbol14");
 
 	background.Init(16384, 4096);
 }

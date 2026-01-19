@@ -46,7 +46,7 @@ protected:
 
 private:
 	void DrawCredits() const;
-
+	void DrawDebug() const;
 
 private:
 	PlayerInfo &player;

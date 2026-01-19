@@ -68,6 +68,7 @@ project("Endless Sky" VERSION 0.10.17
 
 # Find the needed library dependencies.
 find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(CURL REQUIRED)
@@ -172,7 +173,7 @@ if(MINGW)
 endif()
 
 # Link with the general libraries.
-target_link_libraries(ExternalLibraries INTERFACE SDL2::SDL2 PNG::PNG JPEG::JPEG avif
+target_link_libraries(ExternalLibraries INTERFACE SDL2::SDL2 SDL2_ttf::SDL2_ttf PNG::PNG JPEG::JPEG avif
 	OpenAL::OpenAL ${MINIZIP_LIBRARIES} FLAC::FLAC++ CURL::libcurl nlohmann_json::nlohmann_json
 	"$<IF:$<CONFIG:Debug>,${LIBMAD_LIB_DEBUG},${LIBMAD_LIB_RELEASE}>")
 
