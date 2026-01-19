@@ -50,6 +50,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Plugins.h"
 #include "shader/PointerShader.h"
 #include "Politics.h"
+#include "shader/PolygonShader.h"
 #include "RenderBuffer.h"
 #include "shader/RingShader.h"
 #include "Ship.h"
@@ -375,6 +376,7 @@ void GameData::LoadShaders()
 	LineShader::Init();
 	OutlineShader::Init();
 	PointerShader::Init();
+	PolygonShader::Init();
 	RingShader::Init();
 	SpriteShader::Init();
 	BatchShader::Init();
