@@ -1,5 +1,5 @@
 /* Font.cpp
-Copyright (c) 2025 by xobes
+Copyright (c) 2014-2020 by Michael Zahniser
 
 Endless Sky is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
@@ -15,15 +15,30 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Font.h"
 
+#include "Alignment.h"
 #include "../Color.h"
 #include "DisplayText.h"
 #include "../text/Format.h"
 #include "../GameData.h"
+#include "../image/ImageBuffer.h"
 #include "../Logger.h"
 #include "../Point.h"
+#include "../Preferences.h"
 #include "../Screen.h"
+#include "../image/Sprite.h"
+#include "../shader/SpriteShader.h"
+#include "../text/TextRun.h"
+#include "Truncate.h"
 
 #include <SDL2/SDL_ttf.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+
+#include "../Rectangle.h"
+#include "../shader/FillShader.h"
 
 using namespace std;
 
@@ -46,55 +61,39 @@ Font::~Font()
 void Font::Load(const filesystem::path &path, double size)
 {
 	Init();
-	fontSize = size;
-	font = TTF_OpenFont(path.c_str(), size);
+	auto font = TTF_OpenFont(path.c_str(), size);
 	TTF_SetFontHinting(font, TTF_HINTING_MONO);
-	if(size == 14)
-		height = 16;
-	else
-		height = size;
-	space = WidthRawString("-");
+	fontList.emplace_back(font);
+	if (!height)
+	{
+		fontSize = size;
+		height = TTF_FontAscent(font);
+		space = WidthRawString("-");
+	}
 }
 
 
 
 void Font::Draw(const DisplayText &text, const Point &point, const Color &color) const
 {
-	DrawAliased(text, round(point.X()), round(point.Y()), color);
-}
-
-
-
-void Font::DrawAliased(const DisplayText &text, double x, double y, const Color &color) const
-{
-	int width = -1;
-	const string truncText = TruncateText(text, width);
-	const auto &layout = text.GetLayout();
-	if(width >= 0)
-	{
-		if(layout.align == Alignment::CENTER)
-			x += (layout.width - width) / 2;
-		else if(layout.align == Alignment::RIGHT)
-			x += layout.width - width;
-	}
-	DrawAliased(truncText, x, y, color);
+	DisplayText copy(text.GetText(), text.GetLayout());
+	DrawAliased(copy, round(point.X()), round(point.Y()), color);
 }
 
 
 
 void Font::Draw(const string &str, const Point &point, const Color &color) const
 {
-	DrawAliased(str, round(point.X()), round(point.Y()), color);
+	DisplayText text(str, Layout(Alignment::LEFT));
+	DrawAliased(text, round(point.X()), round(point.Y()), color);
 }
 
 
 
 void Font::DrawAliased(const string &str, double x, double y, const Color &color) const
 {
-	if(str.empty())
-		return;
-
-	DrawAliased(GetTextureForText(str), x, y, color);
+	DisplayText text(str, Layout(Alignment::LEFT));
+	DrawAliased(text, x, y, color);
 }
 
 
@@ -171,13 +170,21 @@ int Font::Space() const noexcept
 
 
 
-const Font::TextureHandle& Font::GetTextureForText(const string &str) const
+void Font::ShowUnderlines(bool show) noexcept
+{
+	showUnderlines = show || Preferences::Has("Always underline shortcuts");
+}
+
+
+
+const Font::TextureHandle &Font::GetTextureForText(const string &str, int fontIndex) const
 {
 	// Mark as used and return cached texture if available:
-	auto it = textureCache.find(str);
+	auto texHandle = make_pair(str, fontIndex);
+	auto it = textureCache.find(texHandle);
 	if(it != textureCache.end())
 	{
-		textureUsedThisFrame[str] = true;
+		textureUsedThisFrame[texHandle] = true;
 		return it->second;
 	}
 
@@ -193,6 +200,7 @@ const Font::TextureHandle& Font::GetTextureForText(const string &str) const
 
 	SDL_Color sdlColor(255, 255, 255, 0);
 
+	auto font = fontList[fontIndex];
 	SDL_Surface *surface = TTF_RenderUTF8_Blended(font, str.c_str(), sdlColor);
 
 	if(surface == nullptr)
@@ -209,35 +217,8 @@ const Font::TextureHandle& Font::GetTextureForText(const string &str) const
 		GL_UNSIGNED_BYTE, surface->pixels);
 
 	SDL_FreeSurface(surface);
-	textureUsedThisFrame[str] = true;
-	return textureCache[str] = TextureHandle(texI, columns, rows);
-}
-
-
-
-void Font::DrawAliased(const TextureHandle &texture, double x, double y, const Color &color) const
-{
-	// Bind.
-	glUseProgram(shader->Object());
-	glBindVertexArray(vao);
-	glBindTexture(GL_TEXTURE_2D, texture.GetTexture());
-
-	GLfloat scale[2] = {2.f / Screen::Width(), -2.f / Screen::Height()};
-	glUniform2fv(shader->Uniform("scale"), 1, scale);
-
-	GLfloat sizeV[2] = {static_cast<float>(texture.GetWidth()), static_cast<float>(texture.GetHeight())};
-	glUniform2fv(shader->Uniform("size"), 1, sizeV);
-
-	float position[2]{static_cast<float>(x), static_cast<float>(y - 1)};
-	glUniform2fv(shader->Uniform("position"), 1, position);
-	glUniform4fv(shader->Uniform("color"), 1, color.Get());
-
-	// Draw the rectangle of triangles.
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	// Clean up.
-	glBindVertexArray(0);
-	glUseProgram(0);
+	textureUsedThisFrame[texHandle] = true;
+	return textureCache[texHandle] = TextureHandle(texI, columns, rows);
 }
 
 
@@ -252,32 +233,55 @@ void Font::MarkTexturesUnused() const noexcept
 
 void Font::ClearUnusedTextures() const
 {
-	vector<string> toRemove;
-	for(const auto &entry : textureUsedThisFrame)
-		if(!entry.second)
-			toRemove.push_back(entry.first);
+	vector<pair<string, int>> toRemove;
+	for(const auto &[texHandle, used] : textureUsedThisFrame)
+		if(!used)
+			toRemove.push_back(texHandle);
 
-	for(const auto &str : toRemove)
+	for(const auto &texHandle : toRemove)
 	{
-		textureCache.erase(str);
-		textureUsedThisFrame.erase(str);
+		textureCache.erase(texHandle);
+		textureUsedThisFrame.erase(texHandle);
 	}
-}
-
-
-
-void Font::ShowUnderlines(bool show) noexcept
-{
-	// TODO: showUnderlines = show || Preferences::Has("Always underline shortcuts");
 }
 
 
 
 int Font::WidthRawString(const char *str) const noexcept
 {
+	DisplayText text(str, Alignment::LEFT);
+	return WidthRawString(text);
+}
+
+
+
+int Font::WidthRawString(DisplayText &text) const noexcept
+{
+	text.UpdateSpriteReferences();
+
 	int width = 0;
 	int h = 0;
-	TTF_SizeUTF8(font, str, &width, &h);
+	int spriteNum = 0;
+
+	for(char c : text.GetText())
+	{
+		if(c == '_')
+			continue;
+
+		int w = 0;
+		string s = "";
+		s.push_back(c);
+		//TODO: fribidi font fallback
+		auto font = fontList[0];
+		TTF_SizeUTF8(font, s.c_str(), &w, &h);
+		width += w;
+
+		if(c == DisplayText::SPRITE_PLACEHOLDER)
+		{
+			auto spriteData = text.inlineSprites[spriteNum++];
+			width += std::get<0>(spriteData)->Width();
+		}
+	}
 
 	return width;
 }
@@ -367,9 +371,122 @@ string Font::TruncateEndsOrMiddle(const string &str, int &width,
 				workingWidth = nextWidth;
 			}
 			low = nextChars + (nextChars == low);
-		} else
+		}
+		else
 			high = nextChars - 1;
 	}
 	width = workingWidth;
 	return getResultString(str, workingChars);
+}
+
+
+
+void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color) const
+{
+	text.UpdateSpriteReferences();
+	int spriteNum = 0;
+
+	int width = -1;
+	const DisplayText truncText(TruncateText(text, width), text.GetLayout());
+	const auto &layout = text.GetLayout();
+	if(width >= 0)
+	{
+		if(layout.align == Alignment::CENTER)
+			x += (layout.width - width) / 2;
+		else if(layout.align == Alignment::RIGHT)
+			x += layout.width - width;
+	}
+
+	x -= 1.;
+
+	bool underlineChar = false;
+
+	string str = truncText.GetText();
+
+	std::vector<TextRun> textRuns = GenerateRuns(str, fontList);
+	for(TextRun r: textRuns)
+	{
+		// if this textRun is a placeholder for a SPRITE, draw the sprite
+		if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
+		{
+			auto spriteData = &text.inlineSprites[spriteNum++];
+			double w = std::get<0>(*spriteData)->Width();
+			// Set sprite center point.
+			std::get<2>(*spriteData) = Point(x + .5 * w, y + .5 * height);
+			x += w;
+			continue;
+		}
+
+		for(char c : r.text)
+		{
+			if(c == '_')
+			{
+				underlineChar = showUnderlines;
+			}
+		}
+
+		int h = 0;
+		int w = 0;
+		// TODO: fribidi an stuff
+		TTF_SizeUTF8(fontList[r.fontIndex], r.text.c_str(), &w, &h);
+		RenderString(r.text, r.fontIndex, x, y, color);
+
+		if(underlineChar)
+		{
+			// TODO: actual underlines of width w would be better.
+			FillShader::Fill(Rectangle::FromCorner({x, y}, {1. * w, 1}), color);
+			// RenderString("_", x, y, color);
+			underlineChar = false;
+		}
+
+		x += w;
+	}
+
+	// TODO: a sprite is just it's own portion of a textRun.
+	DrawInlineSprites(text, color);
+}
+
+
+
+void Font::RenderString(const string &str, int fontIndex, double x, double y, const Color &color) const
+{
+	if(str.empty())
+		return;
+
+	const auto texture = &GetTextureForText(str, fontIndex);
+
+	// Bind.
+	glUseProgram(shader->Object());
+	glBindVertexArray(vao);
+	glBindTexture(GL_TEXTURE_2D, texture->GetTexture());
+	GLfloat scale[2] = {2.f / Screen::Width(), -2.f / Screen::Height()};
+	glUniform2fv(shader->Uniform("scale"), 1, scale);
+	GLfloat sizeV[2] = {static_cast<float>(texture->GetWidth()), static_cast<float>(texture->GetHeight())};
+	glUniform2fv(shader->Uniform("size"), 1, sizeV);
+	float position[2]{static_cast<float>(x), static_cast<float>(y - 1)};
+	glUniform2fv(shader->Uniform("position"), 1, position);
+	glUniform4fv(shader->Uniform("color"), 1, color.Get());
+	// Draw the rectangle of triangles.
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	// Clean up.
+	glBindVertexArray(0);
+	glUseProgram(0);
+}
+
+
+
+void Font::DrawInlineSprites(DisplayText text, const Color &color) const
+{
+	for(auto &[sprite, embossedStr, center] : text.inlineSprites)
+	{
+		// center += Point(0,20);
+		SpriteShader::Draw(sprite, center);
+		if(embossedStr != "")
+		{
+			Point textPoint = center + Point(-.5 * sprite->Width(), -.5 * height);
+			DisplayText embossedText(embossedStr, Layout(sprite->Width(), Alignment::CENTER));
+			DrawAliased(embossedText, textPoint.X(), textPoint.Y(), color);
+		}
+	}
 }

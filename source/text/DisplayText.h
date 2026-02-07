@@ -17,11 +17,23 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Layout.h"
 
+#include "../Point.h"
+
 #include <string>
+#include <tuple>
+#include <vector>
+
+class Sprite;
+
 
 
 // Class for holding a displayed text and layout.
 class DisplayText {
+public:
+	// ASCII 28 is "File Separator"
+	static constexpr char SPRITE_PLACEHOLDER = 28;
+
+
 public:
 	DisplayText() = default;
 	DisplayText(const char *text, Layout layout);
@@ -30,8 +42,16 @@ public:
 	const std::string &GetText() const noexcept;
 	const Layout &GetLayout() const noexcept;
 
+	void UpdateSpriteReferences();
+
 
 private:
 	Layout layout;
 	std::string text;
+
+	bool spritesLoaded = false;
+	// Sprite, embossed text, center point.
+	std::vector<std::tuple<const Sprite *, std::string, Point>> inlineSprites;
+
+	friend class Font;
 };

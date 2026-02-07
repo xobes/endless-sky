@@ -446,6 +446,8 @@ target_sources(EndlessSkyLib PRIVATE
 	text/Layout.h
 	text/Table.cpp
 	text/Table.h
+	text/TextRun.cpp
+	text/TextRun.h
 	text/Truncate.h
 	text/Utf8.cpp
 	text/Utf8.h

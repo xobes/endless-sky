@@ -27,13 +27,9 @@ namespace {
 
 
 
-void FontSet::Add(const std::filesystem::path &path, int size, string name)
+void FontSet::Add(const std::filesystem::path &path, int size)
 {
-	// For backwards compatibility, size alone will map to a font without a name.
-	if(name.empty())
-		name = to_string(size);
-	if(!fonts.contains(name))
-		fonts[name].Load(path, size);
+	fonts[to_string(size)].Load(path, size);
 }
 
 

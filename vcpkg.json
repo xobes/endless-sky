@@ -45,7 +45,11 @@
 					"platform": "linux"
 				},
 				"sdl2",
-				"sdl2-ttf",
+				{
+					"name": "sdl2-ttf",
+					"features": ["harfbuzz"]
+				},
+				"fribidi",
 				"pkgconf"
 			]
 		},

@@ -1,5 +1,5 @@
-/* FontSet.h
-Copyright (c) 2014-2020 by Michael Zahniser
+/* TextRun.cpp
+Copyright (c) 2026 by xobes
 
 Endless Sky is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
@@ -12,22 +12,16 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
-
 #pragma once
 
-#include <filesystem>
+#include "Font.h"
 
-class Font;
+#include <vector>
 
-
-
-// Class for getting the Font object for a given point size. Each font must be
-// based on a glyph image; right now only point sizes 14 and 18 exist.
-class FontSet {
-public:
-	static void Add(const std::filesystem::path &path, int size);
-	static const Font &Get(int size);
-	static const Font &Get(const std::string &name);
-	static void MarkFrameStart();
-	static void MarkFrameEnd();
+struct TextRun {
+    std::string text;
+    size_t fontIndex;
 };
+
+
+std::vector<TextRun> GenerateRuns(const std::string &text, const std::vector<TTF_Font *> &fontList);
