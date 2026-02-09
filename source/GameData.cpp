@@ -28,6 +28,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "shader/FillShader.h"
 #include "Fleet.h"
 #include "shader/FogShader.h"
+#include "text/Font.h"
 #include "text/FontSet.h"
 #include "FormationPattern.h"
 #include "Galaxy.h"
@@ -329,13 +330,37 @@ void GameData::LoadShaders()
 	BatchShader::Init();
 	RenderBuffer::Init();
 
-	// FontSet::Add(Files::Images() / "font/ubuntu14r.png", 14);
-	// FontSet::Add(Files::Images() / "font/ubuntu18r.png", 18);
-	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "OpenSymbol.ttf", 14, "symbol14");
-
 	background.Init(16384, 4096);
+}
+
+
+
+void GameData::LoadFonts()
+{
+	// TODO: load more fonts...
+	// bundled with plugins
+	// system fonts? (boooo)
+	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSans-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansArabic-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansJP-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansKR-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansTC-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansChorasmian-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansGunjalaGondi-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansKhojki-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "NotoSansThai-Regular.ttf", 14);
+
+	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSans-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansArabic-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansJP-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansKR-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansTC-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansChorasmian-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansGunjalaGondi-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansKhojki-Regular.ttf", 18);
+	FontSet::Add(Files::Fonts() / "NotoSansThai-Regular.ttf", 18);
 }
 
 
@@ -413,6 +438,22 @@ void GameData::Preload(TaskQueue &queue, const Sprite *sprite)
 const vector<filesystem::path> &GameData::Sources()
 {
 	return sources;
+}
+
+void GameData::TestFonts()
+{
+	double x = -50;
+	double y = -50;
+	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked+@1x.png}", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Spanish	¡Hola, Mundo!", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("French	Bonjour, le monde !", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("German	Hallo, Welt!", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Italian	Ciao, Mondo!", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Portuguese	Olá, Mundo!", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Russian	Привет, мир! (Privet, mir!)", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Japanese	こんにちは、世界！(Konnichiwa, sekai!)", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Chinese (Simplified)	你好，世界！ (Nǐ hǎo, shìjiè!)", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("Arabic	مرحبا، العالم! (Marhaban, alalam!)", {x, y+=20}, {1,1,1});
 }
 
 

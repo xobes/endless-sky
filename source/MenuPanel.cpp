@@ -177,6 +177,9 @@ void MenuPanel::Draw()
 
 	if(!credits.empty())
 		DrawCredits();
+
+
+	GameData::TestFonts();
 }
 
 

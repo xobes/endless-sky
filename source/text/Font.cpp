@@ -30,6 +30,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "../text/TextRun.h"
 #include "Truncate.h"
 
+#include <fribidi.h>
 #include <SDL2/SDL_ttf.h>
 
 #include <algorithm>
@@ -67,7 +68,7 @@ void Font::Load(const filesystem::path &path, double size)
 	if (!height)
 	{
 		fontSize = size;
-		height = TTF_FontAscent(font);
+		height = size > 14 ? size : size + 2;
 		space = WidthRawString("-");
 	}
 }
@@ -272,6 +273,8 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 		string s = "";
 		s.push_back(c);
 		//TODO: fribidi font fallback
+		// TODO: fribidi must be done before text wrapping can happen, too
+		// TODO: fribidi seems slow; but it could be the font searching... Need to analyze; may need to cache
 		auto font = fontList[0];
 		TTF_SizeUTF8(font, s.c_str(), &w, &h);
 		width += w;
@@ -381,11 +384,19 @@ string Font::TruncateEndsOrMiddle(const string &str, int &width,
 
 
 
+// FriBidi handles "flipping" the RTL words so they appear in the right place.
+// HarfBuzz (inside SDL2_ttf) handles "connecting" the letters once it has a correctly ordered chunk.
 void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color) const
 {
 	text.UpdateSpriteReferences();
 	int spriteNum = 0;
 
+	auto font = fontList[0];
+	int baseY = TTF_FontAscent(font);
+	int offset = -0.5 * (TTF_FontHeight(font) - height);
+
+	int h = 0;
+	int w = 0;
 	int width = -1;
 	const DisplayText truncText(TruncateText(text, width), text.GetLayout());
 	const auto &layout = text.GetLayout();
@@ -399,47 +410,41 @@ void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color
 
 	x -= 1.;
 
-	bool underlineChar = false;
-
 	string str = truncText.GetText();
+	if(str.empty())
+		return;
 
-	std::vector<TextRun> textRuns = GenerateRuns(str, fontList);
-	for(TextRun r: textRuns)
+	for(TextRun d: GenerateDirectionalRuns(str))
 	{
-		// if this textRun is a placeholder for a SPRITE, draw the sprite
-		if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
+		bool isRTL = FRIBIDI_LEVEL_IS_RTL(d.embedLevel);
+		for(TextRun r: GenerateGlyphRuns(d.text, fontList, isRTL))
 		{
-			auto spriteData = &text.inlineSprites[spriteNum++];
-			double w = std::get<0>(*spriteData)->Width();
-			// Set sprite center point.
-			std::get<2>(*spriteData) = Point(x + .5 * w, y + .5 * height);
-			x += w;
-			continue;
-		}
-
-		for(char c : r.text)
-		{
-			if(c == '_')
+			// if this textRun is a placeholder for a SPRITE, draw the sprite
+			if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
 			{
-				underlineChar = showUnderlines;
+				auto spriteData = &text.inlineSprites[spriteNum++];
+				double w = std::get<0>(*spriteData)->Width();
+				// Set sprite center point.
+				std::get<2>(*spriteData) = Point(x + .5 * w, y + .5 * height);
+				x += w;
+				continue;
 			}
+
+			auto font = fontList[r.fontIndex];
+			// Note: fribidi alrady swapped LTR/RTL for us
+			// TTF_SetFontDirection(font, isRTL ? TTF_DIRECTION_RTL: TTF_DIRECTION_LTR);
+			TTF_SizeUTF8(font, r.text.c_str(), &w, &h);
+
+			double dY = baseY - TTF_FontAscent(font);
+			RenderString(r.text, r.fontIndex, x, y + offset + dY, color);
+
+			x += w;
+
+			if(showUnderlines)
+				for(auto[ux, uw]: r.underlines)
+					FillShader::Fill(Rectangle::FromCorner(
+						{x + ux, y + offset + dY + height + 2}, {1. * uw, 1}), color);
 		}
-
-		int h = 0;
-		int w = 0;
-		// TODO: fribidi an stuff
-		TTF_SizeUTF8(fontList[r.fontIndex], r.text.c_str(), &w, &h);
-		RenderString(r.text, r.fontIndex, x, y, color);
-
-		if(underlineChar)
-		{
-			// TODO: actual underlines of width w would be better.
-			FillShader::Fill(Rectangle::FromCorner({x, y}, {1. * w, 1}), color);
-			// RenderString("_", x, y, color);
-			underlineChar = false;
-		}
-
-		x += w;
 	}
 
 	// TODO: a sprite is just it's own portion of a textRun.

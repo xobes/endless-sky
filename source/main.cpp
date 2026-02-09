@@ -243,6 +243,8 @@ int main(int argc, char *argv[])
 		{
 			GameData::LoadShaders();
 
+			GameData::LoadFonts();
+
 			// Show something other than a blank window.
 			GameWindow::Step();
 		}

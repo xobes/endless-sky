@@ -88,6 +88,7 @@ public:
 	static void CheckReferences();
 	static void LoadSettings();
 	static void LoadShaders();
+	static void LoadFonts();
 	static double GetProgress();
 	// Whether initial game loading is complete (data, sprites and audio are loaded).
 	static bool IsLoaded();
@@ -97,6 +98,8 @@ public:
 
 	// Get the list of resource sources (i.e. plugin folders).
 	static const std::vector<std::filesystem::path> &Sources();
+
+	static void TestFonts();
 
 	// Get a reference to the UniverseObjects object.
 	static UniverseObjects &Objects();

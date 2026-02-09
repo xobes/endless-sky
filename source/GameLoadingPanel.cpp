@@ -37,9 +37,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "opengl.h"
 
 
-
 GameLoadingPanel::GameLoadingPanel(PlayerInfo &player, TaskQueue &queue, const Conversation &conversation,
-	UI &gamePanels, bool &finishedLoading)
+                                   UI &gamePanels, bool &finishedLoading)
 	: player(player), queue(queue), conversation(conversation), gamePanels(gamePanels),
 		finishedLoading(finishedLoading), ANGLE_OFFSET(360. / MAX_TICKS)
 {
@@ -97,6 +96,8 @@ void GameLoadingPanel::Draw()
 	GameData::Background().Draw(Point());
 
 	GameData::DrawMenuBackground(this);
+
+	GameData::TestFonts();
 
 	// Draw the loading circle.
 	Angle da(ANGLE_OFFSET);

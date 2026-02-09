@@ -282,6 +282,10 @@ bool GameWindow::Init(bool headless)
 		}
 		return false;
 	}
+	int x, y, z;
+	TTF_GetHarfBuzzVersion(&x, &y, &z);
+	string message = "HarfBuzz version: " + to_string(x) + "." + to_string(y) + "." + to_string(z) + "";
+	Logger::Log("(SDL_ttf message: \"" + message + "\")", Logger::Level::INFO);
 
 #ifdef _WIN32
 	UpdateTitleBarTheme();

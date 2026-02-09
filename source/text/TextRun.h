@@ -16,12 +16,19 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Font.h"
 
+#include <fribidi.h>
+
 #include <vector>
+
+
 
 struct TextRun {
     std::string text;
     size_t fontIndex;
+    FriBidiParType paraBaseDirection;
+    FriBidiLevel embedLevel;
+    std::vector<std::pair<double, int>> underlines;
 };
 
-
-std::vector<TextRun> GenerateRuns(const std::string &text, const std::vector<TTF_Font *> &fontList);
+std::vector<TextRun> GenerateDirectionalRuns(const std::string &text);
+std::vector<TextRun> GenerateGlyphRuns(const std::string &text, const std::vector<TTF_Font *> &fontList, bool isRTL);

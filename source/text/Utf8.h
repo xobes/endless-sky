@@ -39,4 +39,6 @@ namespace Utf8 {
 	// pos skips to the next unicode code point after pos in utf8,
 	// or is set string::npos when there are no more code points.
 	char32_t DecodeCodePoint(const std::string &str, std::size_t &pos);
+	std::string UTF32ToUTF8(char32_t utf32);
+
 }

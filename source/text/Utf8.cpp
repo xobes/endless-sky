@@ -15,6 +15,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "Utf8.h"
 
+#include <uchar.h>
+
 #if defined(_WIN32)
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
@@ -166,5 +168,16 @@ namespace Utf8 {
 		for(int i = 1; i < bytes; ++i)
 			c = (c << 6) + (str[pos++] & 0x3f);
 		return c;
+	}
+
+	string UTF32ToUTF8(char32_t utf32)
+	{
+		setlocale(LC_ALL, "C.UTF-8");
+		char out[32] = {};
+		mbstate_t state = {0};
+		// In order for c32rtomb to convert to UTF-8 on unix we must set the local accordingly.
+		// My research suggests that it will always use UTF-8 on Windows.
+		c32rtomb(out, utf32, &state);
+		return out;
 	}
 }
