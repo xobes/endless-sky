@@ -444,16 +444,16 @@ void GameData::TestFonts()
 {
 	double x = -50;
 	double y = -50;
-	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked+@1x.png}", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Spanish	¡Hola, Mundo!", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("French	Bonjour, le monde !", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("German	Hallo, Welt!", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Italian	Ciao, Mondo!", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Portuguese	Olá, Mundo!", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Russian	Привет, мир! (Privet, mir!)", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Japanese	こんにちは、世界！(Konnichiwa, sekai!)", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Chinese (Simplified)	你好，世界！ (Nǐ hǎo, shìjiè!)", {x, y+=20}, {1,1,1});
-	FontSet::Get(14).Draw("Arabic	مرحبا، العالم! (Marhaban, alalam!)", {x, y+=20}, {1,1,1});
+	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked+@1x.png}", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Spanish	¡Hola, Mundo!", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("French	Bonjour, le monde !", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("German	Hallo, Welt!", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Italian	Ciao, Mondo!", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Portuguese	Olá, Mundo!", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Russian	Привет, мир! (Privet, mir!)", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Japanese	こんにちは、世界！(Konnichiwa, sekai!)", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Chinese (Simplified)	你好，世界！ (Nǐ hǎo, shìjiè!)", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Arabic	مرحبا، العالم! (Marhaban, alalam!)", {x, y += 20}, {1, 1, 1});
 }
 
 

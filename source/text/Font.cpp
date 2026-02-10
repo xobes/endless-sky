@@ -18,19 +18,20 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Alignment.h"
 #include "../Color.h"
 #include "DisplayText.h"
+#include "../shader/FillShader.h"
 #include "../text/Format.h"
 #include "../GameData.h"
 #include "../image/ImageBuffer.h"
 #include "../Logger.h"
 #include "../Point.h"
 #include "../Preferences.h"
+#include "../Rectangle.h"
 #include "../Screen.h"
 #include "../image/Sprite.h"
 #include "../shader/SpriteShader.h"
 #include "../text/TextRun.h"
 #include "Truncate.h"
 
-#include <fribidi.h>
 #include <SDL2/SDL_ttf.h>
 
 #include <algorithm>
@@ -38,8 +39,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <cstring>
 
-#include "../Rectangle.h"
-#include "../shader/FillShader.h"
 
 using namespace std;
 
@@ -55,6 +54,9 @@ namespace {
 
 Font::~Font()
 {
+	for(auto font : fontList)
+		if(font)
+			TTF_CloseFont(font);
 }
 
 
@@ -65,7 +67,7 @@ void Font::Load(const filesystem::path &path, double size)
 	auto font = TTF_OpenFont(path.c_str(), size);
 	TTF_SetFontHinting(font, TTF_HINTING_MONO);
 	fontList.emplace_back(font);
-	if (!height)
+	if(!height)
 	{
 		fontSize = size;
 		height = size > 14 ? size : size + 2;
@@ -272,9 +274,6 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 		int w = 0;
 		string s = "";
 		s.push_back(c);
-		//TODO: fribidi font fallback
-		// TODO: fribidi must be done before text wrapping can happen, too
-		// TODO: fribidi seems slow; but it could be the font searching... Need to analyze; may need to cache
 		auto font = fontList[0];
 		TTF_SizeUTF8(font, s.c_str(), &w, &h);
 		width += w;
@@ -414,10 +413,10 @@ void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color
 	if(str.empty())
 		return;
 
-	for(TextRun d: GenerateDirectionalRuns(str))
+	for(TextRun d : GenerateDirectionalRuns(str))
 	{
 		bool isRTL = FRIBIDI_LEVEL_IS_RTL(d.embedLevel);
-		for(TextRun r: GenerateGlyphRuns(d.text, fontList, isRTL))
+		for(TextRun r : GenerateGlyphRuns(d.text, fontList, isRTL))
 		{
 			// if this textRun is a placeholder for a SPRITE, draw the sprite
 			if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
@@ -441,7 +440,7 @@ void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color
 			x += w;
 
 			if(showUnderlines)
-				for(auto[ux, uw]: r.underlines)
+				for(auto[ux, uw] : r.underlines)
 					FillShader::Fill(Rectangle::FromCorner(
 						{x + ux, y + offset + dY + height + 2}, {1. * uw, 1}), color);
 		}
@@ -481,9 +480,9 @@ void Font::RenderString(const string &str, int fontIndex, double x, double y, co
 
 
 
-void Font::DrawInlineSprites(DisplayText text, const Color &color) const
+void Font::DrawInlineSprites(const DisplayText &text, const Color &color) const
 {
-	for(auto &[sprite, embossedStr, center] : text.inlineSprites)
+	for(const auto &[sprite, embossedStr, center] : text.inlineSprites)
 	{
 		// center += Point(0,20);
 		SpriteShader::Draw(sprite, center);

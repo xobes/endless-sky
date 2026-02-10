@@ -122,7 +122,7 @@ private:
 		std::function<std::string(const std::string &, int)> getResultString) const;
 	void DrawAliased(DisplayText &text, double x, double y, const Color &color) const;
 	void RenderString(const std::string &str, int fontIndex, double x, double y, const Color &color) const;
-	void DrawInlineSprites(DisplayText text, const Color &color) const;
+	void DrawInlineSprites(const DisplayText &text, const Color &color) const;
 
 
 private:

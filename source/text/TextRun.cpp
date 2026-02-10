@@ -12,6 +12,7 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 */
+
 #include "TextRun.h"
 
 #include "Utf8.h"
@@ -62,7 +63,7 @@ vector<TextRun> GenerateDirectionalRuns(const string &text)
 		currentRunText.append(Utf8::UTF32ToUTF8(visual_unicode_str[i]));
 	}
 
-	if (!currentRunText.empty())
+	if(!currentRunText.empty())
 		runs.push_back({currentRunText, 0, baseDirection, currentLevel});
 	return runs;
 }
