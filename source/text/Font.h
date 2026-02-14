@@ -16,6 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../shader/Shader.h"
+#include "Utf8String.h"
 
 #include "../opengl.h"
 
@@ -92,12 +93,12 @@ public:
 	// Draw a text string, subject to the given layout and truncation strategy.
 	void Draw(const DisplayText &text, const Point &point, const Color &color) const;
 	// Draw the given text string, e.g. post-formatting (or without regard to formatting).
-	void Draw(const std::string &str, const Point &point, const Color &color) const;
+	void Draw(const Utf8String &str, const Point &point, const Color &color) const;
 	// Special use of DrawAliased only used for drawing planet labels.
-	void DrawAliased(const std::string &str, double x, double y, const Color &color) const;
+	void DrawAliased(const Utf8String &str, double x, double y, const Color &color) const;
 
 	// Determine the string's width, without considering formatting.
-	int Width(const std::string &str) const;
+	int Width(const Utf8String &str) const;
 	// Get the width of the text while accounting for the desired layout and truncation strategy.
 	int FormattedWidth(const DisplayText &text) const;
 	int Height() const noexcept;
@@ -114,12 +115,12 @@ private:
 	void Init();
 	int WidthRawString(const char *str) const noexcept;
 	int WidthRawString(DisplayText &text) const noexcept;
-	std::string TruncateText(const DisplayText &text, int &width) const;
-	std::string TruncateBack(const std::string &str, int &width) const;
-	std::string TruncateFront(const std::string &str, int &width) const;
-	std::string TruncateMiddle(const std::string &str, int &width) const;
-	std::string TruncateEndsOrMiddle(const std::string &str, int &width,
-		std::function<std::string(const std::string &, int)> getResultString) const;
+	Utf8String TruncateText(const DisplayText &text, int &width) const;
+	Utf8String TruncateBack(const Utf8String &str, int &width) const;
+	Utf8String TruncateFront(const Utf8String &str, int &width) const;
+	Utf8String TruncateMiddle(const Utf8String &str, int &width) const;
+	Utf8String TruncateEndsOrMiddle(const Utf8String &str, int &width,
+		const std::function<Utf8String(const Utf8String &, int)>& getResultString) const;
 	void DrawAliased(DisplayText &text, double x, double y, const Color &color) const;
 	void RenderString(const std::string &str, int fontIndex, double x, double y, const Color &color) const;
 	void DrawInlineSprites(const DisplayText &text, const Color &color) const;

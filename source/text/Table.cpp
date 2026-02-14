@@ -149,14 +149,7 @@ void Table::Advance(int fields) const
 
 
 // Draw a single text field, and move on to the next one.
-void Table::Draw(const char *text) const
-{
-	Draw(text, nullptr, color);
-}
-
-
-
-void Table::Draw(const string &text) const
+void Table::Draw(const Utf8String &text) const
 {
 	Draw(text, nullptr, color);
 }
@@ -165,14 +158,7 @@ void Table::Draw(const string &text) const
 
 // If a color is given, this field is drawn using that color, but the
 // previously set color will be used for future fields.
-void Table::Draw(const char *text, const Color &color) const
-{
-	Draw(text, nullptr, color);
-}
-
-
-
-void Table::Draw(const string &text, const Color &color) const
+void Table::Draw(const Utf8String &text, const Color &color) const
 {
 	Draw(text, nullptr, color);
 }
@@ -207,7 +193,7 @@ void Table::DrawCustom(const DisplayText &text, const Color &color) const
 
 
 
-void Table::DrawTruncatedPair(const string &left, const Color &leftColor, const string &right, const Color &rightColor,
+void Table::DrawTruncatedPair(const Utf8String &left, const Color &leftColor, const Utf8String &right, const Color &rightColor,
 	Truncate strategy, bool truncateRightColumn) const
 {
 	// Compute the width of the non-truncated string, and the margin we have for the possibly-large text.
@@ -321,7 +307,7 @@ Table::Column::Column(double offset, Layout layout) noexcept
 
 
 
-void Table::Draw(const string &text, const Layout *special, const Color &color) const
+void Table::Draw(const Utf8String &text, const Layout *special, const Color &color) const
 {
 	if(font && !columns.empty())
 	{

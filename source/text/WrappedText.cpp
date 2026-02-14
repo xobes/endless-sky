@@ -124,18 +124,9 @@ void WrappedText::SetParagraphBreak(int height)
 
 // Get the word positions when wrapping the given text. The coordinates
 // always begin at (0, 0).
-void WrappedText::Wrap(const string &str)
+void WrappedText::Wrap(const Utf8String &str)
 {
 	SetText(str.data(), str.length());
-
-	Wrap();
-}
-
-
-
-void WrappedText::Wrap(const char *str)
-{
-	SetText(str, strlen(str));
 
 	Wrap();
 }
@@ -188,9 +179,9 @@ void WrappedText::Draw(const Point &topLeft, const Color &color) const
 
 
 
-string WrappedText::Word::Value(const string &text) const
+Utf8String WrappedText::Word::Value(const Utf8String &str) const
 {
-	return text.substr(index, length) + suffix;
+	return str.substr(index, length) + suffix;
 }
 
 
@@ -235,23 +226,23 @@ void WrappedText::Wrap()
 	// TODO: break words at hyphens, or even do automatic hyphenation.
 
 	bool done = false;
-	string::iterator it = text.begin();
+	auto it = text.begin();
 	while(!done)
 	{
-		char c;
-		char cLast = '\0';
+		char32_t codepoint;
+		char lastCodepoint = '\0';
 		if(it == text.end())
 		{
-			c = '\n';
-			if(cLast == '\n')
-				word.y -= lineHeight + paragraphBreak;
+			codepoint = '\n';
+			if(lastCodepoint == '\n')
+				word.y -= lineHeight + paragraphBreak;  // TODO: unreachable code
 			done = true;
 		}
 		else
-			c = *it;
+			codepoint = *it;
 
 		// Whitespace signals a word end - mark it and wrap the text if needed.
-		if(c <= ' ' && traversingWord)
+		if(codepoint <= ' ' && traversingWord)
 		{
 			traversingWord = false;
 			// Break the string at this point, and measure the word's width.
@@ -259,7 +250,7 @@ void WrappedText::Wrap()
 			bool breakingWord = true;
 			while(breakingWord)
 			{
-				word.length = (it - text.begin()) - word.index;
+				word.length = it.codepointStartByte - word.index;
 				int width = font->Width(word.Value(text));
 				// If adding this word would overflow the length of the line,
 				// this word will be the first on the next line.
@@ -277,11 +268,11 @@ void WrappedText::Wrap()
 					{
 						// First portion will fit on this line, with a hyphen.
 						word.length = numChars;
-						word.suffix = '-';
+						word.suffix = "-";
 						words.push_back(word);
 						word.suffix.clear();
 						word.index += word.length;
-						word.length = (it - text.begin()) - word.index;
+						word.length = it.codepointStartByte - word.index;
 						word.x += chunkWidth;
 						// Keep track of how wide this line is now that this word is added.
 						lineWidth = word.x + hyphen;
@@ -334,7 +325,7 @@ void WrappedText::Wrap()
 		}
 
 		// If that whitespace was a newline, we must handle that, too.
-		if(c == '\n')
+		if(codepoint == '\n')
 		{
 			// The next word will begin on a new line.
 			word.y += lineHeight + paragraphBreak;
@@ -344,15 +335,15 @@ void WrappedText::Wrap()
 			AdjustLine(lineBegin, lineWidth, true);
 		}
 		// Otherwise, whitespace just adds to the x position.
-		else if(c <= ' ')
-			word.x += Space(c);
+		else if(codepoint <= ' ')
+			word.x += Space(codepoint);
 		// If we've reached the start of a new word, remember where it begins.
 		else if(!traversingWord)
 		{
 			traversingWord = true;
-			word.index = it - text.begin();
+			word.index = it.codepointStartByte;
 		}
-		cLast = c;
+		lastCodepoint = codepoint;
 		++it;
 	}
 	height = max(0, word.y - paragraphBreak);
@@ -398,12 +389,12 @@ int WrappedText::BreakWord(const WrappedText::Word &word, int &chunkWidth)
 	temp.length = word.length;
 	int width = font->Width(temp.Value(text));
 	while(width > chunkWidth && temp.length > 0)
-	{
+	{  // TODO: binary search not just one char at a time
 		--temp.length;
 		width = font->Width(temp.Value(text));
 	}
 	chunkWidth = width;
-	// Note: there should be a minimum enforced wrap width. Here we expect at lesat two char with a hyphen to fit.
+	// Note: there should be a minimum enforced wrap width. Here we expect at least two char with a hyphen to fit.
 	return temp.length > 2 ? temp.length : 0;
 }
 

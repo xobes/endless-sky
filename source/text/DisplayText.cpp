@@ -18,26 +18,20 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "../Point.h"
 #include "../image/Sprite.h"
 #include "../image/SpriteSet.h"
+#include "Utf8String.h"
 
 using namespace std;
 
 
 
-DisplayText::DisplayText(const char *text, Layout layout)
+DisplayText::DisplayText(const Utf8String &text, Layout layout)
 	: layout(layout), text(text)
 {
 }
 
 
 
-DisplayText::DisplayText(const string &text, Layout layout)
-	: layout(layout), text(text)
-{
-}
-
-
-
-const string &DisplayText::GetText() const noexcept
+const Utf8String &DisplayText::GetText() const noexcept
 {
 	return text;
 }
@@ -51,15 +45,14 @@ const Layout &DisplayText::GetLayout() const noexcept
 
 
 
-
 // Returns the width of the sprites that are included by reference in the string in &width.
 // Don't call this to process sprite references before the sprites are loaded, e.g. GameLoadingPanel, it won't work.
 void DisplayText::UpdateSpriteReferences()
 {
 	if(!spritesLoaded)
 	{
-		string target;
-		target.reserve(text.length());
+		Utf8String target;
+		target.reserve(text.size  ());
 
 		inlineSprites.clear();
 
@@ -71,15 +64,15 @@ void DisplayText::UpdateSpriteReferences()
 			if(left == string::npos)
 				break;
 
-			size_t right = text.find('>', left);
+			size_t right = text.find(">", left);
 			if(right == string::npos)
 				break;
 
 			size_t spriteLeft = left + 8;
 
 			// Gather the path and the (optional) embossed text.
-			string spritePath = text.substr(spriteLeft, right - spriteLeft);
-			string embossedText;
+			string spritePath = text.substr(spriteLeft, right - spriteLeft).to_string();
+			Utf8String embossedText;
 			size_t embossed = spritePath.find(':', 0);
 			if(embossed != string::npos)
 			{

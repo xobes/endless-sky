@@ -64,6 +64,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "test/Test.h"
 #include "test/TestData.h"
 #include "UniverseObjects.h"
+#include "text/Utf8String.h"
 
 #include <algorithm>
 #include <atomic>
@@ -352,6 +353,7 @@ void GameData::LoadFonts()
 	FontSet::Add(Files::Fonts() / "NotoSansGunjalaGondi-Regular.ttf", 14);
 	FontSet::Add(Files::Fonts() / "NotoSansKhojki-Regular.ttf", 14);
 	FontSet::Add(Files::Fonts() / "NotoSansThai-Regular.ttf", 14);
+	FontSet::Add(Files::Fonts() / "DOESNOTEXIST-Regular.ttf", 14);
 
 	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
 	FontSet::Add(Files::Fonts() / "NotoSans-Regular.ttf", 18);
@@ -459,7 +461,7 @@ const vector<filesystem::path> &GameData::Sources()
 void GameData::TestFonts()
 {
 	double x = -50;
-	double y = -50;
+	double y = -150;
 	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked+@1x.png}", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Spanish	¡Hola, Mundo!", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("French	Bonjour, le monde !", {x, y += 20}, {1, 1, 1});
@@ -470,6 +472,29 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("Japanese	こんにちは、世界！(Konnichiwa, sekai!)", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Chinese (Simplified)	你好，世界！ (Nǐ hǎo, shìjiè!)", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Arabic	مرحبا، العالم! (Marhaban, alalam!)", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO: load font from resources", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO: load font from plugin zip", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO: make translation plugin", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - make translation scripts", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags?", {x, y += 20}, {1, 1, 1});
+
+	x = -400;
+	y += 20;
+	for(const char32_t c : Utf8String("Japanese	こんにちは、世界！(Konnichiwa, sekai!)"))
+	{
+		FontSet::Get(14).Draw(Utf8::UTF32ToUTF8(c), {x += 20, y}, {1, 1, 1});
+	}
+
+	WrappedText wrap;
+	wrap.SetAlignment(Alignment::JUSTIFIED);
+	wrap.SetWrapWidth(100);
+	wrap.SetFont(FontSet::Get(14));
+	// TODO: wrapping isn't working, last line missing/wrong?
+	wrap.Wrap("https://github.com/xobes/endless-sky/tree/feature/ttf-plugin こんにちは、世界; 你好，世界 ***!!!");
+	wrap.Draw({x = -400, y += 20}, {1, 1, 1});
+
+
 }
 
 

@@ -18,6 +18,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "../Color.h"
 #include "Layout.h"
 #include "../Point.h"
+#include "Utf8String.h"
 
 #include <string>
 #include <vector>
@@ -63,12 +64,12 @@ public:
 	void Advance(int fields = 1) const;
 
 	// Draw a single text field, and move on to the next one.
-	void Draw(const char *text) const;
-	void Draw(const std::string &text) const;
+	// void Draw(const char *text) const;
+	void Draw(const Utf8String &text) const;
 	// If a color is given, this field is drawn using that color, but the
 	// previously set color will be used for future fields.
-	void Draw(const char *text, const Color &color) const;
-	void Draw(const std::string &text, const Color &color) const;
+	// void Draw(const char *text, const Color &color) const;
+	void Draw(const Utf8String &text, const Color &color) const;
 	void Draw(double value) const;
 	void Draw(double value, const Color &color) const;
 	// Use the width & alignment associated with the text (instead of the column's).
@@ -77,7 +78,7 @@ public:
 
 	// Draw two columns as a pair with opposite alignments. If needed, truncate the given
 	// column based on the width of the non-truncated column's value.
-	void DrawTruncatedPair(const std::string &left, const Color &leftColor, const std::string &right,
+	void DrawTruncatedPair(const Utf8String &left, const Color &leftColor, const Utf8String &right,
 		const Color &rightColor, Truncate strategy, bool truncateRightColumn) const;
 
 	// Draw an underline under the text for the current row.
@@ -121,7 +122,7 @@ private:
 
 
 private:
-	void Draw(const std::string &text, const Layout *special, const Color &color) const;
+	void Draw(const Utf8String &text, const Layout *special, const Color &color) const;
 
 
 private:

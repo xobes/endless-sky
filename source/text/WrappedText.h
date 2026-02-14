@@ -18,8 +18,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Alignment.h"
 #include "../Point.h"
 #include "Truncate.h"
+#include "Utf8String.h"
 
-#include <string>
 #include <vector>
 
 class Color;
@@ -63,8 +63,7 @@ public:
 	void SetParagraphBreak(int height);
 
 	// Wrap the given text. Use Draw() to draw it.
-	void Wrap(const std::string &str);
-	void Wrap(const char *str);
+	void Wrap(const Utf8String &str);
 
 	/// Get the height of the wrapped text.
 	/// With trailingBreak, include a paragraph break after the text.
@@ -83,7 +82,7 @@ private:
 	public:
 		Word() = default;
 
-		std::string Value(const std::string &text) const;
+		Utf8String Value(const Utf8String &str) const;
 		Point Pos() const;
 
 	private:
@@ -91,7 +90,7 @@ private:
 		size_t index = 0;
 		// Track how many chars from reference text belong to this word.
 		size_t length = 0;
-		std::string suffix;
+		Utf8String suffix;
 		// Track screen coordinates.
 		int x = 0;
 		int y = 0;
@@ -120,7 +119,7 @@ private:
 	Alignment alignment = Alignment::JUSTIFIED;
 	Truncate truncate = Truncate::NONE;
 
-	std::string text;
+	Utf8String text;
 	std::vector<Word> words;
 	int height = 0;
 

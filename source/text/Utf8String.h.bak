@@ -1,0 +1,131 @@
+/* Utf8String.h
+Copyright (c) 2026 by xobes
+
+Endless Sky is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later version.
+
+Endless Sky is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#pragma once
+
+#include "Utf8.h"
+
+#include <cassert>
+#include <vector>
+
+// Usage Example:
+// #include "text/Utf8String.h"
+// for(char32_t c : Utf8String(str))
+// {
+// }
+
+// class Range
+// {
+// public:
+//     // member typedefs provided through inheriting from std::iterator
+//     class iterator {
+//         long num = FROM;
+//     public:
+//         explicit iterator(long _num = 0) : num(_num) {}
+//         iterator& operator++() { num = TO >= FROM ? num + 1: num - 1; return *this; }
+//         iterator operator++(int) { iterator retval = *this; ++(*this); return retval; }
+//         bool operator==(iterator other) const { return num == other.num; }
+//         bool operator!=(iterator other) const { return !(*this == other); }
+//         reference operator*() const { return num; }
+//     };
+//     iterator begin() { return iterator(FROM); }
+//     iterator end() { return iterator(TO >= FROM? TO + 1 : TO - 1); }
+// };
+
+class Utf8String {
+public:
+	class Utf8StringIterator {
+	public:
+		explicit Utf8StringIterator(std::string *data, size_t pos = 0);
+		Utf8StringIterator(std::string *data, size_t pos, char32_t codepoint);
+		char32_t operator*() const;
+		Utf8StringIterator &operator++();
+		bool operator!=(const Utf8StringIterator &other) const;
+
+	private:
+		std::string *data;
+		size_t pos = 0;
+		char32_t codepoint = '\0';
+	};
+
+	Utf8String() = default;
+	explicit Utf8String(const std::string &dataIn);
+	Utf8String(const Utf8String &) = default;
+	Utf8String(Utf8String &&) = default;
+	Utf8String &operator=(const Utf8String &) = default;
+	Utf8String &operator=(Utf8String &&) = default;
+	Utf8StringIterator begin();
+	Utf8StringIterator end();
+
+
+private:
+	std::string data;
+};
+
+inline Utf8String::Utf8StringIterator::Utf8StringIterator(std::string* data, size_t pos)
+	: data(data), pos(pos)
+{
+	codepoint = Utf8::DecodeCodePoint(*data, this->pos);
+}
+
+inline Utf8String::Utf8StringIterator::Utf8StringIterator(std::string* data, size_t pos, char32_t codepoint)
+	: data(data), pos(pos), codepoint(codepoint)
+{
+}
+
+inline char32_t Utf8String::Utf8StringIterator::operator*() const
+{
+	assert((data && codepoint) && "Trying to deference invalidated iterator!");
+	return codepoint;
+}
+
+inline Utf8String::Utf8StringIterator & Utf8String::Utf8StringIterator::operator++()
+{
+	codepoint = Utf8::DecodeCodePoint(*data, pos);
+	return *this;
+}
+
+inline bool Utf8String::Utf8StringIterator::operator!=(const Utf8StringIterator& other) const
+{
+	return pos != other.pos;
+}
+
+inline Utf8String::Utf8String(const std::string& dataIn)
+	: data(dataIn)
+{
+}
+
+// Skip to the next unicode code point after pos in utf8.
+// Return string::npos when there are no more code points.
+// size_t new_pos = NextCodePoint(const std::string &str, std::size_t pos);
+
+// Returns the start of the unicode code point at pos in utf8.
+// std::size_t CodePointStart(const std::string &str, std::size_t pos);
+
+// Decodes a unicode code point in utf8.
+// Invalid codepoints are converted to 0xFFFFFFFF.
+// pos skips to the next unicode code point after pos in utf8,
+// or is set string::npos when there are no more code points.
+// char32_t DecodeCodePoint(const std::string &str, std::size_t &pos);
+
+inline Utf8String::Utf8StringIterator Utf8String::begin()
+{
+	return Utf8String::Utf8StringIterator(&data);
+}
+
+inline Utf8String::Utf8StringIterator Utf8String::end()
+{
+	return {&data, data.size(), '\0'};
+}

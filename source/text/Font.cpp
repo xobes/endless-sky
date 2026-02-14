@@ -31,6 +31,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "../shader/SpriteShader.h"
 #include "../text/TextRun.h"
 #include "Truncate.h"
+#include "Utf8String.h"
 
 #include <SDL2/SDL_ttf.h>
 
@@ -38,7 +39,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-
 
 using namespace std;
 
@@ -54,9 +54,6 @@ namespace {
 
 Font::~Font()
 {
-	for(auto font : fontList)
-		if(font)
-			TTF_CloseFont(font);
 }
 
 
@@ -65,6 +62,11 @@ void Font::Load(const filesystem::path &path, double size)
 {
 	Init();
 	auto font = TTF_OpenFont(path.c_str(), size);
+	if(!font)
+	{
+		Logger::Log("Unable to load font: " + path.string(), Logger::Level::WARNING);
+		return;
+	}
 	TTF_SetFontHinting(font, TTF_HINTING_MONO);
 	fontList.emplace_back(font);
 	if(!height)
@@ -85,7 +87,7 @@ void Font::Draw(const DisplayText &text, const Point &point, const Color &color)
 
 
 
-void Font::Draw(const string &str, const Point &point, const Color &color) const
+void Font::Draw(const Utf8String &str, const Point &point, const Color &color) const
 {
 	DisplayText text(str, Layout(Alignment::LEFT));
 	DrawAliased(text, round(point.X()), round(point.Y()), color);
@@ -93,7 +95,7 @@ void Font::Draw(const string &str, const Point &point, const Color &color) const
 
 
 
-void Font::DrawAliased(const string &str, double x, double y, const Color &color) const
+void Font::DrawAliased(const Utf8String &str, double x, double y, const Color &color) const
 {
 	DisplayText text(str, Layout(Alignment::LEFT));
 	DrawAliased(text, x, y, color);
@@ -143,7 +145,7 @@ void Font::Init()
 
 
 
-int Font::Width(const string &str) const
+int Font::Width(const Utf8String &str) const
 {
 	return WidthRawString(str.c_str());
 }
@@ -153,7 +155,7 @@ int Font::Width(const string &str) const
 int Font::FormattedWidth(const DisplayText &text) const
 {
 	int width = -1;
-	const string truncText = TruncateText(text, width);
+	const Utf8String truncText = TruncateText(text, width);
 	return width < 0 ? WidthRawString(truncText.c_str()) : width;
 }
 
@@ -266,19 +268,28 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 	int h = 0;
 	int spriteNum = 0;
 
-	for(char c : text.GetText())
+	Utf8String s = "";
+	for(auto codepoint : text.GetText())
 	{
-		if(c == '_')
+		// Underscores are control characters and have zero width:
+		if(codepoint == '_')
 			continue;
 
-		int w = 0;
-		string s = "";
-		s.push_back(c);
+		// TODO: this should use the text-runs...
+
+		s += codepoint;
+
 		auto font = fontList[0];
-		TTF_SizeUTF8(font, s.c_str(), &w, &h);
+
+		int w = 0;
+		// TODO: attempting double free:
+		//  2026-02-14 02:11:18 | E | Attempt to create surface resulted in TTF_GetError:Couldn't find glyph
+		//  2026-02-14 02:11:18 | W | Failed to initialize framebuffer for RenderBuffer.
+		TTF_SizeUTF8(font, Utf8::UTF32ToUTF8(codepoint).c_str(), &w, &h);
+		// TODO: but the true answer won't be the sum of the codepoints' widths...
 		width += w;
 
-		if(c == DisplayText::SPRITE_PLACEHOLDER)
+		if(codepoint == DisplayText::SPRITE_PLACEHOLDER)
 		{
 			auto spriteData = text.inlineSprites[spriteNum++];
 			width += std::get<0>(spriteData)->Width();
@@ -291,11 +302,11 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 
 
 // Param width will be set to the width of the return value, unless the layout width is negative.
-string Font::TruncateText(const DisplayText &text, int &width) const
+Utf8String Font::TruncateText(const DisplayText &text, int &width) const
 {
 	width = -1;
 	const auto &layout = text.GetLayout();
-	const string &str = text.GetText();
+	const Utf8String &str = text.GetText();
 	if(layout.width < 0 || (layout.align == Alignment::LEFT && layout.truncate == Truncate::NONE))
 		return str;
 	width = layout.width;
@@ -316,38 +327,38 @@ string Font::TruncateText(const DisplayText &text, int &width) const
 
 
 
-string Font::TruncateBack(const string &str, int &width) const
+Utf8String Font::TruncateBack(const Utf8String &str, int &width) const
 {
 	return TruncateEndsOrMiddle(str, width,
-		[](const string &str, int charCount) {
+		[](const Utf8String &str, int charCount) {
 			return str.substr(0, charCount) + "...";
 		});
 }
 
 
 
-string Font::TruncateFront(const string &str, int &width) const
+Utf8String Font::TruncateFront(const Utf8String &str, int &width) const
 {
 	return TruncateEndsOrMiddle(str, width,
-		[](const string &str, int charCount) {
-			return "..." + str.substr(str.size() - charCount);
+		[](const Utf8String &str, int charCount) {
+			return Utf8String("...") + str.substr(str.size() - charCount);
 		});
 }
 
 
 
-string Font::TruncateMiddle(const string &str, int &width) const
+Utf8String Font::TruncateMiddle(const Utf8String &str, int &width) const
 {
 	return TruncateEndsOrMiddle(str, width,
-		[](const string &str, int charCount) {
-			return str.substr(0, (charCount + 1) / 2) + "..." + str.substr(str.size() - charCount / 2);
+		[](const Utf8String &str, int charCount) {
+			return str.substr(0, (charCount + 1) / 2) + "..." + str.substr(str.length() - charCount / 2);
 		});
 }
 
 
 
-string Font::TruncateEndsOrMiddle(const string &str, int &width,
-	function<string(const string &, int)> getResultString) const
+Utf8String Font::TruncateEndsOrMiddle(const Utf8String &str, int &width,
+	const function<Utf8String(const Utf8String &, int)>& getResultString) const
 {
 	int firstWidth = WidthRawString(str.c_str());
 	if(firstWidth <= width)
@@ -409,7 +420,7 @@ void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color
 
 	x -= 1.;
 
-	string str = truncText.GetText();
+	string str = truncText.GetText().to_string();
 	if(str.empty())
 		return;
 

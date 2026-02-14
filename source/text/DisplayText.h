@@ -18,6 +18,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Layout.h"
 
 #include "../Point.h"
+#include "Utf8String.h"
 
 #include <string>
 #include <tuple>
@@ -36,10 +37,9 @@ public:
 
 public:
 	DisplayText() = default;
-	DisplayText(const char *text, Layout layout);
-	DisplayText(const std::string &text, Layout layout);
+	DisplayText(const Utf8String &text, Layout layout);
 
-	const std::string &GetText() const noexcept;
+	const Utf8String &GetText() const noexcept;
 	const Layout &GetLayout() const noexcept;
 
 	void UpdateSpriteReferences();
@@ -47,11 +47,11 @@ public:
 
 private:
 	Layout layout;
-	std::string text;
+	Utf8String text;
 
 	bool spritesLoaded = false;
 	// Sprite, embossed text, center point.
-	std::vector<std::tuple<const Sprite *, std::string, Point>> inlineSprites;
+	std::vector<std::tuple<const Sprite *, Utf8String, Point>> inlineSprites;
 
 	friend class Font;
 };

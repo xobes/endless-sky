@@ -453,6 +453,8 @@ target_sources(EndlessSkyLib PRIVATE
 	text/Truncate.h
 	text/Utf8.cpp
 	text/Utf8.h
+	text/Utf8String.cpp
+	text/Utf8String.h
 	text/WrappedText.cpp
 	text/WrappedText.h
 )
