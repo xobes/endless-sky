@@ -60,6 +60,7 @@ Font::~Font()
 
 void Font::Load(const filesystem::path &path, double size)
 {
+	// TODO: consider variable initialized with std::this_thread::get_id() to allow asserting that later calls to Font are on the same thread (for much clearer debugging when that happens not to be the case, as SDL_ttf fonts only exist/work on the thread they are initialized in)
 	Init();
 	auto font = TTF_OpenFont(path.c_str(), size);
 	if(!font)
@@ -264,35 +265,29 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 {
 	text.UpdateSpriteReferences();
 
+	if(text.GetText().length() == 0)
+		return 0;
+
 	int width = 0;
-	int h = 0;
 	int spriteNum = 0;
 
-	Utf8String s = "";
-	for(auto codepoint : text.GetText())
+	for(TextRun d : GenerateDirectionalRuns(text.GetText().to_string()))
 	{
-		// Underscores are control characters and have zero width:
-		if(codepoint == '_')
-			continue;
-
-		// TODO: this should use the text-runs...
-
-		s += codepoint;
-
-		auto font = fontList[0];
-
-		int w = 0;
-		// TODO: attempting double free:
-		//  2026-02-14 02:11:18 | E | Attempt to create surface resulted in TTF_GetError:Couldn't find glyph
-		//  2026-02-14 02:11:18 | W | Failed to initialize framebuffer for RenderBuffer.
-		TTF_SizeUTF8(font, Utf8::UTF32ToUTF8(codepoint).c_str(), &w, &h);
-		// TODO: but the true answer won't be the sum of the codepoints' widths...
-		width += w;
-
-		if(codepoint == DisplayText::SPRITE_PLACEHOLDER)
+		bool isRTL = FRIBIDI_LEVEL_IS_RTL(d.embedLevel);
+		for(TextRun r : GenerateGlyphRuns(d.text, fontList, isRTL))
 		{
-			auto spriteData = text.inlineSprites[spriteNum++];
-			width += std::get<0>(spriteData)->Width();
+			// If this textRun is a placeholder for a SPRITE, save room for the sprite.
+			if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
+			{
+				auto spriteData = text.inlineSprites[spriteNum++];
+				width += std::get<0>(spriteData)->Width();
+				continue;
+			}
+
+			int h;
+			int w;
+			TTF_SizeUTF8(fontList[r.fontIndex], r.text.c_str(), &w, &h);
+			width += w;
 		}
 	}
 

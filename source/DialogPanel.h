@@ -134,8 +134,6 @@ public:
 	// Some dialogs allow fast-forward to stay active.
 	bool AllowsFastForward() const noexcept final;
 
-	virtual void UpdateText(const std::string &message);
-
 protected:
 	// The user can click "ok" or "cancel", or use the tab key to toggle which
 	// button is highlighted and the enter key to select it.

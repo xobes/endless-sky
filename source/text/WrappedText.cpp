@@ -382,14 +382,14 @@ void WrappedText::AdjustLine(size_t &lineBegin, int &lineWidth, bool isEnd)
 
 
 // Given `chunkWidth` pixels, determine where to split `word`, if possible.
-int WrappedText::BreakWord(const WrappedText::Word &word, int &chunkWidth)
+int WrappedText::BreakWord(const WrappedText::Word &word, int &chunkWidth) const
 {
 	Word temp;
 	temp.index = word.index;
 	temp.length = word.length;
 	int width = font->Width(temp.Value(text));
 	while(width > chunkWidth && temp.length > 0)
-	{  // TODO: binary search not just one char at a time
+	{  // TODO: binary search not just one char at a time; ratio?
 		--temp.length;
 		width = font->Width(temp.Value(text));
 	}

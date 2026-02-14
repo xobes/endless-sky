@@ -72,7 +72,7 @@ vector<TextRun> GenerateDirectionalRuns(const string &text)
 
 // This function will parse out the underlines and provide a set of underlines in their stead.
 vector<TextRun> GenerateGlyphRuns(
-	const string &text, const vector<TTF_Font *> &fontList, bool isRTL)
+	const string &text, const vector<TTF_Font *> &fontList, bool isRTL, bool measureUnderlines)
 {
 	vector<TextRun> runs;
 	string currentRunText;
@@ -90,7 +90,7 @@ vector<TextRun> GenerateGlyphRuns(
 	if(!Utf8::IsBOM(Utf8::DecodeCodePoint(text, pos)))
 		pos = 0;
 
-	bool underlineChar = false;
+	bool underlineNextChar = false;
 	while(pos < end)
 	{
 		size_t start = pos;
@@ -107,10 +107,9 @@ vector<TextRun> GenerateGlyphRuns(
 		}
 		if(codepoint == '_')
 		{
-			underlineChar = true;
+			underlineNextChar = measureUnderlines;
 			continue;
 		}
-		string utf8codepoint = text.substr(start, pos - start);
 
 		// See which of our fonts/fallback fonts are needed to handle this codepoint:
 		for(size_t i = 0; i < fontList.size(); ++i)
@@ -134,16 +133,20 @@ vector<TextRun> GenerateGlyphRuns(
 		currentFontIndex = newFontIndex;
 
 		// Append the raw UTF-8 bytes for this codepoint to the current run
-		currentRunText.append(text, start, pos - start);
+		string utf8codepoint = text.substr(start, pos - start);
+		currentRunText += utf8codepoint;
 
-		// Calculate the width of the this codepoint so that we can draw a proper underline
-		TTF_SizeUTF8(fontList[newFontIndex], utf8codepoint.c_str(), &w, &h);
-		if(underlineChar)
+		// Calculate the width of this codepoint so that we can draw a proper underline
+		if(measureUnderlines)
 		{
-			underlines.emplace_back(make_pair(x, w));
-			underlineChar = false;
+			TTF_SizeUTF8(fontList[newFontIndex], utf8codepoint.c_str(), &w, &h);
+			if(underlineNextChar)
+			{
+				underlines.emplace_back(make_pair(x, w));
+				underlineNextChar = false;
+			}
+			x += isRTL ? w : -w;
 		}
-		x += isRTL ? w : -w;
 	}
 
 	if(!currentRunText.empty())

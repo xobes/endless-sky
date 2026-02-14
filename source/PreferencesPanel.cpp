@@ -264,16 +264,42 @@ void PreferencesPanel::Step()
 		{
 			std::string error = it->get();
 
-			if(downloadInProgressDialog && GetUI().Top().get() == downloadInProgressDialog)
+			if(downloadInProgressDialog)
 			{
-				GetUI().Pop(GetUI().Top().get());
+				GetUI().Pop(downloadInProgressDialog);
 				downloadInProgressDialog = nullptr;
 			}
 
 			if(!error.empty())
-				if(error == "redownload")
+				if(error.starts_with("redownload:"))
+				{
+					string url = error.substr(error.find(':') + 1);
 					GetUI().Push(new DialogPanel(this, &PreferencesPanel::ProcessPluginIndex,
-						"The plugin index at failed to download. Would you like to try again?"));
+						"The plugin index at " + url + " failed to download.\n\nWould you like to try again?"));
+				}
+				else if(error.starts_with("downloaded:"))
+				{
+					// Mark the appropriate library as downloaded.
+					string whichIndex = error.substr(error.find(':') + 1);
+					int i = 0;
+					int num = 0;
+					for(auto it : Plugins::GetPluginLibraryUrls())
+					{
+						if(std::to_string(i) == whichIndex)
+							it.second = true;
+						if(it.second)
+							++num;
+						++i;
+					}
+
+					// If any of the urls are downloaded, then we have a library to show.
+					downloadedPluginIndex = true;
+					if (num < i)
+					{
+						downloadInProgressDialog = new DialogPanel(GenerateDownloadMessage());
+						GetUI().Push(downloadInProgressDialog);
+					}
+				}
 				else
 					GetUI().Push(new DialogPanel(error));
 			else
@@ -287,6 +313,7 @@ void PreferencesPanel::Step()
 					Resize();
 				}
 			}
+
 			it = installFeedbacks.erase(it);
 		}
 		else
@@ -650,9 +677,10 @@ void PreferencesPanel::Resize()
 		const Interface *pluginUi = GameData::Interfaces().Get("plugins");
 		Rectangle pluginListBox = pluginUi->GetBox("plugin list");
 		pluginListClip = make_unique<RenderBuffer>(pluginListBox.Dimensions());
-		Draw();
-		RenderPluginDescription();
-		ScrollSelectedPlugin();
+		// TODO: these were causing crashes...
+		//  Draw();
+		//  RenderPluginDescription();
+		//  ScrollSelectedPlugin();
 	}
 }
 
@@ -1882,42 +1910,51 @@ void PreferencesPanel::HandleConfirm()
 
 
 
+string PreferencesPanel::GenerateDownloadMessage()
+{
+	string message = "Downloading plugin index:";
+	for(auto it : Plugins::GetPluginLibraryUrls())
+	{
+		if(!it.second)
+			message += "\n" + it.first + "...";
+	}
+	message += + "\nPlease wait...";
+	return message;
+}
+
+
+
 void PreferencesPanel::ProcessPluginIndex()
 {
-	if(!downloadInProgressDialog)
+	int libraryIdx = 0;
+	for(auto it : Plugins::GetPluginLibraryUrls())
 	{
-		downloadInProgressDialog = new DialogPanel("Downloading plugin index...");
-		GetUI().Push(downloadInProgressDialog);
+		// If this index has not already been fetched, download it. This allows us to call
+		// ProcessPluginIndex multiple times, e.g. if prompted to redownload
+		if(!it.second)
+		{
+			string url = it.first;
+			installFeedbacks.emplace_back(
+				// Note: async, cannot work with fonts (or GUI), or the loop variable in a writable fashion
+				async(launch::async, [&, url, libraryIdx]() noexcept -> string
+				{
+					string filename = "plugins" + std::to_string(libraryIdx) + ".json";
+					auto path = Files::Config() / filename;
+					if(!Plugins::Download(url, path))
+						return "redownload:" + url;
+					Plugins::LoadAvailablePlugins(queue, path);
+					return "downloaded:" + std::to_string(libraryIdx);
+				})
+			);
+		}
+		++libraryIdx;
 	}
 
-	installFeedbacks.emplace_back(async(launch::async, [&]() noexcept -> string {
-		for(auto it : Plugins::GetPluginLibraryUrls())
-		{
-			// If this index has not already been fetched, download it. This allows us to call
-			// ProcessPluginIndex multiple times, e.g. if prompted to redownload
-			if(!it.second)
-			{
-				string url = it.first;
-				auto path = Files::Config() / "plugins.json";
-				if(downloadInProgressDialog && GetUI().Top().get() == downloadInProgressDialog)
-					downloadInProgressDialog->UpdateText(
-						"Downloading plugin index:\n" + url + "\nPlease wait.");
-
-				if(!Plugins::Download(url, path))
-				{
-					return "redownload";
-				}
-				it.second = true;
-
-				// If any of the (usually one) urls are downloaded, then we have a library to show.
-				downloadedPluginIndex = true;
-
-				Plugins::LoadAvailablePlugins(queue, path);
-			}
-		}
-
-		return {};
-	}));
+	if(!downloadInProgressDialog)
+	{
+		downloadInProgressDialog = new DialogPanel( GenerateDownloadMessage());
+		GetUI().Push(downloadInProgressDialog);
+	}
 }
 
 

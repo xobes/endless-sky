@@ -103,7 +103,7 @@ private:
 	void SetText(const char *it, size_t length);
 	void Wrap();
 	void AdjustLine(size_t &lineBegin, int &lineWidth, bool isEnd);
-	int BreakWord(const Word &word, int &chunkWidth);
+	int BreakWord(const Word &word, int &chunkWidth) const;
 	int Space(char c) const;
 
 

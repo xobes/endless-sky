@@ -32,4 +32,5 @@ struct TextRun {
 };
 
 std::vector<TextRun> GenerateDirectionalRuns(const std::string &text);
-std::vector<TextRun> GenerateGlyphRuns(const std::string &text, const std::vector<TTF_Font *> &fontList, bool isRTL);
+std::vector<TextRun> GenerateGlyphRuns(const std::string &text, const std::vector<TTF_Font *> &fontList, bool isRTL,
+    bool measureUnderlines = false);

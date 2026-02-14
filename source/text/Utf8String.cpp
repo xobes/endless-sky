@@ -201,6 +201,12 @@ Utf8String &Utf8String::operator+=(char ch)
 	return *this;
 }
 
+Utf8String &Utf8String::operator+=(char32_t codepoint)
+{
+	str += Utf8::UTF32ToUTF8(codepoint);
+	return *this;
+}
+
 Utf8String Utf8String::operator+(const Utf8String &other) const
 {
 	return {this->str + other.str};

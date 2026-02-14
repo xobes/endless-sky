@@ -55,7 +55,7 @@ public:
 	Utf8String substr(size_t pos, size_t len = std::string::npos) const;
 	// Returns index of codepoint containing `search`
 	size_t find(const char* search, size_t size) const;
-	void append(const Utf8String& text, size_t start, size_t size);
+	void append(const Utf8String &text, size_t start, size_t size);
 
 	std::string to_string() const;
 	const char *c_str() const;
@@ -70,14 +70,17 @@ public:
 	void clear();
 	void shrink_to_fit();
 	void reserve(size_t size);
-	void assign(const char* it, size_t size);
+	void assign(const char *it, size_t size);
 
 	// Compare to constant char string.
 	// bool operator==(const Utf8String *other) const;
 	bool operator==(const Utf8String &other) const;
 	bool operator==(const char *other) const;
+	// 8-bit char codepoints
 	Utf8String & operator+=(char ch);
-	Utf8String operator+(const Utf8String& other) const;
+	// 32-bit UTF32 codepoints
+	Utf8String & operator+=(char32_t codepoint);
+	Utf8String operator+(const Utf8String &other) const;
 
 private:
 	std::string str;
