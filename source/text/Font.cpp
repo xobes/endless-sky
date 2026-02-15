@@ -68,7 +68,9 @@ void Font::Load(const filesystem::path &path, double size)
 		Logger::Log("Unable to load font: " + path.string(), Logger::Level::WARNING);
 		return;
 	}
+	Logger::Log("Loaded font: " + path.string(), Logger::Level::INFO);
 	TTF_SetFontHinting(font, TTF_HINTING_MONO);
+	// TODO: avoid re-loading if loaded -- meh, font's are small
 	fontList.emplace_back(font);
 	if(!height)
 	{

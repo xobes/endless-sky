@@ -74,6 +74,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <utility>
 #include <vector>
 
+#include "Logger.h"
+
 
 using namespace std;
 
@@ -338,33 +340,23 @@ void GameData::LoadShaders()
 
 
 
+// Load fonts from all discovered paths, plugins included.
 void GameData::LoadFonts()
 {
-	// TODO: load more fonts...
-	// bundled with plugins
-	// system fonts? (boooo)
-	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSans-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansArabic-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansJP-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansKR-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansTC-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansChorasmian-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansGunjalaGondi-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansKhojki-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "NotoSansThai-Regular.ttf", 14);
-	FontSet::Add(Files::Fonts() / "DOESNOTEXIST-Regular.ttf", 14);
+	// Above all else, the standard game font. This differs from other plugin resources, but it is intended to
+	// ensure that alternate language fonts do not also override the default latin/english font.
+	for (int size : {14, 18})
+		FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", size);
 
-	FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSans-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansArabic-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansJP-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansKR-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansTC-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansChorasmian-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansGunjalaGondi-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansKhojki-Regular.ttf", 18);
-	FontSet::Add(Files::Fonts() / "NotoSansThai-Regular.ttf", 18);
+	for(const filesystem::path &source : sources)
+	{
+		filesystem::path base = source / "fonts";
+		if(Files::Exists(base))
+			for(const filesystem::path &fontFile : Files::RecursiveList(base))
+				if(fontFile.extension() == ".ttf")
+					for (int size : {14, 18})
+						FontSet::Add(fontFile, size);
+	}
 }
 
 
@@ -472,12 +464,11 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("Japanese	こんにちは、世界！(Konnichiwa, sekai!)", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Chinese (Simplified)	你好，世界！ (Nǐ hǎo, shìjiè!)", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Arabic	مرحبا، العالم! (Marhaban, alalam!)", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO: load font from resources", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO: load font from plugin zip", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO: make translation plugin", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - make translation scripts", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags?", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint)", {x, y += 20}, {1, 1, 1});
 
 	x = -400;
 	y += 20;
