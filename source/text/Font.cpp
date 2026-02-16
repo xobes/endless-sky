@@ -40,6 +40,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <cstdlib>
 #include <cstring>
 
+#include "../ZipFile.h"
+
 using namespace std;
 
 namespace {
@@ -62,16 +64,29 @@ void Font::Load(const filesystem::path &path, double size)
 {
 	// TODO: consider variable initialized with std::this_thread::get_id() to allow asserting that later calls to Font are on the same thread (for much clearer debugging when that happens not to be the case, as SDL_ttf fonts only exist/work on the thread they are initialized in)
 	Init();
-	auto font = TTF_OpenFont(path.c_str(), size);
-	if(!font)
+	string fontKey = path.string();
+	if(ranges::find(loadedFonts, fontKey) == loadedFonts.end())
 	{
-		Logger::Log("Unable to load font: " + path.string(), Logger::Level::WARNING);
-		return;
+		filesystem::path fontFileUnzipped = path;
+		// string zipFilePath;
+		string pathString = path.string();
+		size_t zip = pathString.find(".zip", 0);
+		if(zip != std::string::npos)
+			fontFileUnzipped = ZipFile(pathString.substr(0, zip + 4)).ExtractTempFile(path);
+			// fontFileUnzipped = ZipFile(pathString.substr(0, zip + 4)).ExtractTempFile(pathString.substr(zip + 5));
+		Logger::Log("extractedFile = " + fontFileUnzipped.string(), Logger::Level::INFO);
+
+		auto font = TTF_OpenFont(fontFileUnzipped.c_str(), size);
+		if(!font)
+		{
+			Logger::Log("Unable to load font: " + fontFileUnzipped.string(), Logger::Level::WARNING);
+			return;
+		}
+		TTF_SetFontHinting(font, TTF_HINTING_MONO);
+		fontList.emplace_back(font);
+		loadedFonts.emplace_back(fontKey);
+		Logger::Log("Loaded font: " + fontFileUnzipped.string() + " size " + std::to_string(size), Logger::Level::INFO);
 	}
-	Logger::Log("Loaded font: " + path.string(), Logger::Level::INFO);
-	TTF_SetFontHinting(font, TTF_HINTING_MONO);
-	// TODO: avoid re-loading if loaded -- meh, font's are small
-	fontList.emplace_back(font);
 	if(!height)
 	{
 		fontSize = size;

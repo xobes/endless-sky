@@ -88,7 +88,7 @@ public:
 	Font() noexcept = default;
  	~Font();
 
-	void Load(const std::filesystem::path &fontPath, double size);
+	void Load(const std::filesystem::path &path, double size);
 
 	// Draw a text string, subject to the given layout and truncation strategy.
 	void Draw(const DisplayText &text, const Point &point, const Color &color) const;
@@ -133,6 +133,7 @@ private:
 	int space;
 
 	mutable GLfloat scale[2]{0.f, 0.f};
+	std::vector<std::string> loadedFonts;
 	std::vector<TTF_Font *> fontList;
 	mutable std::map<std::pair<std::string, int>, TextureHandle> textureCache;
 	mutable std::map<std::pair<std::string, int>, bool> textureUsedThisFrame;

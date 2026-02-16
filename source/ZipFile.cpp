@@ -130,6 +130,19 @@ string ZipFile::ReadFile(const filesystem::path &filePath) const
 
 
 
+std::string ZipFile::ExtractTempFile(const std::filesystem::path& filePath) const
+{
+	string fileData = ReadFile(filePath);
+
+	filesystem::path extractedPath = Files::Temp() / GetPathInZip(filePath);
+	Files::CreateFolder(extractedPath.parent_path());
+	Files::Write(extractedPath, fileData);
+
+	return extractedPath;
+}
+
+
+
 filesystem::path ZipFile::GetPathInZip(const filesystem::path &path) const
 {
 	filesystem::path relative = path.lexically_relative(basePath);

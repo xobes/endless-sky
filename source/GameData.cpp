@@ -468,10 +468,14 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("TODO:       - make translation scripts", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags?", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint)", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint), e.g description panel", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - font-only plugins appear unhappy... blank names", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - fix double-download never goes away on its own", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - fix unable to load font... is it the unicode name?", {x, y += 20}, {1, 1, 1});
 
 	x = -400;
 	y += 20;
+	// testing iteration over codepoints and not chars
 	for(const char32_t c : Utf8String("Japanese	こんにちは、世界！(Konnichiwa, sekai!)"))
 	{
 		FontSet::Get(14).Draw(Utf8::UTF32ToUTF8(c), {x += 20, y}, {1, 1, 1});
@@ -1107,6 +1111,9 @@ void GameData::LoadSources(TaskQueue &queue)
 	sources.clear();
 	sources.push_back(Files::Resources());
 
+	// TODO: still finding one empty string
+	// TODO: when font's are in zip; only use the temp folder
+
 	// Make a list of all known plugin paths to allow for the plugins to be loaded according to the specified order.
 	// For consistency between the plugin library and the installed plugins,
 	// we will strip the zip extension off any zip files, or else use the folder name.
@@ -1116,6 +1123,7 @@ void GameData::LoadSources(TaskQueue &queue)
 	for(const auto &path : globalPlugins)
 		if(Plugins::IsPlugin(path))
 			foundPlugins.Get(path.stem().string())->assign(path);
+		// TODO" else if not matching the plugin logic from IsPlugin then remove it and give an error
 	// Load unzipped plugins first to give them precedence, then load the zipped plugins.
 	globalPlugins = Files::List(Files::GlobalPlugins());
 	for(const auto &path : globalPlugins)
@@ -1132,6 +1140,7 @@ void GameData::LoadSources(TaskQueue &queue)
 			foundPlugins.Get(path.stem().string())->assign(path);
 
 	// Sort out the paths according to user-prescribed plugin order.
+	// TODO: better behavior in the situation where the plugin gets installed but doesn't pass the IsPlugin test...
 	vector<filesystem::path> loadOrder;
 	{
 		auto plugins = Plugins::GetPluginsLocked();

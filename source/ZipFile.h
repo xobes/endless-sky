@@ -48,6 +48,7 @@ public:
 	/// Reads a frp, from the zip.
 	/// @param filePath The complete file path, including the zip's path.
 	std::string ReadFile(const std::filesystem::path &filePath) const;
+	std::string ExtractTempFile(const std::filesystem::path &filePath) const;
 
 
 private:

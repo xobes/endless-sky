@@ -39,6 +39,7 @@ namespace {
 	filesystem::path imagePath;
 	filesystem::path soundPath;
 	filesystem::path savePath;
+	filesystem::path tempPath;
 	filesystem::path userPluginPath;
 	filesystem::path globalPluginPath;
 	filesystem::path testPath;
@@ -231,6 +232,21 @@ const filesystem::path &Files::Sounds()
 const filesystem::path &Files::Saves()
 {
 	return savePath;
+}
+
+
+
+const std::filesystem::path& Files::Temp()
+{
+	if(tempPath.empty())
+	{
+		// Create temp dir with process ID and timestamp
+		auto now = std::chrono::system_clock::now().time_since_epoch().count();
+		string dirName = "endless-sky-" + std::to_string(getpid()) + "-" + std::to_string(now);
+		tempPath = filesystem::temp_directory_path() / dirName;
+		CreateFolder(tempPath);
+	}
+	return tempPath;
 }
 
 
@@ -467,7 +483,7 @@ void Files::CreateFolder(const filesystem::path &path)
 	if(Exists(path))
 		return;
 
-	if(filesystem::create_directory(path))
+	if(filesystem::create_directories(path))
 		filesystem::permissions(path, filesystem::perms(filesystem::perms::owner_all));
 	else
 		throw runtime_error("Error creating directory!");
