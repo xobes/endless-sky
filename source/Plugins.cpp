@@ -352,8 +352,7 @@ string Plugins::Load(const filesystem::path &path)
 	// For consistency between the plugin library and the installed plugins,
 	// we will strip the zip extension off any zip files, or else the folder name.
 	// Get the name of the folder/zip-file containing the plugin.
-	string name = path.filename().string();
-	name = path.stem().string();
+	string name = path.stem().string();
 	if(name != "integration-tests")
 		// TODO: this was a hack to get things working, why does this break integration tests?
 		Logger::Log("Loading Plugin: '" + name + "'...", Logger::Level::INFO);
@@ -449,7 +448,7 @@ string Plugins::Load(const filesystem::path &path)
 	plugin->tags = std::move(tags);
 	plugin->dependencies = std::move(dependencies);
 
-	return name;
+	return plugin->name;
 }
 
 

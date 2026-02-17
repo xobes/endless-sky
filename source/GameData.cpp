@@ -469,9 +469,8 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags?", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint), e.g description panel", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - font-only plugins appear unhappy... blank names", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - still one blank name", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - fix double-download never goes away on its own", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - fix unable to load font... is it the unicode name?", {x, y += 20}, {1, 1, 1});
 
 	x = -400;
 	y += 20;

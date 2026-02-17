@@ -73,8 +73,6 @@ void Font::Load(const filesystem::path &path, double size)
 		size_t zip = pathString.find(".zip", 0);
 		if(zip != std::string::npos)
 			fontFileUnzipped = ZipFile(pathString.substr(0, zip + 4)).ExtractTempFile(path);
-			// fontFileUnzipped = ZipFile(pathString.substr(0, zip + 4)).ExtractTempFile(pathString.substr(zip + 5));
-		Logger::Log("extractedFile = " + fontFileUnzipped.string(), Logger::Level::INFO);
 
 		auto font = TTF_OpenFont(fontFileUnzipped.c_str(), size);
 		if(!font)
@@ -85,12 +83,12 @@ void Font::Load(const filesystem::path &path, double size)
 		TTF_SetFontHinting(font, TTF_HINTING_MONO);
 		fontList.emplace_back(font);
 		loadedFonts.emplace_back(fontKey);
-		Logger::Log("Loaded font: " + fontFileUnzipped.string() + " size " + std::to_string(size), Logger::Level::INFO);
+		Logger::Log("Loaded font/size: " + fontFileUnzipped.string() + " size " + std::to_string(static_cast<int>(size)), Logger::Level::INFO);
 	}
 	if(!height)
 	{
 		fontSize = size;
-		height = size > 14 ? size : size + 2;
+		height = size < 16 ? size < 15 ? size + 2 : size + 1 : size;
 		space = WidthRawString("-");
 	}
 }
