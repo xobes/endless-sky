@@ -293,8 +293,13 @@ void PreferencesPanel::Step()
 						if(it.second == Plugins::Status::FAILED_DOWNLOAD)
 							message += "\n" + it.first + "...";
 					if(!message.empty())
-						GetUI().Push(new DialogPanel(this, &PreferencesPanel::ProcessPluginIndex,
-							"Failed to download plugin index:" + message + "\n\nWould you like to try again?"));
+					{
+						// Note: by using the same dialog handle, we'll re-pop the inprogress dialog later, even if
+						// it had been dismissed; but there are bigger problems.
+						downloadInProgressDialog = new DialogPanel(this, &PreferencesPanel::ProcessPluginIndex,
+							"Failed to download plugin index:" + message + "\n\nWould you like to try again?");
+						GetUI().Push(downloadInProgressDialog);
+					}
 					else if(displayed)
 					{
 						message = GenerateDownloadMessage();
@@ -1937,22 +1942,20 @@ void PreferencesPanel::ProcessPluginIndex()
 	{
 		// If this index has not already been fetched, download it. This allows us to call
 		// ProcessPluginIndex multiple times, e.g. if prompted to redownload
-		if(it.second != Plugins::Status::DOWNLOADED)
-		{
-			string url = it.first;
-			installFeedbacks.emplace_back(
-				// Note: async, cannot work with fonts (or GUI), or the loop variable in a writable fashion
-				async(launch::async, [&, url, libraryIdx]() noexcept -> string
-				{
-					string filename = "plugins" + std::to_string(libraryIdx) + ".json";
-					auto path = Files::Temp() / filename;
+		string url = it.first;
+		installFeedbacks.emplace_back(
+			// Note: async, cannot work with fonts (or GUI), or the loop variable in a writable fashion
+			async(launch::async, [&, url, libraryIdx, installed=it.second]() noexcept -> string
+			{
+				string filename = "plugins" + std::to_string(libraryIdx) + ".json";
+				auto path = Files::Temp() / filename;
+				if(installed != Plugins::Status::DOWNLOADED)
 					if(!Plugins::Download(url, path))
 						return "redownload:" + url;
-					Plugins::LoadAvailablePlugins(queue, path);
-					return "downloaded:" + url;
-				})
-			);
-		}
+				Plugins::LoadAvailablePlugins(queue, path);
+				return "downloaded:" + url;
+			})
+		);
 		++libraryIdx;
 	}
 
