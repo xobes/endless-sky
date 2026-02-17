@@ -54,7 +54,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 namespace {
-	map<string, bool> plugin_list_urls;
+	map<string, Plugins::Status> plugin_list_urls;
 
 	// These are the installed and available plugins, not all of which will be enabled for use.
 	mutex pluginsMutex;
@@ -453,14 +453,14 @@ string Plugins::Load(const filesystem::path &path)
 
 
 
-void Plugins::AddLibraryUrl(const std::string &url)
+void Plugins::AddLibraryUrl(const std::string &url, const Status installed)
 {
-	plugin_list_urls[url] = false;
+	plugin_list_urls[url] = installed;
 }
 
 
 
-map<string, bool> &Plugins::GetPluginLibraryUrls()
+map<string, Plugins::Status> &Plugins::GetPluginLibraryUrls()
 {
 	return plugin_list_urls;
 }

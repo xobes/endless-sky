@@ -1110,9 +1110,6 @@ void GameData::LoadSources(TaskQueue &queue)
 	sources.clear();
 	sources.push_back(Files::Resources());
 
-	// TODO: still finding one empty string
-	// TODO: when font's are in zip; only use the temp folder
-
 	// Make a list of all known plugin paths to allow for the plugins to be loaded according to the specified order.
 	// For consistency between the plugin library and the installed plugins,
 	// we will strip the zip extension off any zip files, or else use the folder name.

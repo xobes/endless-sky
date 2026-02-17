@@ -264,40 +264,45 @@ void PreferencesPanel::Step()
 		{
 			std::string error = it->get();
 
-			if(downloadInProgressDialog)
-			{
-				GetUI().Pop(downloadInProgressDialog);
-				downloadInProgressDialog = nullptr;
-			}
-
 			if(!error.empty())
-				if(error.starts_with("redownload:"))
+				// Update interal states based on special error codes; Then process error codes.
+				// TODO: race condition between fast fail and ongoing download; when second download is complete
+				//  the dialog that it pops will be on top; would like to avoid that.
+				if(error.starts_with("redownload:") || error.starts_with("downloaded:"))
 				{
 					string url = error.substr(error.find(':') + 1);
-					GetUI().Push(new DialogPanel(this, &PreferencesPanel::ProcessPluginIndex,
-						"The plugin index at " + url + " failed to download.\n\nWould you like to try again?"));
-				}
-				else if(error.starts_with("downloaded:"))
-				{
-					// Mark the appropriate library as downloaded.
-					string whichIndex = error.substr(error.find(':') + 1);
-					int i = 0;
-					int num = 0;
-					for(auto it : Plugins::GetPluginLibraryUrls())
+					if(error.starts_with("redownload:"))
+						Plugins::AddLibraryUrl(url, Plugins::Status::FAILED_DOWNLOAD);
+					else if(error.starts_with("downloaded:"))
 					{
-						if(std::to_string(i) == whichIndex)
-							it.second = true;
-						if(it.second)
-							++num;
-						++i;
+						// If any of the urls are downloaded, then we have a library to show.
+						downloadedPluginIndex = true;
+						Plugins::AddLibraryUrl(url, Plugins::Status::DOWNLOADED);
 					}
 
-					// If any of the urls are downloaded, then we have a library to show.
-					downloadedPluginIndex = true;
-					if (num < i)
+					bool displayed = false;
+					if(downloadInProgressDialog)
 					{
-						downloadInProgressDialog = new DialogPanel(GenerateDownloadMessage());
-						GetUI().Push(downloadInProgressDialog);
+						displayed = true;
+						GetUI().Pop(downloadInProgressDialog);
+						downloadInProgressDialog = nullptr;
+					}
+
+					string message;
+					for(auto it : Plugins::GetPluginLibraryUrls())
+						if(it.second == Plugins::Status::FAILED_DOWNLOAD)
+							message += "\n" + it.first + "...";
+					if(!message.empty())
+						GetUI().Push(new DialogPanel(this, &PreferencesPanel::ProcessPluginIndex,
+							"Failed to download plugin index:" + message + "\n\nWould you like to try again?"));
+					else if(displayed)
+					{
+						message = GenerateDownloadMessage();
+						if(!message.empty())
+						{
+							downloadInProgressDialog = new DialogPanel(message);
+							GetUI().Push(downloadInProgressDialog);
+						}
 					}
 				}
 				else
@@ -1912,13 +1917,14 @@ void PreferencesPanel::HandleConfirm()
 
 string PreferencesPanel::GenerateDownloadMessage()
 {
-	string message = "Downloading plugin index:";
+	string message;
 	for(auto it : Plugins::GetPluginLibraryUrls())
 	{
-		if(!it.second)
+		if(it.second != Plugins::Status::DOWNLOADED)
 			message += "\n" + it.first + "...";
 	}
-	message += + "\nPlease wait...";
+	if (!message.empty())
+		return "Downloading plugin index:" + message + "\nPlease wait...";
 	return message;
 }
 
@@ -1931,7 +1937,7 @@ void PreferencesPanel::ProcessPluginIndex()
 	{
 		// If this index has not already been fetched, download it. This allows us to call
 		// ProcessPluginIndex multiple times, e.g. if prompted to redownload
-		if(!it.second)
+		if(it.second != Plugins::Status::DOWNLOADED)
 		{
 			string url = it.first;
 			installFeedbacks.emplace_back(
@@ -1939,11 +1945,11 @@ void PreferencesPanel::ProcessPluginIndex()
 				async(launch::async, [&, url, libraryIdx]() noexcept -> string
 				{
 					string filename = "plugins" + std::to_string(libraryIdx) + ".json";
-					auto path = Files::Config() / filename;
+					auto path = Files::Temp() / filename;
 					if(!Plugins::Download(url, path))
 						return "redownload:" + url;
 					Plugins::LoadAvailablePlugins(queue, path);
-					return "downloaded:" + std::to_string(libraryIdx);
+					return "downloaded:" + url;
 				})
 			);
 		}
