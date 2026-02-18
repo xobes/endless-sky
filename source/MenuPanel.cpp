@@ -22,6 +22,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "text/FontSet.h"
 #include "text/Format.h"
 #include "GameData.h"
+#include "GamerulesPanel.h"
 #include "Information.h"
 #include "Interface.h"
 #include "LoadPanel.h"
@@ -44,7 +45,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <format>
+#include <stdexcept>
 
 using namespace std;
 
@@ -144,6 +145,8 @@ void MenuPanel::Draw()
 	if(player.IsLoaded() && !player.IsDead())
 	{
 		info.SetCondition("pilot loaded");
+		if(!player.GetGamerules().LockGamerules())
+			info.SetCondition("gamerules unlocked");
 		info.SetString("pilot", player.FirstName() + " " + player.LastName());
 		if(player.Flagship())
 		{
@@ -218,6 +221,8 @@ bool MenuPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &command, boo
 		// StartConditionsPanel also handles the case where there's no scenarios.
 		GetUI().Push(new StartConditionsPanel(player, gamePanels, GameData::StartOptions(), nullptr));
 	}
+	else if(key == 'g' && player.IsLoaded() && !player.IsDead() && !player.GetGamerules().LockGamerules())
+		GetUI().Push(new GamerulesPanel(player.GetGamerules(), true));
 	else if(key == 'q')
 	{
 		GetUI().Quit();
@@ -258,7 +263,6 @@ bool MenuPanel::Click(int x, int y, MouseButton button, int clicks)
 void MenuPanel::DrawCredits() const
 {
 	const Font &font = FontSet::Get(14);
-
 	const auto creditsRect = mainMenuUi->GetBox("credits");
 	const int top = static_cast<int>(creditsRect.Top());
 	const int bottom = static_cast<int>(creditsRect.Bottom());

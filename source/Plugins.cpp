@@ -89,7 +89,7 @@ namespace {
 	set<string> busyPlugins;
 
 	// Shorthand method for returning future<string> values.
-	future<string> FutureString(string value)
+	future<string> FutureString(const string &value)
 	{
 		promise<string> p;
 		p.set_value(std::move(value));
@@ -97,7 +97,7 @@ namespace {
 	}
 
 	// The maximum size of a plugin in bytes, this will be 1 Gigabyte.
-	const size_t MAX_DOWNLOAD_SIZE = 1073741824;
+	constexpr size_t MAX_DOWNLOAD_SIZE = 1<<30;
 }
 
 
@@ -355,7 +355,7 @@ string Plugins::Load(const filesystem::path &path)
 	string name = path.stem().string();
 	if(name != "integration-tests")
 		// TODO: this was a hack to get things working, why does this break integration tests?
-		Logger::Log("Loading Plugin: '" + name + "'...", Logger::Level::INFO);
+		Logger::Log("Reading Plugin: '" + name + "'...", Logger::Level::INFO);
 
 	filesystem::path pluginFile = path / "plugin.txt";
 	string description;
@@ -591,7 +591,7 @@ LockedOrderedSet<Plugin> Plugins::GetPluginsLocked()
 // Negative to move toward list start, positive toward end, returns new index;
 int Plugins::Move(int index, int offset)
 {
-	int otherIndex;
+	int otherIndex = -1;
 	{
 		auto iPlugins = GetPluginsLocked();
 		otherIndex = std::clamp(index + offset, 0, iPlugins->size() - 1);

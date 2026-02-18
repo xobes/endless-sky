@@ -109,7 +109,7 @@ Type *OrderedSet<Type>::Get(const std::string &name)
 	// The order can be changed afterward as needed.
 	Type *retVal = Set<Type>::Get(name);
 	if(std::find(order.begin(), order.end(), name) == order.end())
-		order.push_back(name);
+		order.emplace_back(name);
 	return retVal;
 }
 
@@ -127,7 +127,5 @@ template<class Type>
 void OrderedSet<Type>::erase(const std::string &name)
 {
 	Set<Type>::erase(name);
-	const auto it = std::find(order.begin(), order.end(), name);
-	if(it != order.end())
-		order.erase(it);
+	std::erase(order, name);
 }

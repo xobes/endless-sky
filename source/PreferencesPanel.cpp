@@ -118,6 +118,7 @@ namespace {
 #else
 	const int SETTINGS_PAGE_COUNT = 2;
 #endif
+
 	const map<string, SoundCategory> volumeBars = {
 		{"volume", SoundCategory::MASTER},
 		{"music volume", SoundCategory::MUSIC},
@@ -266,8 +267,8 @@ void PreferencesPanel::Step()
 
 			if(!error.empty())
 				// Update interal states based on special error codes; Then process error codes.
-				// TODO: race condition between fast fail and ongoing download; when second download is complete
-				//  the dialog that it pops will be on top; would like to avoid that.
+				// Since there can be a race condition between fast fail and ongoing download; when second download 
+				//  is complete the dialog that it pops will be on top; would like to avoid that.
 				if(error.starts_with("redownload:") || error.starts_with("downloaded:"))
 				{
 					string url = error.substr(error.find(':') + 1);
@@ -294,9 +295,9 @@ void PreferencesPanel::Step()
 							message += "\n" + it.first + "...";
 					if(!message.empty())
 					{
-						// Note: by using the same dialog handle, we'll re-pop the inprogress dialog later, even if
+						// Note: by using the same dialog handle, we'll re-pop the in-progress dialog later, even if
 						// it had been dismissed; but there are bigger problems.
-						downloadInProgressDialog = new DialogPanel(this, &PreferencesPanel::ProcessPluginIndex,
+						downloadInProgressDialog = DialogPanel::CallFunctionIfOk(this, &PreferencesPanel::ProcessPluginIndex,
 							"Failed to download plugin index:" + message + "\n\nWould you like to try again?");
 						GetUI().Push(downloadInProgressDialog);
 					}
@@ -305,13 +306,13 @@ void PreferencesPanel::Step()
 						message = GenerateDownloadMessage();
 						if(!message.empty())
 						{
-							downloadInProgressDialog = new DialogPanel(message);
+							downloadInProgressDialog = DialogPanel::Info(message);
 							GetUI().Push(downloadInProgressDialog);
 						}
 					}
 				}
 				else
-					GetUI().Push(new DialogPanel(error));
+					GetUI().Push(DialogPanel::Info(error));
 			else
 			{
 				if(page == PLUGINS)
@@ -323,7 +324,6 @@ void PreferencesPanel::Step()
 					Resize();
 				}
 			}
-
 			it = installFeedbacks.erase(it);
 		}
 		else
@@ -370,7 +370,7 @@ bool PreferencesPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &comma
 		Files::OpenUserPluginFolder();
 	else if((key == 'd' || key == SDLK_DELETE) && (page == PLUGINS || page == LIBRARY))
 	{
-		GetUI().Push(new DialogPanel(this, &PreferencesPanel::DeletePlugin,
+		GetUI().Push(DialogPanel::CallFunctionIfOk(this, &PreferencesPanel::DeletePlugin,
 			"Do you really want to delete this plugin?"));
 	}
 	else if((key == 'n' || key == SDLK_PAGEUP)
@@ -415,7 +415,8 @@ bool PreferencesPanel::KeyDown(SDL_Keycode key, Uint16 mod, const Command &comma
 		Resize();
 	}
 	else if(key == 'f' && (page == PLUGINS || page == LIBRARY))
-		GetUI().Push(new DialogPanel(this, &PreferencesPanel::DoSearch, "Search for:", searchFor, Truncate::NONE, true));
+		GetUI().Push(DialogPanel::RequestString(this, &PreferencesPanel::DoSearch, "Search for:", searchFor,
+			Truncate::NONE, true));
 	else if(key == LIBRARY || key == PLUGINS)
 	{
 		page = key;
@@ -465,13 +466,12 @@ bool PreferencesPanel::Click(int x, int y, MouseButton button, int clicks)
 			if(zones[index].Contains(point))
 			{
 				if(zones[index].Value().Has(Command::MENU))
-					GetUI().Push(new DialogPanel([this, index]()
+					GetUI().Push(DialogPanel::CallFunctionIfOk([this, index]()
 						{
 							this->editing = this->selected = index;
 						},
 						"Rebinding this key will change the keypress you need to access this menu. "
-						"You really shouldn't rebind this unless needed.",
-						Truncate::NONE, true, true));
+						"You really shouldn't rebind this unless needed.", true));
 				else
 					editing = selected = index;
 			}
@@ -687,10 +687,9 @@ void PreferencesPanel::Resize()
 		const Interface *pluginUi = GameData::Interfaces().Get("plugins");
 		Rectangle pluginListBox = pluginUi->GetBox("plugin list");
 		pluginListClip = make_unique<RenderBuffer>(pluginListBox.Dimensions());
-		// TODO: these were causing crashes...
-		//  Draw();
-		//  RenderPluginDescription();
-		//  ScrollSelectedPlugin();
+		Draw();
+		RenderPluginDescription();
+		ScrollSelectedPlugin();
 	}
 }
 
@@ -927,25 +926,34 @@ void PreferencesPanel::DrawSettings()
 		"Performance",
 		"Show CPU / GPU load",
 		LARGE_GRAPHICS_REDUCTION,
+		"Defer loading images",
 		SHIP_OUTLINES,
 		HUD_SHIP_OUTLINES,
 		"",
-		"Gameplay",
+		"Map",
+		"Deadline blink by distance",
+		"Hide unexplored map regions",
+		"Show escort systems on map",
+		"Show stored outfits on map",
+		"\n",
+		"Flagship Behavior",
 		"Control ship with mouse",
 		"Aim turrets with mouse",
 		AUTO_AIM_SETTING,
 		AUTO_FIRE_SETTING,
-		TURRET_TRACKING,
 		TARGET_ASTEROIDS_BASED_ON,
 		BOARDING_PRIORITY,
+		"Rehire extra crew when lost",
+		"Automatically unpark flagship",
+		FLAGSHIP_SPACE_PRIORITY,
+		"",
+		"Fleet Behavior",
+		TURRET_TRACKING,
 		EXPEND_AMMO,
 		FLOTSAM_SETTING,
 		FIGHTER_REPAIR,
 		"Fighters transfer cargo",
-		"Rehire extra crew when lost",
-		"Automatically unpark flagship",
-		FLAGSHIP_SPACE_PRIORITY,
-		"\n",
+		"\t",
 		"HUD",
 		STATUS_OVERLAYS_ALL,
 		STATUS_OVERLAYS_FLAGSHIP,
@@ -962,13 +970,7 @@ void PreferencesPanel::DrawSettings()
 		"Clickable radar display",
 		ALERT_INDICATOR,
 		"Extra fleet status messages",
-		"\t",
-		"Map",
-		"Deadline blink by distance",
-		"Hide unexplored map regions",
-		"Show escort systems on map",
-		"Show stored outfits on map",
-		"",
+		"\n",
 		"Other",
 		"Always underline shortcuts",
 		REACTIVATE_HELP,
@@ -981,7 +983,7 @@ void PreferencesPanel::DrawSettings()
 		NOTIFY_ON_DEST,
 		"Save message log",
 #ifdef _WIN32
-		"\n",
+		"\t",
 		"Windows Options",
 		TITLE_BAR_THEME,
 		WINDOW_ROUNDING
@@ -1704,7 +1706,7 @@ void PreferencesPanel::Exit()
 {
 	if(Command::MENU.HasConflict() || !Command::MENU.HasBinding())
 	{
-		GetUI().Push(new DialogPanel("Menu keybind is not bound or has conflicts."));
+		GetUI().Push(DialogPanel::Info("Menu keybind is not bound or has conflicts."));
 		return;
 	}
 
@@ -1732,7 +1734,7 @@ void PreferencesPanel::HandleSettingsString(const string &str, Point cursorPosit
 			// Only show this if it's not possible to zoom the view at all, as
 			// otherwise the dialog will show every time, which is annoying.
 			if(newZoom == ZOOM_FACTOR_MIN + ZOOM_FACTOR_INCREMENT)
-				GetUI().Push(new DialogPanel(
+				GetUI().Push(DialogPanel::Info(
 					"Your screen resolution is too low to support a zoom level above 100%."));
 			Screen::SetZoom(ZOOM_FACTOR_MIN);
 		}
@@ -1759,7 +1761,7 @@ void PreferencesPanel::HandleSettingsString(const string &str, Point cursorPosit
 	else if(str == VSYNC_SETTING)
 	{
 		if(!Preferences::ToggleVSync())
-			GetUI().Push(new DialogPanel(
+			GetUI().Push(DialogPanel::Info(
 				"Unable to change VSync state. (Your system's graphics settings may be controlling it instead.)"));
 	}
 	else if(str == CAMERA_ACCELERATION)
@@ -1928,7 +1930,7 @@ string PreferencesPanel::GenerateDownloadMessage()
 		if(it.second != Plugins::Status::DOWNLOADED)
 			message += "\n" + it.first + "...";
 	}
-	if (!message.empty())
+	if(!message.empty())
 		return "Downloading plugin index:" + message + "\nPlease wait...";
 	return message;
 }
@@ -1961,7 +1963,7 @@ void PreferencesPanel::ProcessPluginIndex()
 
 	if(!downloadInProgressDialog)
 	{
-		downloadInProgressDialog = new DialogPanel( GenerateDownloadMessage());
+		downloadInProgressDialog = DialogPanel::Info(GenerateDownloadMessage());
 		GetUI().Push(downloadInProgressDialog);
 	}
 }
@@ -2061,7 +2063,7 @@ void PreferencesPanel::DeletePlugin()
 		if(message.empty())
 			Plugins::Save();
 		else
-			GetUI().Push(new DialogPanel(message));
+			GetUI().Push(DialogPanel::Info(message));
 		selectedPlugin = GetPluginNameByIndex(selected);
 	}
 }
