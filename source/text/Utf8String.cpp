@@ -1,4 +1,4 @@
-/* Utf8String.h
+/* Utf8String.cpp
 Copyright (c) 2026 by xobes
 
 Endless Sky is free software: you can redistribute it and/or modify it under the
@@ -26,8 +26,7 @@ using namespace std;
 
 
 
-Utf8String::Utf8StringIterator::Utf8StringIterator(const 
-string* str, size_t bytePos)
+Utf8String::Utf8StringIterator::Utf8StringIterator(const string* str, size_t bytePos)
 	: codepointStartByte(bytePos), codepointNextByte(bytePos), str(str)
 {
 	// if (str && bytePos < str->size())
@@ -86,7 +85,7 @@ Utf8String::Utf8StringIterator Utf8String::end() const
 size_t Utf8String::length() const
 {
 	size_t count = 0;
-	for (auto it = begin(); it != end(); ++it)
+	for(auto it = begin(); it != end(); ++it)
 		++count;
 	return count;
 }
@@ -102,10 +101,12 @@ Utf8String Utf8String::substr(size_t pos, size_t len) const
 	size_t count = 0;
 	size_t collected = 0;
 
-	for (auto it = begin(); it != end(); ++it) {
-		if (count >= pos) {
+	for(auto it = begin(); it != end(); ++it)
+	{
+		if(count >= pos)
+		{
 			result += str.substr(it.codepointStartByte, it.codepointNextByte - it.codepointStartByte);
-			if (++collected == len)
+			if(++collected == len)
 				break;
 		}
 		++count;
@@ -114,7 +115,7 @@ Utf8String Utf8String::substr(size_t pos, size_t len) const
 	return {result};
 }
 
-size_t Utf8String::find(const char* search, size_t start) const
+size_t Utf8String::find(const char *search, size_t start) const
 {
 	// Note: we must ensure that the found result is on a codepoint boundary
 	size_t count = 0;
@@ -130,7 +131,7 @@ size_t Utf8String::find(const char* search, size_t start) const
 	return string::npos;
 }
 
-void Utf8String::append(const Utf8String& text, size_t start, size_t size)
+void Utf8String::append(const Utf8String &text, size_t start, size_t size)
 {
 	str += text.substr(start, size).to_string();
 }
@@ -140,12 +141,12 @@ string Utf8String::to_string() const
 	return str;
 }
 
-const char* Utf8String::c_str() const
+const char *Utf8String::c_str() const
 {
 	return str.c_str();
 }
 
-const char* Utf8String::data() const
+const char *Utf8String::data() const
 {
 	return this->str.data();
 }

@@ -52,7 +52,7 @@ void DisplayText::UpdateSpriteReferences()
 	if(!spritesLoaded)
 	{
 		Utf8String target;
-		target.reserve(text.size  ());
+		target.reserve(text.size());
 
 		inlineSprites.clear();
 

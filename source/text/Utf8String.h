@@ -54,7 +54,7 @@ public:
 	// Returns substring from codepoint pos with length len codepoints.
 	Utf8String substr(size_t pos, size_t len = std::string::npos) const;
 	// Returns index of codepoint containing `search`
-	size_t find(const char* search, size_t size) const;
+	size_t find(const char *search, size_t size) const;
 	void append(const Utf8String &text, size_t start, size_t size);
 
 	std::string to_string() const;

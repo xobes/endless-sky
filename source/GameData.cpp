@@ -270,7 +270,7 @@ void GameData::LoadFonts()
 {
 	// Above all else, the standard game font. This differs from other plugin resources, but it is intended to
 	// ensure that alternate language fonts do not also override the default latin/english font.
-	for (int size : {14, 18})
+	for(int size : {14, 18})
 		FontSet::Add(Files::Fonts() / "UbuntuSans-Regular.ttf", size);
 
 	for(const filesystem::path &source : sources)
@@ -279,7 +279,7 @@ void GameData::LoadFonts()
 		if(Files::Exists(base))
 			for(const filesystem::path &fontFile : Files::RecursiveList(base))
 				if(fontFile.extension() == ".ttf")
-					for (int size : {14, 18})
+					for(int size : {14, 18})
 						FontSet::Add(fontFile, size);
 	}
 }
@@ -337,9 +337,12 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("TODO: make translation plugin", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - make translation scripts", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags? group `language	 into another place?", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint), e.g description panel", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - fix double-download never goes away on its own", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags? group `language	"
+					   "into another place?", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint), "
+					   "e.g description panel", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:       - fix double-download never goes away on its own",
+		{x, y += 20}, {1, 1, 1});
 
 	x = -400;
 	y += 20;

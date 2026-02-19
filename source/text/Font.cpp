@@ -62,7 +62,9 @@ Font::~Font()
 
 void Font::Load(const filesystem::path &path, double size)
 {
-	// TODO: consider variable initialized with std::this_thread::get_id() to allow asserting that later calls to Font are on the same thread (for much clearer debugging when that happens not to be the case, as SDL_ttf fonts only exist/work on the thread they are initialized in)
+	// TODO: consider variable initialized with std::this_thread::get_id() to allow asserting that later
+	//  calls to Font are on the same thread (for much clearer debugging when that happens not to be the
+	//  case, as SDL_ttf fonts only exist/work on the thread they are initialized in)
 	Init();
 	string fontKey = path.string();
 	if(ranges::find(loadedFonts, fontKey) == loadedFonts.end())
@@ -83,7 +85,8 @@ void Font::Load(const filesystem::path &path, double size)
 		TTF_SetFontHinting(font, TTF_HINTING_MONO);
 		fontList.emplace_back(font);
 		loadedFonts.emplace_back(fontKey);
-		Logger::Log("Loaded font/size: " + fontFileUnzipped.string() + " size " + std::to_string(static_cast<int>(size)), Logger::Level::INFO);
+		Logger::Log("Loaded font/size: " + fontFileUnzipped.string() + " size " +
+			std::to_string(static_cast<int>(size)), Logger::Level::INFO);
 	}
 	if(!height)
 	{

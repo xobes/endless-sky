@@ -193,8 +193,8 @@ void Table::DrawCustom(const DisplayText &text, const Color &color) const
 
 
 
-void Table::DrawTruncatedPair(const Utf8String &left, const Color &leftColor, const Utf8String &right, const Color &rightColor,
-	Truncate strategy, bool truncateRightColumn) const
+void Table::DrawTruncatedPair(const Utf8String &left, const Color &leftColor, const Utf8String &right,
+	const Color &rightColor, Truncate strategy, bool truncateRightColumn) const
 {
 	// Compute the width of the non-truncated string, and the margin we have for the possibly-large text.
 	const auto colWidth = it->layout.width;
@@ -314,7 +314,8 @@ void Table::Draw(const Utf8String &text, const Layout *special, const Color &col
 		const auto &layout = special ? *special : it->layout;
 		const double alignmentOffset = layout.align == Alignment::RIGHT ? -1.
 			: layout.align == Alignment::CENTER ? -0.5 : 0.;
-		auto pos = point + Point(it->offset + alignmentOffset * (layout.width >= 0 ? layout.width : font->Width(text)), 0.);
+		auto pos = point + Point(it->offset + alignmentOffset * (
+			layout.width >= 0 ? layout.width : font->Width(text)), 0.);
 		font->Draw({text, layout}, pos, color);
 	}
 

@@ -97,7 +97,7 @@ namespace {
 	}
 
 	// The maximum size of a plugin in bytes, this will be 1 Gigabyte.
-	constexpr size_t MAX_DOWNLOAD_SIZE = 1<<30;
+	constexpr size_t MAX_DOWNLOAD_SIZE = 1 << 30;
 }
 
 
