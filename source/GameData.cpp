@@ -322,9 +322,9 @@ const vector<filesystem::path> &GameData::Sources()
 
 void GameData::TestFonts()
 {
-	double x = -50;
-	double y = -150;
-	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked+@1x.png}", {x, y += 20}, {1, 1, 1});
+	double x = -100;
+	double y = -250;
+	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked}", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Spanish	¡Hola, Mundo!", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("French	Bonjour, le monde !", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("German	Hallo, Welt!", {x, y += 20}, {1, 1, 1});
@@ -339,27 +339,37 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags? group `language	"
 					   "into another place?", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - fix plugin manager support for utf8 (char vs codepoint), "
-					   "e.g description panel", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - fix double-download never goes away on its own",
-		{x, y += 20}, {1, 1, 1});
 
 	x = -400;
-	y += 20;
+	y = -300;
 	// testing iteration over codepoints and not chars
 	for(const char32_t c : Utf8String("Japanese	こんにちは、世界！(Konnichiwa, sekai!)"))
 	{
 		FontSet::Get(14).Draw(Utf8::UTF32ToUTF8(c), {x += 20, y}, {1, 1, 1});
 	}
 
+	string s = "https://github.com/xobes/endless-sky/tree/feature/ttf-plugin こんにちは、世界; 你好，世界 ***!!!";
+
+	FontSet::Get(14).Draw(s, {x = -400, y += 20}, {1, 1, 1});
+
 	WrappedText wrap;
 	wrap.SetAlignment(Alignment::JUSTIFIED);
 	wrap.SetWrapWidth(100);
 	wrap.SetFont(FontSet::Get(14));
-	// TODO: wrapping isn't working, last line missing/wrong?
-	wrap.Wrap("https://github.com/xobes/endless-sky/tree/feature/ttf-plugin こんにちは、世界; 你好，世界 ***!!!");
+	wrap.Wrap(s);
 	wrap.Draw({x = -400, y += 20}, {1, 1, 1});
 
+	// Compare a couple different widths to try and debug the wrapping
+	y += wrap.Height();
+	wrap.SetWrapWidth(200);
+	wrap.Wrap(s);
+	wrap.Draw({x = -400, y}, {1, 1, 1});
+
+	s = "Version: 20260219015322\nAuthors: Various\nLicense: to be determined\nAdds the Vietnamese - Tiếng Việt language to Endless Sky.\nHomepage: http://localhost:8880/languages/Vietnamese%20-%20Ti%E1%BA%BFng%20Vi%E1%BB%87t/\n";
+	y += wrap.Height();
+	wrap.SetWrapWidth(220);
+	wrap.Wrap(s);
+	wrap.Draw({x = -400, y}, {1, 1, 1});
 
 }
 

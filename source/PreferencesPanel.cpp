@@ -1521,7 +1521,7 @@ void PreferencesPanel::DrawPluginInstalls()
 		{
 			if(plugin.outdated || !installedPlugin)
 			{
-				// Can install - clicking the the icon will do so.
+				// Can install - clicking the icon will do so.
 				AddZone(spriteBounds + pluginListBox.Center(), [this, i]()
 				{
 					selected = i;

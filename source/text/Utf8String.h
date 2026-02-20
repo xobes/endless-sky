@@ -54,7 +54,7 @@ public:
 	// Returns substring from codepoint pos with length len codepoints.
 	Utf8String substr(size_t pos, size_t len = std::string::npos) const;
 	// Returns index of codepoint containing `search`
-	size_t find(const char *search, size_t size) const;
+	size_t find(const char *search, size_t size = 0) const;
 	void append(const Utf8String &text, size_t start, size_t size);
 
 	std::string to_string() const;
@@ -80,6 +80,12 @@ public:
 	Utf8String & operator+=(char ch);
 	// 32-bit UTF32 codepoints
 	Utf8String & operator+=(char32_t codepoint);
+	// strings
+	// Utf8String & operator+=(const std::string& s);
+	// Utf8String
+	Utf8String& operator+=(const Utf8String& other);
+
+	Utf8String operator+(char c) const;
 	Utf8String operator+(const Utf8String &other) const;
 
 private:

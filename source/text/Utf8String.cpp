@@ -14,6 +14,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "Utf8String.h"
+#include "../Logger.h"
 
 #include "Utf8.h"
 
@@ -183,6 +184,9 @@ void Utf8String::reserve(size_t size)
 
 void Utf8String::assign(const char* it, size_t size)
 {
+
+	if(this->str.find("Vietnamese") != std::string::npos)
+		Logger::Log(this->str, Logger::Level::INFO);
 	this->str.assign(it, size);
 }
 
@@ -206,6 +210,25 @@ Utf8String &Utf8String::operator+=(char32_t codepoint)
 {
 	str += Utf8::UTF32ToUTF8(codepoint);
 	return *this;
+}
+
+// Utf8String& Utf8String::operator+=(const std::string& s)
+// {
+// 	str += s;
+// 	return *this;
+// }
+
+Utf8String& Utf8String::operator+=(const Utf8String& other)
+{
+	str += other.str;
+	return *this;
+
+}
+
+Utf8String Utf8String::operator+(char c) const
+{
+	string s = this->str + c;
+	return {s};
 }
 
 Utf8String Utf8String::operator+(const Utf8String &other) const

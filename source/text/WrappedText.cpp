@@ -126,7 +126,7 @@ void WrappedText::SetParagraphBreak(int height)
 // always begin at (0, 0).
 void WrappedText::Wrap(const Utf8String &str)
 {
-	SetText(str.data(), str.length());
+	SetText(str.data(), str.size()); // bytes
 
 	Wrap();
 }
@@ -227,15 +227,16 @@ void WrappedText::Wrap()
 
 	bool done = false;
 	auto it = text.begin();
+	char32_t codepoint;
+	char32_t lastCodepoint = '\0';
+	size_t i = 0;
 	while(!done)
 	{
-		char32_t codepoint;
-		char lastCodepoint = '\0';
 		if(it == text.end())
 		{
 			codepoint = '\n';
 			if(lastCodepoint == '\n')
-				word.y -= lineHeight + paragraphBreak;  // TODO: unreachable code
+				word.y -= lineHeight + paragraphBreak;
 			done = true;
 		}
 		else
@@ -250,19 +251,20 @@ void WrappedText::Wrap()
 			bool breakingWord = true;
 			while(breakingWord)
 			{
-				word.length = it.codepointStartByte - word.index;
+				word.length = i - word.index;
 				int width = font->Width(word.Value(text));
 				// If adding this word would overflow the length of the line,
 				// this word will be the first on the next line.
-				// However, if this word itself is too long to fit on it's own
+				// However, if this word itself is too long to fit on its own
 				// line: we have no choice but to break the word.
 				if(width > wrapWidth)
 				{
 					// How much space is left on the current line?
 					int chunkWidth = wrapWidth - lineWidth - hyphen;
-					// When we break the word, we may be able to do so in such a
-					// way that a part of it will fit on this line afterall, and
-					// the remainder on the next line or lines.
+					// When we break the word, we may be able to do so in such a way that a part of it will fit on this
+					// line after all, and the remainder on the next line or lines.
+					// numChars will be the number of characters on this line, and chunkWidth will be the actual width
+					// in pixels.
 					int numChars = BreakWord(word, chunkWidth);
 					if(numChars)
 					{
@@ -270,14 +272,15 @@ void WrappedText::Wrap()
 						word.length = numChars;
 						word.suffix = "-";
 						words.push_back(word);
-						word.suffix.clear();
-						word.index += word.length;
-						word.length = it.codepointStartByte - word.index;
-						word.x += chunkWidth;
+
 						// Keep track of how wide this line is now that this word is added.
+						word.x += chunkWidth;
 						lineWidth = word.x + hyphen;
 
 						// Then we need to place the remainder of the word on the next line.
+						word.suffix.clear();
+						word.index += word.length;
+						word.length = i - word.index;
 						word.y += lineHeight;
 						word.x = 0;
 
@@ -308,8 +311,9 @@ void WrappedText::Wrap()
 					breakingWord = false;
 					// Store this word, then advance the x position to the end of it.
 					words.push_back(word);
-					word.x += width;
+
 					// Keep track of how wide this line is now that this word is added.
+					word.x += width;
 					lineWidth = word.x;
 				}
 				else
@@ -317,8 +321,9 @@ void WrappedText::Wrap()
 					breakingWord = false;
 					// Store this word, then advance the x position to the end of it.
 					words.push_back(word);
-					word.x += width;
+
 					// Keep track of how wide this line is now that this word is added.
+					word.x += width;
 					lineWidth = word.x;
 				}
 			}
@@ -341,10 +346,11 @@ void WrappedText::Wrap()
 		else if(!traversingWord)
 		{
 			traversingWord = true;
-			word.index = it.codepointStartByte;
+			word.index = i;
 		}
 		lastCodepoint = codepoint;
 		++it;
+		++i;
 	}
 	height = max(0, word.y - paragraphBreak);
 }
@@ -393,6 +399,7 @@ int WrappedText::BreakWord(const WrappedText::Word &word, int &chunkWidth) const
 		--temp.length;
 		width = font->Width(temp.Value(text));
 	}
+	// Return the actual width in pixels that was actually used.
 	chunkWidth = width;
 	// Note: there should be a minimum enforced wrap width. Here we expect at least two char with a hyphen to fit.
 	return temp.length > 2 ? temp.length : 0;

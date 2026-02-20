@@ -383,7 +383,7 @@ Utf8String Font::TruncateEndsOrMiddle(const Utf8String &str, int &width,
 	int workingChars = 0;
 	int workingWidth = 0;
 
-	int low = 0, high = str.size() - 1;
+	int low = 0, high = str.length() - 1;
 	while(low <= high)
 	{
 		// Think "how many chars to take from both ends, omitting in the middle".

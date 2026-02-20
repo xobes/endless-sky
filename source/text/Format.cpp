@@ -198,7 +198,7 @@ namespace {
 			function<const string *(const string &)> SubstitutionFor)
 	{
 		string target;
-		target.reserve(source.length());
+		target.reserve(source.size());
 
 		string key;
 		size_t start = 0;
@@ -682,8 +682,8 @@ string Format::WordForm(int64_t value, bool startOfSentence)
 	ostringstream o;
 	o << Wrapped { value };
 	string result = o.str();
-	if(result.size() > 0 && result[result.size() - 1] == ' ')
-		result.resize(result.size() - 1);
+	if(result.length() > 0 && result[result.length() - 1] == ' ')
+		result.resize(result.length() - 1);
 	if(!result.empty() && startOfSentence && result[0] >= 'a' && result[0] <= 'z')
 		result[0] -= 32;
 	return result;
@@ -831,7 +831,7 @@ void Format::ReplaceAll(string &text, const string &target, const string &replac
 		return;
 
 	string newString;
-	newString.reserve(text.length());
+	newString.reserve(text.size());
 
 	// Index at which to begin searching for the target string.
 	size_t start = 0;
@@ -894,7 +894,7 @@ vector<string> Format::Split(const string &str, const string &separator)
 		if(pos == string::npos)
 			pos = str.length();
 		result.emplace_back(str, begin, pos - begin);
-		begin = pos + separator.size();
+		begin = pos + separator.length();
 		if(begin >= str.length())
 			break;
 	}
@@ -943,7 +943,7 @@ string Format::ExpandConditions(const string &source, const ConditionGetter &get
 	char oldState = LPAREN;
 	// "start" is the beginning of the text that has not yet been sent to result.
 	size_t start = 0;
-	for(size_t look = 0; look < source.size(); ++look)
+	for(size_t look = 0; look < source.length(); ++look)
 	{
 		char next = source[look];
 		// This would be faster with a nested select, but that would be
@@ -1009,7 +1009,7 @@ string Format::ExpandConditions(const string &source, const ConditionGetter &get
 			state = OUTER;
 		}
 	}
-	if(start < source.size())
+	if(start < source.length())
 		result.append(source, start, string::npos);
 	return result;
 }

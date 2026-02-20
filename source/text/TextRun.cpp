@@ -27,11 +27,11 @@ using namespace std;
 
 vector<TextRun> GenerateDirectionalRuns(const string &text)
 {
-	vector<FriBidiChar> logical_unicode_str(text.size());
+	vector<FriBidiChar> logical_unicode_str(text.length());
 	FriBidiStrIndex len = fribidi_charset_to_unicode(
 		FRIBIDI_CHAR_SET_UTF8,
 		text.c_str(),
-		text.size(),
+		text.length(),
 		logical_unicode_str.data()
 	);
 	vector<FriBidiChar> visual_unicode_str(len);

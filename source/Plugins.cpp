@@ -41,6 +41,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 
 #include "text/Format.h"
+#include "text/Utf8String.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -84,7 +85,7 @@ namespace {
 		}
 	}
 
-	// Keep track of plugins that are undergoing download/file operations to avoid doubling up on activity.
+	// Keep track of plugins that are undergoing download/file operations to avoid doubling up on act		ty.
 	mutex busyPluginsMutex;
 	set<string> busyPlugins;
 
@@ -183,20 +184,22 @@ bool Plugin::PluginDependencies::IsValid() const
 
 
 // Constructs a description of the plugin from its name, tags, dependencies, etc.
-string Plugin::CreateDescription() const
+Utf8String Plugin::CreateDescription() const
 {
-	string text;
+	Utf8String text;
 	if(!version.empty())
 		text += "Version: " + version + '\n';
 	if(!installedVersion.empty() && installedVersion != version)
 		text += "Installed Version: " + installedVersion + '\n';
 	if(!authors.empty())
 	{
+		string comma;
 		text += "Authors: ";
 		for(const string &author : authors)
-			text += author + ", ";
-		text.pop_back();
-		text.pop_back();
+		{
+			text += comma + author;
+			comma = ", ";
+		}
 		text += '\n';
 	}
 	if(!license.empty())
@@ -207,11 +210,13 @@ string Plugin::CreateDescription() const
 		text += "Homepage: " + homepage + '\n';
 	if(!tags.empty())
 	{
+		string comma;
 		text += "Tags: ";
 		for(const string &tag : tags)
-			text += tag + ", ";
-		text.pop_back();
-		text.pop_back();
+		{
+			text += comma + tag;
+			comma = ", ";
+		}
 		text += '\n';
 	}
 	if(!dependencies.IsEmpty())
@@ -297,7 +302,7 @@ bool Plugin::Search(const std::string &search) const
 	for(auto &it : authors)
 		if(Format::Search(it, search) > 0)
 			return true;
-	if(Format::Search(description, search) > 0)
+	if(Format::Search(description.to_string(), search) > 0)
 		return true;
 	if(Format::Search(name, search) > 0)
 		return true;
@@ -789,6 +794,7 @@ bool Plugins::Download(const string &url, const filesystem::path &location)
 		return false;
 	}
 
+	Logger::Log("setting up curl", Logger::Level::INFO);
 	// Set the url that gets downloaded.
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 	// Follow redirects.

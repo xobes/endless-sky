@@ -24,6 +24,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+#include "text/Utf8String.h"
 
 
 // Plugin class represents information about a single plugin.
@@ -58,13 +59,13 @@ public:
 	// Attempt to load a plugin at the given path.
 	Plugin() = default;
 	Plugin(const std::string &pluginName, const std::string &pluginUrl, const std::string &pluginVersion,
-			const std::string &pluginDescription, const std::vector<std::string> &pluginAuthors,
+			const Utf8String &pluginDescription, const std::vector<std::string> &pluginAuthors,
 			const std::string &pluginHomepage, const std::string &pluginLicense)
 		: name(pluginName), description(pluginDescription), version(pluginVersion), authors(pluginAuthors),
 			homepage(pluginHomepage), license(pluginLicense), url(pluginUrl) {}
 
 	// Constructs a description of the plugin from its name, tags, dependencies, etc.
-	[[nodiscard]] std::string CreateDescription() const;
+	[[nodiscard]] Utf8String CreateDescription() const;
 	[[nodiscard]] std::string GetIconName() const;
 	[[nodiscard]] bool InUse() const;
 	[[nodiscard]] const std::string &Name() const;
@@ -84,7 +85,7 @@ protected:
 	// The path to the plugin's folder.
 	std::filesystem::path path;
 	// The about text, if any, of this plugin.
-	std::string description;
+	Utf8String description;
 	// The version of this plugin, important if it has been installed over ES.
 	std::string version = "???";
 	// The set of tags which are used to categorize the plugin.
