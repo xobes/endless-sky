@@ -85,7 +85,7 @@ namespace {
 		}
 	}
 
-	// Keep track of plugins that are undergoing download/file operations to avoid doubling up on act		ty.
+	// Keep track of plugins that are undergoing download/file operations to avoid doubling up on activity.
 	mutex busyPluginsMutex;
 	set<string> busyPlugins;
 
@@ -581,14 +581,14 @@ bool Plugins::DownloadingInBackground()
 
 LockedOrderedSet<Plugin> Plugins::GetAvailablePluginsLocked()
 {
-	return {availablePluginsMutex, availablePlugins};
+	return {availablePluginsMutex, &availablePlugins};
 }
 
 
 
 LockedOrderedSet<Plugin> Plugins::GetPluginsLocked()
 {
-	return {pluginsMutex, plugins};
+	return {pluginsMutex, &plugins};
 }
 
 
@@ -794,7 +794,6 @@ bool Plugins::Download(const string &url, const filesystem::path &location)
 		return false;
 	}
 
-	Logger::Log("setting up curl", Logger::Level::INFO);
 	// Set the url that gets downloaded.
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 	// Follow redirects.

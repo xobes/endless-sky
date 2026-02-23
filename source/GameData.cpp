@@ -324,7 +324,7 @@ void GameData::TestFonts()
 {
 	double x = -100;
 	double y = -250;
-	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 {images/ui/checked}", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("English	Hello, World! 🌎👋 <images/ui/checked>", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Spanish	¡Hola, Mundo!", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("French	Bonjour, le monde !", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("German	Hallo, Welt!", {x, y += 20}, {1, 1, 1});
@@ -334,16 +334,16 @@ void GameData::TestFonts()
 	FontSet::Get(14).Draw("Japanese	こんにちは、世界！(Konnichiwa, sekai!)", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Chinese (Simplified)	你好，世界！ (Nǐ hǎo, shìjiè!)", {x, y += 20}, {1, 1, 1});
 	FontSet::Get(14).Draw("Arabic	مرحبا، العالم! (Marhaban, alalam!)", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO: make translation plugin", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - make translation scripts", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - make translation repo", {x, y += 20}, {1, 1, 1});
-	FontSet::Get(14).Draw("TODO:       - update plugin manager to filter on tags? group `language	"
-					   "into another place?", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:	- make translation scripts", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:	- string replacement strategy", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("TODO:	- MUST FIX gpu percentage is crazy high (textures?)", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Feature:	- update plugin manager to support categories", {x, y += 20}, {1, 1, 1});
+	FontSet::Get(14).Draw("Feature:	- update plugin manager to support display size", {x, y += 20}, {1, 1, 1});
 
 	x = -400;
 	y = -300;
 	// testing iteration over codepoints and not chars
-	for(const char32_t c : Utf8String("Japanese	こんにちは、世界！(Konnichiwa, sekai!)"))
+	for(const char32_t c : Utf8String("Japanese:	こんにちは、世界！(Konnichiwa, sekai!)"))
 	{
 		FontSet::Get(14).Draw(Utf8::UTF32ToUTF8(c), {x += 20, y}, {1, 1, 1});
 	}
@@ -370,7 +370,6 @@ void GameData::TestFonts()
 	wrap.SetWrapWidth(220);
 	wrap.Wrap(s);
 	wrap.Draw({x = -400, y}, {1, 1, 1});
-
 }
 
 
