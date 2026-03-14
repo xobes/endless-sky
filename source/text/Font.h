@@ -86,7 +86,7 @@ class Font {
 
 public:
 	Font() noexcept = default;
- 	~Font();
+ 	~Font() = default;
 
 	void Load(const std::filesystem::path &path, double size);
 

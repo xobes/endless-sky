@@ -25,15 +25,13 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Tooltip.h"
 
 #include <future>
-
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "DialogPanel.h"
-
 class Command;
+class DialogPanel;
 class PlayerInfo;
 class RenderBuffer;
 class Sprite;

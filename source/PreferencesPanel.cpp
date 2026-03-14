@@ -27,6 +27,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "text/FontSet.h"
 #include "text/Format.h"
 #include "GameData.h"
+#include "image/ImageFileData.h"
+#include "image/ImageSet.h"
 #include "Information.h"
 #include "Interface.h"
 #include "text/Layout.h"
@@ -37,6 +39,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "RenderBuffer.h"
 #include "Screen.h"
 #include "image/Sprite.h"
+#include "image/SpriteLoadManager.h"
 #include "image/SpriteSet.h"
 #include "shader/SpriteShader.h"
 #include "shader/StarField.h"
@@ -55,6 +58,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <chrono>
 #include <cstdio>
 #include <utility>
+
 
 using namespace std;
 
@@ -261,9 +265,9 @@ void PreferencesPanel::Step()
 	auto it = installFeedbacks.begin();
 	while(it != installFeedbacks.end())
 	{
-		if(it->wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+		if(it->wait_for(chrono::seconds(0)) == future_status::ready)
 		{
-			std::string error = it->get();
+			string error = it->get();
 
 			bool displayed = false;
 			if(downloadInProgressDialog)
@@ -287,6 +291,32 @@ void PreferencesPanel::Step()
 						// If any of the urls are downloaded, then we have a library to show.
 						downloadedPluginIndex = true;
 						Plugins::AddLibraryUrl(url, Plugins::Status::DOWNLOADED);
+
+						{
+							// Upon completion of downloading the plugins (and icons) for a given plugin library,
+							// load the plugin icons into memory:
+							auto aPlugins = Plugins::GetAvailablePluginsLocked();
+							for(const auto &namePlugin : *aPlugins)
+							{
+								auto plugin = namePlugin.second;
+								if(!plugin.IsValid())
+									continue;
+
+								// Load the icon for the plugin, if any.
+								auto icon = make_shared<ImageSet>(plugin.GetIconName());
+								string iconPath = (Files::Config() / "icons" / (plugin.name + ".png")).string();
+								if(Files::Exists(iconPath))
+								{
+									icon->Add(ImageFileData(iconPath));
+									if(!icon->IsEmpty())
+									{
+										icon->ValidateFrames();
+										SpriteLoadManager::LoadSprite(GetUI().AsyncQueue(), icon);
+									}
+								}
+							}
+						}
+
 						Resize();
 					}
 
@@ -298,7 +328,8 @@ void PreferencesPanel::Step()
 					{
 						// Note: by using the same dialog handle, we'll re-pop the in-progress dialog later, even if
 						// it had been dismissed; but there are bigger problems.
-						downloadInProgressDialog = DialogPanel::CallFunctionIfOk(this, &PreferencesPanel::ProcessPluginIndex,
+						downloadInProgressDialog = DialogPanel::CallFunctionIfOk(this,
+							&PreferencesPanel::ProcessPluginIndex,
 							"Failed to download plugin index:" + message + "\n\nWould you like to try again?");
 						GetUI().Push(downloadInProgressDialog);
 					}
@@ -1948,9 +1979,9 @@ void PreferencesPanel::ProcessPluginIndex()
 		string url = it.first;
 		installFeedbacks.emplace_back(
 			// Note: async, cannot work with fonts (or GUI), or the loop variable in a writable fashion
-			async(launch::async, [&, url, libraryIdx, installed=it.second]() noexcept -> string
+			async(launch::async, [&, url, libraryIdx, installed = it.second]() noexcept -> string
 			{
-				string filename = "plugins" + std::to_string(libraryIdx) + ".json";
+				string filename = "plugins" + to_string(libraryIdx) + ".json";
 				auto path = Files::Config() / filename;
 				if(installed != Plugins::Status::DOWNLOADED)
 					if(!Plugins::Download(url, path))

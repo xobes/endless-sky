@@ -14,8 +14,8 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "Utf8String.h"
-#include "../Logger.h"
 
+#include "../Logger.h"
 #include "Utf8.h"
 
 #include <cassert>
@@ -218,7 +218,7 @@ Utf8String &Utf8String::operator+=(char32_t codepoint)
 // 	return *this;
 // }
 
-Utf8String& Utf8String::operator+=(const Utf8String& other)
+Utf8String &Utf8String::operator+=(const Utf8String &other)
 {
 	str += other.str;
 	return *this;

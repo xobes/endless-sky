@@ -32,6 +32,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "../text/TextRun.h"
 #include "Truncate.h"
 #include "Utf8String.h"
+#include "../ZipFile.h"
 
 #include <SDL2/SDL_ttf.h>
 
@@ -39,8 +40,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
-
-#include "../ZipFile.h"
 
 using namespace std;
 
@@ -50,12 +49,6 @@ namespace {
 	/// Shared VAO and VBO quad (0,0) -> (1,1)
 	GLuint vao = 0;
 	GLuint vbo = 0;
-}
-
-
-
-Font::~Font()
-{
 }
 
 

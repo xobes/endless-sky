@@ -83,7 +83,7 @@ public:
 	// strings
 	// Utf8String & operator+=(const std::string& s);
 	// Utf8String
-	Utf8String& operator+=(const Utf8String& other);
+	Utf8String & operator+=(const Utf8String &other);
 
 	Utf8String operator+(char c) const;
 	Utf8String operator+(const Utf8String &other) const;

@@ -19,10 +19,11 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "DataNode.h"
 #include "DataWriter.h"
 #include "Files.h"
-#include "GameData.h"
+#include "text/Format.h"
 #include "Logger.h"
 #include "Set.h"
 #include "TaskQueue.h"
+#include "text/Utf8String.h"
 
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
@@ -40,9 +41,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-#include "text/Format.h"
-#include "text/Utf8String.h"
-
 #ifdef _WIN32
 #include <windows.h>
 #undef ERROR
@@ -55,7 +53,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 namespace {
-	map<string, Plugins::Status> plugin_list_urls;
+	map<string, Plugins::Status> pluginListUrls;
 
 	// These are the installed and available plugins, not all of which will be enabled for use.
 	mutex pluginsMutex;
@@ -294,7 +292,7 @@ bool Plugin::HasChanged() const
 
 
 
-bool Plugin::Search(const std::string &search) const
+bool Plugin::Search(const string &search) const
 {
 	for(auto &it : tags)
 		if(Format::Search(it, search) > 0)
@@ -458,21 +456,21 @@ string Plugins::Load(const filesystem::path &path)
 
 
 
-void Plugins::AddLibraryUrl(const std::string &url, const Status installed)
+void Plugins::AddLibraryUrl(const string &url, const Status installed)
 {
-	plugin_list_urls[url] = installed;
+	pluginListUrls[url] = installed;
 }
 
 
 
 map<string, Plugins::Status> &Plugins::GetPluginLibraryUrls()
 {
-	return plugin_list_urls;
+	return pluginListUrls;
 }
 
 
 
-void Plugins::LoadAvailablePlugins(TaskQueue &queue, const std::filesystem::path &pluginsJsonPath)
+void Plugins::LoadAvailablePlugins(TaskQueue &queue, const filesystem::path &pluginsJsonPath)
 {
 	ifstream pluginlistFile(pluginsJsonPath);
 	nlohmann::json pluginInstallList = nlohmann::json::parse(pluginlistFile);
@@ -505,8 +503,6 @@ void Plugins::LoadAvailablePlugins(TaskQueue &queue, const std::filesystem::path
 
 		if((!Files::Exists(iconPath) || isOutdated) && pluginInstall.contains("iconUrl"))
 			Download(pluginInstall.value("iconUrl", ""), iconPath);
-		if(Files::Exists(iconPath))
-			GameData::RequestSpriteLoad(queue, iconPath, plugin->GetIconName());
 	}
 	// And finally, because we are using the same (sorted) OrderedSet to better share common code, we must sort.
 	{
@@ -599,7 +595,7 @@ int Plugins::Move(int index, int offset)
 	int otherIndex = -1;
 	{
 		auto iPlugins = GetPluginsLocked();
-		otherIndex = std::clamp(index + offset, 0, iPlugins->size() - 1);
+		otherIndex = clamp(index + offset, 0, iPlugins->size() - 1);
 		iPlugins->swap(index, otherIndex);
 	}
 	Save();

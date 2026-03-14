@@ -39,6 +39,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "image/ImageSet.h"
 #include "Interface.h"
 #include "shader/LineShader.h"
+#include "Logger.h"
 #include "image/MaskManager.h"
 #include "Minable.h"
 #include "Mission.h"
@@ -74,8 +75,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <queue>
 #include <utility>
 #include <vector>
-
-#include "Logger.h"
 
 
 using namespace std;
@@ -128,7 +127,7 @@ namespace {
 			filesystem::path iconPath = path / ("icon" + extension);
 			if(Files::Exists(iconPath))
 			{
-				icon->Add(iconPath);
+				icon->Add(ImageFileData(iconPath));
 				break;
 			}
 		}
@@ -137,7 +136,7 @@ namespace {
 			filesystem::path iconPath = path / ("icon@2x" + extension);
 			if(Files::Exists(iconPath))
 			{
-				icon->Add(iconPath);
+				icon->Add(ImageFileData(iconPath));
 				break;
 			}
 		}
@@ -300,20 +299,6 @@ bool GameData::IsLoaded()
 
 
 
-// Add a sprite to the queue.
-void GameData::RequestSpriteLoad(TaskQueue &queue, const string &path, const string &name)
-{
-	auto image = make_shared<ImageSet>(name);
-	image->Add(ImageFileData(path));
-	if(!image->IsEmpty())
-	{
-		image->ValidateFrames();
-		SpriteLoadManager::LoadSprite(queue, image);
-	}
-}
-
-
-
 // Get the list of resource sources (i.e. plugin folders).
 const vector<filesystem::path> &GameData::Sources()
 {
@@ -365,7 +350,8 @@ void GameData::TestFonts()
 	wrap.Wrap(s);
 	wrap.Draw({x = -400, y}, {1, 1, 1});
 
-	s = "Version: 20260219015322\nAuthors: Various\nLicense: to be determined\nAdds the Vietnamese - Tiếng Việt language to Endless Sky.\nHomepage: http://localhost:8880/languages/Vietnamese%20-%20Ti%E1%BA%BFng%20Vi%E1%BB%87t/\n";
+	s = "Version: 20260219015322\nAuthors: Various\nLicense: to be determined\nAdds the Vietnamese - Tiếng Việt langua"
+	 "ge to Endless Sky.\nHomepage: http://localhost:8880/languages/Vietnamese%20-%20Ti%E1%BA%BFng%20Vi%E1%BB%87t/\n";
 	y += wrap.Height();
 	wrap.SetWrapWidth(220);
 	wrap.Wrap(s);
@@ -1021,7 +1007,7 @@ void GameData::LoadSources(TaskQueue &queue)
 	// Make a list of all known plugin paths to allow for the plugins to be loaded according to the specified order.
 	// For consistency between the plugin library and the installed plugins,
 	// we will strip the zip extension off any zip files, or else use the folder name.
-	Set<std::filesystem::path> foundPlugins;
+	Set<filesystem::path> foundPlugins;
 
 	vector<filesystem::path> globalPlugins = Files::ListDirectories(Files::GlobalPlugins());
 	for(const auto &path : globalPlugins)

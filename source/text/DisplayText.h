@@ -16,7 +16,6 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "Layout.h"
-
 #include "../Point.h"
 #include "Utf8String.h"
 
