@@ -52,7 +52,10 @@ const Font &FontSet::Get(const string &name)
 void FontSet::MarkFrameStart()
 {
 	for(auto &entry : fonts)
+	{
 		entry.second.MarkTexturesUnused();
+		entry.second.MarkTextRunsUnused();
+	}
 }
 
 
@@ -60,5 +63,8 @@ void FontSet::MarkFrameStart()
 void FontSet::MarkFrameEnd()
 {
 	for(auto &entry : fonts)
+	{
 		entry.second.ClearUnusedTextures();
+		entry.second.ClearUnusedTextRuns();
+	}
 }

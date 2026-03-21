@@ -84,7 +84,7 @@ void Font::Load(const filesystem::path &path, double size)
 	if(!height)
 	{
 		fontSize = size;
-		height = size < 16 ? size < 15 ? size + 2 : size + 1 : size;
+		height = size + 2;
 		space = WidthRawString("-");
 	}
 }
@@ -264,6 +264,47 @@ void Font::ClearUnusedTextures() const
 
 
 
+void Font::MarkTextRunsUnused() const noexcept
+{
+	for(auto &entry : textRunsUsedThisFrame)
+		entry.second = false;
+}
+
+
+
+void Font::ClearUnusedTextRuns() const
+{
+	vector<string> toRemove;
+	for(const auto &[str, used] : textRunsUsedThisFrame)
+		if(!used)
+			toRemove.push_back(str);
+
+	for(const auto &str : toRemove)
+	{
+		textRunsCache.erase(str);
+		textRunsUsedThisFrame.erase(str);
+	}
+}
+
+
+
+void Font::CachedTTFSizeUTF8(TTF_Font *font, const std::string &text, size_t fontIndex, int &w) const
+{
+	auto sizeKey = std::make_pair(text, fontIndex);
+	auto sizeIt = sizeCache.find(sizeKey);
+	if(sizeIt != sizeCache.end())
+		w = sizeIt->second.first;
+	else
+	{
+		int h;
+		TTF_SizeUTF8(font, text.c_str(), &w, &h);
+		sizeCache[sizeKey] = std::make_pair(w, h);
+	}
+	sizeUsedThisFrame[sizeKey] = true;
+}
+
+
+
 int Font::WidthRawString(const char *str) const noexcept
 {
 	DisplayText text(str, Alignment::LEFT);
@@ -276,16 +317,15 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 {
 	text.UpdateSpriteReferences();
 
-	if(text.GetText().length() == 0)
+	if(text.GetText().empty())
 		return 0;
 
 	int width = 0;
 	int spriteNum = 0;
 
-	for(TextRun d : GenerateDirectionalRuns(text.GetText().to_string()))
+	for(const TextRun &d : GenerateDirectionalRuns(text.GetText().to_string()))
 	{
-		bool isRTL = FRIBIDI_LEVEL_IS_RTL(d.embedLevel);
-		for(TextRun r : GenerateGlyphRuns(d.text, fontList, isRTL))
+		for(const TextRun &r : GenerateGlyphRuns(d.text, fontList, d.isRTL))
 		{
 			// If this textRun is a placeholder for a SPRITE, save room for the sprite.
 			if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
@@ -295,9 +335,8 @@ int Font::WidthRawString(DisplayText &text) const noexcept
 				continue;
 			}
 
-			int h;
 			int w;
-			TTF_SizeUTF8(fontList[r.fontIndex], r.text.c_str(), &w, &h);
+			CachedTTFSizeUTF8(fontList[r.fontIndex], r.text, r.fontIndex, w);
 			width += w;
 		}
 	}
@@ -411,7 +450,6 @@ void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color
 	int baseY = TTF_FontAscent(font);
 	int offset = -0.5 * (TTF_FontHeight(font) - height);
 
-	int h = 0;
 	int w = 0;
 	int width = -1;
 	const DisplayText truncText(TruncateText(text, width), text.GetLayout());
@@ -430,37 +468,52 @@ void Font::DrawAliased(DisplayText &text, double x, double y, const Color &color
 	if(str.empty())
 		return;
 
-	for(TextRun d : GenerateDirectionalRuns(str))
+	// Check TextRuns cache
+	auto it = textRunsCache.find(str);
+	if(it == textRunsCache.end())
 	{
-		bool isRTL = FRIBIDI_LEVEL_IS_RTL(d.embedLevel);
-		for(TextRun r : GenerateGlyphRuns(d.text, fontList, isRTL))
+		// Add a new value to the cache
+		auto &cached = textRunsCache[str];
+		for(const TextRun &d : GenerateDirectionalRuns(str))
 		{
-			// if this textRun is a placeholder for a SPRITE, draw the sprite
-			if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
-			{
-				auto spriteData = &text.inlineSprites[spriteNum++];
-				double w = std::get<0>(*spriteData)->Width();
-				// Set sprite center point.
-				std::get<2>(*spriteData) = Point(x + .5 * w, y + .5 * height);
-				x += w;
-				continue;
-			}
-
-			auto font = fontList[r.fontIndex];
-			// Note: fribidi alrady swapped LTR/RTL for us
-			// TTF_SetFontDirection(font, isRTL ? TTF_DIRECTION_RTL: TTF_DIRECTION_LTR);
-			TTF_SizeUTF8(font, r.text.c_str(), &w, &h);
-
-			double dY = baseY - TTF_FontAscent(font);
-			RenderString(r.text, r.fontIndex, x, y + offset + dY, color);
-
-			x += w;
-
-			if(showUnderlines)
-				for(auto[ux, uw] : r.underlines)
-					FillShader::Fill(Rectangle::FromCorner(
-						{x + ux, y + offset + dY + height + 2}, {1. * uw, 1}), color);
+			auto glyphRuns = GenerateGlyphRuns(d.text, fontList, d.isRTL);
+			cached.insert(cached.end(), glyphRuns.begin(), glyphRuns.end());
 		}
+		it = textRunsCache.find(str);
+	}
+	textRunsUsedThisFrame[str] = true;
+
+	// Render text runs
+	for(TextRun &r : it->second)
+	{
+		// if this textRun is a placeholder for a SPRITE, draw the sprite
+		if(r.text.c_str()[0] == DisplayText::SPRITE_PLACEHOLDER && r.text.length() == 1)
+		{
+			auto spriteData = &text.inlineSprites[spriteNum++];
+			double w = std::get<0>(*spriteData)->Width();
+			// Set sprite center point.
+			std::get<2>(*spriteData) = Point(x + .5 * w, y + .5 * height);
+			x += w;
+			continue;
+		}
+
+		auto font = fontList[r.fontIndex];
+		// Note: fribidi alrady swapped LTR/RTL for us
+		// TTF_SetFontDirection(font, r.isRTL ? TTF_DIRECTION_RTL: TTF_DIRECTION_LTR);
+
+		if(r.width == 0)
+			CachedTTFSizeUTF8(font, r.text, r.fontIndex, r.width);
+		w = r.width;
+
+		double dY = baseY - TTF_FontAscent(font);
+		RenderString(r.text, r.fontIndex, x, y + offset + dY, color);
+
+		x += w;
+
+		if(showUnderlines)
+			for(auto[ux, uw] : r.underlines)
+				FillShader::Fill(Rectangle::FromCorner(
+					{x + ux, y + offset + dY + height + 2}, {1. * uw, 1}), color);
 	}
 
 	// TODO: a sprite is just it's own portion of a textRun.

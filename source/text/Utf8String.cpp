@@ -64,7 +64,7 @@ bool Utf8String::Utf8StringIterator::operator==(const Utf8StringIterator &other)
 
 
 Utf8String::Utf8String(string str)
-	: str(move(str))
+	: str(std::move(str))
 {
 }
 
@@ -184,7 +184,6 @@ void Utf8String::reserve(size_t size)
 
 void Utf8String::assign(const char* it, size_t size)
 {
-
 	if(this->str.find("Vietnamese") != std::string::npos)
 		Logger::Log(this->str, Logger::Level::INFO);
 	this->str.assign(it, size);
@@ -212,17 +211,10 @@ Utf8String &Utf8String::operator+=(char32_t codepoint)
 	return *this;
 }
 
-// Utf8String& Utf8String::operator+=(const std::string& s)
-// {
-// 	str += s;
-// 	return *this;
-// }
-
 Utf8String &Utf8String::operator+=(const Utf8String &other)
 {
 	str += other.str;
 	return *this;
-
 }
 
 Utf8String Utf8String::operator+(char c) const

@@ -16,6 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 #include "../shader/Shader.h"
+#include "TextRun.h"
 #include "Utf8String.h"
 
 #include "../opengl.h"
@@ -26,6 +27,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 class Color;
 class DisplayText;
@@ -111,6 +113,9 @@ private:
 
 	void MarkTexturesUnused() const noexcept;
 	void ClearUnusedTextures() const;
+	void MarkTextRunsUnused() const noexcept;
+	void ClearUnusedTextRuns() const;
+	void CachedTTFSizeUTF8(TTF_Font *font, const std::string &text, size_t fontIndex, int &w) const;
 
 	void Init();
 	int WidthRawString(const char *str) const noexcept;
@@ -137,6 +142,14 @@ private:
 	std::vector<TTF_Font *> fontList;
 	mutable std::map<std::pair<std::string, int>, TextureHandle> textureCache;
 	mutable std::map<std::pair<std::string, int>, bool> textureUsedThisFrame;
+
+	// TextRuns cache (pre-HarfBuzz/FriBiDi shaped results)
+	mutable std::map<std::string, std::vector<TextRun>> textRunsCache;
+	mutable std::map<std::string, bool> textRunsUsedThisFrame;
+
+	// TTF size cache (text + fontIndex -> width, height)
+	mutable std::map<std::pair<std::string, int>, std::pair<int, int>> sizeCache;
+	mutable std::map<std::pair<std::string, int>, bool> sizeUsedThisFrame;
 
 	friend class FontSet;
 };

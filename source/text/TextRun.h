@@ -15,20 +15,22 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include "Font.h"
+#include <SDL2/SDL_ttf.h>
 
-#include <fribidi.h>
-
+#include <string>
+#include <utility>
 #include <vector>
-
 
 
 struct TextRun {
     std::string text;
-    size_t fontIndex;
-    FriBidiParType paraBaseDirection;
-    FriBidiLevel embedLevel;
+    size_t fontIndex = 0;
+    bool isRTL = false;
     std::vector<std::pair<double, int>> underlines;
+    int width = 0;
+
+    TextRun(std::string t, size_t f, bool rtl, const std::vector<std::pair<double, int>> &u)
+        : text(std::move(t)), fontIndex(f), isRTL(rtl), underlines(u) {}
 };
 
 std::vector<TextRun> GenerateDirectionalRuns(const std::string &text);

@@ -55,7 +55,7 @@ vector<TextRun> GenerateDirectionalRuns(const string &text)
 		// If the font changed, save the previous run and start a new one
 		if(level != currentLevel && !currentRunText.empty())
 		{
-			runs.push_back({currentRunText, 0, baseDirection, currentLevel});
+			runs.push_back({currentRunText, 0, static_cast<bool>(FRIBIDI_LEVEL_IS_RTL(currentLevel)), {}});
 			currentRunText.clear();
 		}
 		currentLevel = level;
@@ -64,7 +64,7 @@ vector<TextRun> GenerateDirectionalRuns(const string &text)
 	}
 
 	if(!currentRunText.empty())
-		runs.push_back({currentRunText, 0, baseDirection, currentLevel});
+		runs.push_back({currentRunText, 0, static_cast<bool>(FRIBIDI_LEVEL_IS_RTL(currentLevel)), {}});
 	return runs;
 }
 
@@ -125,7 +125,7 @@ vector<TextRun> GenerateGlyphRuns(
 		// If the font changed, save the previous run and start a new one
 		if(newFontIndex != currentFontIndex && !currentRunText.empty())
 		{
-			runs.push_back({currentRunText, currentFontIndex});
+			runs.push_back({currentRunText, currentFontIndex, isRTL, {}});
 			currentRunText.clear();
 			underlines.clear();
 		}
@@ -150,7 +150,7 @@ vector<TextRun> GenerateGlyphRuns(
 	}
 
 	if(!currentRunText.empty())
-		runs.push_back({currentRunText, currentFontIndex, 0, 0, underlines});
+		runs.push_back({currentRunText, currentFontIndex, isRTL, underlines});
 
 	return runs;
 }
