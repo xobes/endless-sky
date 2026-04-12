@@ -199,6 +199,14 @@ void PreferencesPanel::Draw()
 	GameData::Interfaces().Get(pageName)->Draw(info, this);
 	GameData::Interfaces().Get("preferences")->Draw(info, this);
 
+	// TODO: DELETE, ONLY FOR DEBUG
+	if(Preferences::Has("Debug Interfaces"))
+	{
+		GameData::ReloadInterface(pageName);
+	}
+	// TODO: DELETE, ONLY FOR DEBUG
+
+	GameData::Interfaces().Get(pageName)->Draw(info, this);
 	zones.clear();
 	prefZones.clear();
 	pluginZones.clear();
@@ -627,7 +635,8 @@ void PreferencesPanel::DrawControls()
 		Command::PAUSE,
 		Command::HELP,
 		Command::MESSAGE_LOG,
-		Command::PERFORMANCE_DISPLAY
+		Command::PERFORMANCE_DISPLAY,
+		Command::DEBUG_INTERFACES,
 	};
 
 	int page = 0;
@@ -773,7 +782,7 @@ void PreferencesPanel::DrawSettings()
 		"Trading",
 		"'Sell Outfits' without outfitter",
 		"Confirm 'Sell Outfits' button",
-		"Confirm 'Sell MInables' button",
+		"Confirm 'Sell Minables' button",
 		"Show parenthesis",
 		"\n",
 		"Flagship Behavior",
@@ -821,6 +830,7 @@ void PreferencesPanel::DrawSettings()
 		DATE_FORMAT,
 		NOTIFY_ON_DEST,
 		"Save message log",
+		"Debug Interfaces",
 #ifdef _WIN32
 		"\t",
 		"Windows Options",

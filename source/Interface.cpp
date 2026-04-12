@@ -16,6 +16,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "Interface.h"
 
 #include "Angle.h"
+#include "DataFile.h"
 #include "DataNode.h"
 #include "text/DisplayText.h"
 #include "shader/FillShader.h"
@@ -28,6 +29,7 @@ this program. If not, see <https://www.gnu.org/licenses/>.
 #include "shader/OutlineShader.h"
 #include "Panel.h"
 #include "shader/PointerShader.h"
+#include "Preferences.h"
 #include "Rectangle.h"
 #include "shader/RingShader.h"
 #include "Screen.h"
@@ -61,6 +63,17 @@ namespace {
 		}
 		return alignment;
 	}
+}
+
+
+
+// Load an interface.
+void Interface::Load(const DataNode &node, const filesystem::path &path) {
+	if(node.Size() < 2)
+		return;
+	name = node.Token(1);
+	this->path = path;
+	Interface::Load(node);
 }
 
 
@@ -142,6 +155,28 @@ void Interface::Load(const DataNode &node)
 			elements.back()->SetConditions(visibleIf, activeIf);
 		}
 	}
+}
+
+
+
+// Reload the interface from disk
+void Interface::Reload()
+{
+	// This is an ordinary file. Check to see if it is an image.
+	if(path.extension() != ".txt")
+		return;
+
+	for(DataFile data(path); const DataNode &node : data)
+	{
+		const string &key = node.Token(0);
+		bool hasValue = node.Size() >= 2;
+		if(key == "interface" && hasValue && node.Token(1) == name)
+		{
+			Load(node);
+			break;
+		}
+	}
+
 }
 
 
