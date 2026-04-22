@@ -687,7 +687,7 @@ bool Interface::WrappedTextElement::ParseLine(const DataNode &node)
 {
 	if(TextElement::ParseLine(node))
 		return true;
-	if(node.Token(0) == "alignment")
+	if(node.Token(0) == "align")
 	{
 		const string &value = node.Token(1);
 		if(value == "left")

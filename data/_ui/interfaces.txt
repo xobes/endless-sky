@@ -596,7 +596,7 @@ interface "controls"
 		color medium
 	"wrapped label" "Press '_x' over controls to unbind them. Controls can share the same keybind."
 		from -420 70 to -270 130
-		alignment right
+		align right
 		color medium
 	
 	visible if "multiple controls pages"
@@ -1129,7 +1129,7 @@ interface "gamerules"
 		color medium
 	"wrapped label" "Press '_x' over a rule to reset it to the value from the chosen preset."
 		from -400 60 to -275 130
-		alignment right
+		align right
 		color medium
 	
 	visible if "multiple settings pages"
@@ -1187,7 +1187,7 @@ interface "gamerules presets"
 		color medium
 	"wrapped label" "Click the checkbox next to a preset to activate it."
 		from -400 50 to -275 120
-		alignment right
+		align right
 		color medium
 
 
